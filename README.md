@@ -2,7 +2,7 @@
 Copyright (c) 2026 Yao
 
 This file is part of AiWorkHarness, AI coding agent chat inside VS Code.
-https://github.com/westhack/ai-work-harness
+https://github.com/westhack/ai-work-harness-vs
 
 Licensed under the MIT License. See LICENSE file in the project root.
 -->
@@ -19,7 +19,7 @@ Licensed under the MIT License. See LICENSE file in the project root.
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness">Install for VS Code</a> ·
-  <a href="https://github.com/westhack/ai-work-harness/releases">Releases</a> ·
+  <a href="https://github.com/westhack/ai-work-harness-vs/releases">Releases</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#development">Build from source</a> ·
   <a href="#credits">Credits</a>
@@ -29,7 +29,7 @@ AiWorkHarness brings conversation, code exploration, file edits, terminal comman
 
 ## Quick start
 
-1. **Install AiWorkHarness** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness). You can also download a `.vsix` from [Releases](https://github.com/westhack/ai-work-harness/releases) and run **Extensions: Install from VSIX**. Requires VS Code 1.96 or newer.
+1. **Install AiWorkHarness** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness). You can also download a `.vsix` from [Releases](https://github.com/westhack/ai-work-harness-vs/releases) and run **Extensions: Install from VSIX**. Requires VS Code 1.96 or newer.
 2. **Connect a model.** Open the AiWorkHarness sidebar, then Settings. Add an account or API provider under **Providers**, or configure **Ollama** or **llama.cpp** for local inference.
 3. **Choose a model and start a conversation.** Enable the models you want in **Models**, select one in the composer, and describe your task. Use `Ctrl+L` on Windows/Linux or `Cmd+L` on macOS to add an editor selection (or the whole file, when nothing is selected) to chat. This replaces VS Code's default *Expand Line Selection* shortcut while an editor is focused; rebind `aiworkharness.addToChat` in Keyboard Shortcuts if you prefer the original.
 4. **Review the result.** Inspect tool activity and file changes, then keep or undo the edits. Adjust the permission controls to decide which actions need your approval.
@@ -116,8 +116,8 @@ Model inference runs at the endpoint you choose. Hosted models and embeddings re
 Use Node.js 22, pnpm, Git, and VS Code to build the extension.
 
 ```bash
-git clone https://github.com/westhack/ai-work-harness.git
-cd ai-work-harness
+git clone https://github.com/westhack/ai-work-harness-vs.git
+cd ai-work-harness-vs
 pnpm install --frozen-lockfile
 pnpm run compile
 ```
@@ -151,7 +151,7 @@ README artwork lives in [`media/readme`](media/readme). The SVG sources are edit
 
 ## Contributing
 
-Bug reports, documentation improvements, provider fixes, and pull requests are welcome. [Open an issue](https://github.com/westhack/ai-work-harness/issues) with steps to reproduce the problem, your VS Code version, and the relevant provider or runtime. Remove credentials and private workspace content from any logs or screenshots you share.
+Bug reports, documentation improvements, provider fixes, and pull requests are welcome. [Open an issue](https://github.com/westhack/ai-work-harness-vs/issues) with steps to reproduce the problem, your VS Code version, and the relevant provider or runtime. Remove credentials and private workspace content from any logs or screenshots you share.
 
 For code changes, include focused verification and screenshots when the interface changes. Keep pull requests scoped so the behavior and its validation are easy to review.
 

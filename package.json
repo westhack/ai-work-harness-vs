@@ -8,12 +8,12 @@
 	"icon": "media/icon.png",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/westhack/ai-work-harness.git"
+		"url": "https://github.com/westhack/ai-work-harness-vs.git"
 	},
 	"bugs": {
-		"url": "https://github.com/westhack/ai-work-harness/issues"
+		"url": "https://github.com/westhack/ai-work-harness-vs/issues"
 	},
-	"homepage": "https://github.com/westhack/ai-work-harness#readme",
+	"homepage": "https://github.com/westhack/ai-work-harness-vs#readme",
 	"engines": {
 		"vscode": "^1.96.0"
 	},

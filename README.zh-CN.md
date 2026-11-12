@@ -2,7 +2,7 @@
 Copyright (c) 2026 Yao
 
 This file is part of AiWorkHarness, AI coding agent chat inside VS Code.
-https://github.com/westhack/ai-work-harness
+https://github.com/westhack/ai-work-harness-vs
 
 Licensed under the MIT License. See LICENSE file in the project root.
 -->
@@ -19,7 +19,7 @@ Licensed under the MIT License. See LICENSE file in the project root.
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness">安装到 VS Code</a> ·
-  <a href="https://github.com/westhack/ai-work-harness/releases">版本发布</a> ·
+  <a href="https://github.com/westhack/ai-work-harness-vs/releases">版本发布</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#开发">从源码构建</a> ·
   <a href="#致谢">致谢</a>
@@ -29,7 +29,7 @@ AiWorkHarness 把对话、代码探索、文件编辑、终端命令与改动审
 
 ## 快速开始
 
-1. **安装 AiWorkHarness**：从 [VS Code 市场](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness) 安装；也可以在 [版本发布](https://github.com/westhack/ai-work-harness/releases) 下载 `.vsix`，然后执行 **扩展：从 VSIX 安装**。需要 VS Code 1.96 或更高版本。
+1. **安装 AiWorkHarness**：从 [VS Code 市场](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness) 安装；也可以在 [版本发布](https://github.com/westhack/ai-work-harness-vs/releases) 下载 `.vsix`，然后执行 **扩展：从 VSIX 安装**。需要 VS Code 1.96 或更高版本。
 2. **接入模型。** 打开 AiWorkHarness 侧边栏，进入设置。在 **Providers（提供商）** 中添加账号或 API 提供商，或配置 **Ollama**、**llama.cpp** 做本地推理。
 3. **选择模型并开始对话。** 在 **Models（模型）** 中启用需要的模型，在输入框中选择一个，然后描述你的任务。Windows/Linux 按 `Ctrl+L`、macOS 按 `Cmd+L`，可把编辑器中的选区（未选中时为整个文件）加入对话。在编辑器获得焦点时，这会覆盖 VS Code 默认的 *扩展行选择* 快捷键；如果想保留原快捷键，可在键盘快捷方式中重新绑定 `aiworkharness.addToChat`。
 4. **审查结果。** 查看工具活动与文件改动，然后保留或撤销修改。调整权限控制，决定哪些操作需要你的批准。
@@ -116,8 +116,8 @@ AiWorkHarness 把对话、代码探索、文件编辑、终端命令与改动审
 构建扩展需要 Node.js 22、pnpm、Git 与 VS Code。
 
 ```bash
-git clone https://github.com/westhack/ai-work-harness.git
-cd ai-work-harness
+git clone https://github.com/westhack/ai-work-harness-vs.git
+cd ai-work-harness-vs
 pnpm install --frozen-lockfile
 pnpm run compile
 ```
@@ -151,7 +151,7 @@ README 用的图片位于 [`media/readme`](media/readme)。SVG 源文件可直�
 
 ## 贡献
 
-欢迎提交缺陷报告、文档改进、提供商修复与 Pull Request。请 [提交 issue](https://github.com/westhack/ai-work-harness/issues)，附上复现步骤、VS Code 版本以及相关的提供商或运行时。分享日志与截图前，请先移除凭据与私有工作区内容。
+欢迎提交缺陷报告、文档改进、提供商修复与 Pull Request。请 [提交 issue](https://github.com/westhack/ai-work-harness-vs/issues)，附上复现步骤、VS Code 版本以及相关的提供商或运行时。分享日志与截图前，请先移除凭据与私有工作区内容。
 
 提交代码改动时，请给出针对性的验证；界面有变化时请附截图。保持 PR 范围聚焦，便于审查行为与其验证方式。
 

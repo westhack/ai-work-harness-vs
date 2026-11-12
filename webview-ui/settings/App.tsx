@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Yao
  *
  * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
- * https://github.com/westhack/ai-work-harness
+ * https://github.com/westhack/ai-work-harness-vs
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -1302,10 +1302,10 @@ export function App() {
                   <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/westhack" })}>{tr("GitHub ↗")}</button>
                 </Row>
                 <Row title={tr("Repository")} desc={tr("Source code, issues and contributions.")}>
-                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/westhack/ai-work-harness" })}>{tr("Open ↗")}</button>
+                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/westhack/ai-work-harness-vs" })}>{tr("Open ↗")}</button>
                 </Row>
                 <Row title={tr("Report an Issue")} desc={tr("Found a bug or have a feature request?")}>
-                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/westhack/ai-work-harness/issues" })}>{tr("Issues ↗")}</button>
+                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/westhack/ai-work-harness-vs/issues" })}>{tr("Issues ↗")}</button>
                 </Row>
                 <Row title={tr("License")} desc={tr("Free and open source under the MIT License.")}>
                   <span className="badge-tag glob">{tr("MIT")}</span>
