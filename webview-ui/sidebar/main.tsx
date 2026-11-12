@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -14,11 +14,15 @@ import "../shared/code-highlighting.css";
 import { App, ErrorBoundary } from "./App";
 import "../shared/motion.css";
 import { initializeMotionPreference } from "../shared/motionPreference";
+import { applyShellLocale, bindLocaleToRoot } from "../shared/i18n";
 
 initializeMotionPreference();
+applyShellLocale(document.getElementById("root"));
 const root = createRoot(document.getElementById("root")!);
-root.render(
+const render = () => root.render(
   <ErrorBoundary>
     <App />
   </ErrorBoundary>
 );
+render();
+bindLocaleToRoot(render);

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -28,7 +28,7 @@ async function seed(kind: OAuthKind = "codex", extra: Partial<OAuthAccount> = {}
   const account: OAuthAccount = { id: `transport-${kind}`, kind, accessToken: "old-access", refreshToken: "old-refresh",
     expiresAt: Date.now() + 3_600_000, accountId: "workspace-one", projectId: "project-one", ...extra };
   const fixtures = [account, ...additional];
-  for (const fixture of fixtures) saved.set(`ocursor.oauth.acct.${fixture.id}`, JSON.stringify(fixture));
+  for (const fixture of fixtures) saved.set(`aiworkharness.oauth.acct.${fixture.id}`, JSON.stringify(fixture));
   initOAuth({ globalState: { get: (_key: string, fallback: unknown) => Array.isArray(fallback) ? fixtures.map(fixture => fixture.id) : fallback, update: vi.fn() },
     secrets: { get: async (key: string) => saved.get(key), store: async (key: string, value: string) => { saved.set(key, value); },
       delete: async (key: string) => { saved.delete(key); } } } as unknown as Parameters<typeof initOAuth>[0]);
@@ -212,7 +212,7 @@ describe("OAuth account transport", () => {
     await chat("antigravity");
     expect(projects).toEqual(["project-one", "current-project"]);
     expect(fetch).toHaveBeenCalledTimes(3);
-    expect(JSON.parse(saved.get(`ocursor.oauth.acct.${account.id}`)!)).toMatchObject({ projectId: "current-project" });
+    expect(JSON.parse(saved.get(`aiworkharness.oauth.acct.${account.id}`)!)).toMatchObject({ projectId: "current-project" });
   });
 
   it("does not retry an unavailable Antigravity model when the authoritative project is unchanged", async () => {
@@ -257,7 +257,7 @@ describe("OAuth account transport", () => {
     }));
     await chat("antigravity");
     expect(urls.map((url) => url.split(":").at(-1))).toEqual(["loadCodeAssist", "onboardUser", "streamGenerateContent?alt=sse"]);
-    expect(JSON.parse(saved.get(`ocursor.oauth.acct.${account.id}`)!)).toMatchObject({ projectId: "provisioned-project" });
+    expect(JSON.parse(saved.get(`aiworkharness.oauth.acct.${account.id}`)!)).toMatchObject({ projectId: "provisioned-project" });
   });
 
   it.each(["codex", "claude-code", "antigravity"] as const)("refreshes a rejected %s token once using its native encoding", async (kind) => {
@@ -280,7 +280,7 @@ describe("OAuth account transport", () => {
     expect(headers(sent[0]).get("authorization")).toBe("Bearer old-access");
     expect(headers(sent[1]).get("authorization")).toBe("Bearer new-access");
     expect(sent[1].body).toBe(sent[0].body);
-    expect(JSON.parse(saved.get(`ocursor.oauth.acct.${account.id}`)!)).toMatchObject({ accessToken: "new-access", refreshToken: "new-refresh" });
+    expect(JSON.parse(saved.get(`aiworkharness.oauth.acct.${account.id}`)!)).toMatchObject({ accessToken: "new-access", refreshToken: "new-refresh" });
   });
 
   it("shares a rotated token across simultaneous rejected requests", async () => {
@@ -317,7 +317,7 @@ describe("OAuth account transport", () => {
     const account = await seed("codex", { expiresAt: Date.now() - 1 });
     vi.stubGlobal("fetch", vi.fn(async () => Response.json({ refresh_token: "do-not-save", expires_in: 3600 })));
     await expect(chat()).rejects.toThrow("access token");
-    expect(JSON.parse(saved.get(`ocursor.oauth.acct.${account.id}`)!)).toMatchObject({ accessToken: "old-access", refreshToken: "old-refresh" });
+    expect(JSON.parse(saved.get(`aiworkharness.oauth.acct.${account.id}`)!)).toMatchObject({ accessToken: "old-access", refreshToken: "old-refresh" });
   });
 
   it("refreshes workspace identity and uses it for chat and quota requests", async () => {
@@ -347,7 +347,7 @@ describe("OAuth account transport", () => {
     release(Response.json({ access_token: "new-access", expires_in: 3600 }));
     await rejected;
     expect(listAccounts()).toEqual([]);
-    expect(saved.has(`ocursor.oauth.acct.${account.id}`)).toBe(false);
+    expect(saved.has(`aiworkharness.oauth.acct.${account.id}`)).toBe(false);
   });
 
   it("cancels a waiting chat while allowing a shared refresh to persist safely", async () => {
@@ -363,7 +363,7 @@ describe("OAuth account transport", () => {
     controller.abort();
     await rejected;
     release(Response.json({ access_token: "new-access", refresh_token: "new-refresh", expires_in: 3600 }));
-    await vi.waitFor(() => expect(JSON.parse(saved.get(`ocursor.oauth.acct.${account.id}`)!)).toMatchObject({ accessToken: "new-access", disabled: true }));
+    await vi.waitFor(() => expect(JSON.parse(saved.get(`aiworkharness.oauth.acct.${account.id}`)!)).toMatchObject({ accessToken: "new-access", disabled: true }));
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 });

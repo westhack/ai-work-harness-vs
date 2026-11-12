@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -23,7 +23,7 @@ let dir: string | undefined;
 afterEach(async () => { if (dir) await rm(dir, { recursive: true, force: true }); });
 describe("production explicit context resolution", () => {
   it("selects late file lines before limiting their content", async () => {
-    dir = await mkdtemp(path.join(tmpdir(), "ocursor-mention-"));
+    dir = await mkdtemp(path.join(tmpdir(), "aiworkharness-mention-"));
     const file = path.join(dir, "large.ts");
     await writeFile(file, [...Array.from({ length: 219 }, () => "x".repeat(80)), "selected-220", "selected-221", "unselected"].join("\n"));
     const result = await resolveMentions([{ kind: "code", name: "selection", path: `${file}:220-221` }], "explain", []);

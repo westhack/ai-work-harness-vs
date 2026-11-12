@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -27,11 +27,11 @@ const stripMarkers = (value: unknown) => JSON.parse(JSON.stringify(value, (key, 
 it("advances completed tool-result cache boundaries over four turns and retains the previous batch", () => {
   const context = snapshotUserContext({ userInfo: "Project rules", openFiles: "app.ts", timestamp: "first" });
   const history: Step[] = [{ kind: "user", text: "Inspect", context }];
-  let previous = toAnthropic(buildMessages("OpenCursor", history));
+  let previous = toAnthropic(buildMessages("AiWorkHarness", history));
   for (let turn = 1; turn <= 4; turn++) {
     const ids = Array.from({ length: turn === 3 ? 25 : 1 }, (_, index) => `turn-${turn}-${index}`);
     history.push(...exchange(ids));
-    const wire = buildMessages("OpenCursor", history);
+    const wire = buildMessages("AiWorkHarness", history);
     const original = JSON.stringify(wire);
     const payload = toAnthropic(wire);
     const previousId = turn === 4 ? "turn-3-24" : `turn-${turn - 1}-0`;
@@ -44,7 +44,7 @@ it("advances completed tool-result cache boundaries over four turns and retains 
     previous = payload;
   }
   history.push({ kind: "assistant", text: "Finished", calls: [] }, { kind: "user", text: "Follow-up", context: snapshotUserContext({ ...context, timestamp: "later" }, context) });
-  const followUp = toAnthropic(buildMessages("OpenCursor", history));
+  const followUp = toAnthropic(buildMessages("AiWorkHarness", history));
   expect(cachedResults(followUp)).toEqual(["turn-4-0"]);
   const latest = followUp.messages[followUp.messages.length - 1].content;
   expect(Array.isArray(latest) && latest[latest.length - 1].cache_control).toEqual({ type: "ephemeral" });
@@ -52,7 +52,7 @@ it("advances completed tool-result cache boundaries over four turns and retains 
 });
 
 it("normalizes generic string user turns consistently when older cache boundaries age out", () => {
-  const wire: WireMessage[] = [{ role: "system", content: "OpenCursor" }, { role: "user", content: "First" }];
+  const wire: WireMessage[] = [{ role: "system", content: "AiWorkHarness" }, { role: "user", content: "First" }];
   let previous = toAnthropic(wire);
   for (let i = 0; i < 4; i++) {
     wire.push({ role: "assistant", content: "Answer" }, { role: "user", content: `Next ${i}` });
@@ -67,7 +67,7 @@ it("normalizes generic string user turns consistently when older cache boundarie
 
 it("caches the complete tool-result block without changing nested image content or call pairing", () => {
   const wire: WireMessage[] = [
-    { role: "system", content: "OpenCursor" }, { role: "user", content: "Inspect" },
+    { role: "system", content: "AiWorkHarness" }, { role: "user", content: "Inspect" },
     { role: "assistant", content: null, tool_calls: [{ id: "image", type: "function", function: { name: "Read", arguments: "{}" } }] },
     { role: "tool", tool_call_id: "image", content: [{ type: "text", text: "Image data" }, { type: "image_url", image_url: { url: "data:image/png;base64,YQ==" } }] },
   ];

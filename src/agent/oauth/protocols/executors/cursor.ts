@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -34,7 +34,7 @@ import zlib from "zlib";
 import * as http2Builtin from "node:http2";
 import crypto from "crypto";
 
-// OpenCursor runs this adapter inside the Node extension host.
+// AiWorkHarness runs this adapter inside the Node extension host.
 const http2 = http2Builtin;
 type CursorFrame = { status: "done" } | { status: "skip"; offset: number } | { status: "ok"; offset: number; payload: Buffer };
 type AgentReadResult = { done: true; value?: undefined } | { done: false; value: Uint8Array };
@@ -403,7 +403,7 @@ const CURSOR_EMPTY_TURN_RETRY_DELAY_MS = (() => {
 export function tailOnlyCursorMessages(messages: ProtocolRecord[]): ProtocolRecord[] {
   if (!Array.isArray(messages) || messages.length === 0) return messages || [];
   const systemMessages = messages.filter(
-    (message: ProtocolRecord) => message?.role === ROLE.SYSTEM && !String(message?.content || "").includes("[OpenCursor]"),
+    (message: ProtocolRecord) => message?.role === ROLE.SYSTEM && !String(message?.content || "").includes("[AiWorkHarness]"),
   );
   const chatMessages = messages.filter((message: ProtocolRecord) => message?.role !== ROLE.SYSTEM);
   let anchor = chatMessages.length - 1;
@@ -417,7 +417,7 @@ export function tailOnlyCursorMessages(messages: ProtocolRecord[]): ProtocolReco
   const tail = chatMessages.slice(Math.max(0, tailStart));
   const note: ProtocolRecord = {
     role: ROLE.SYSTEM,
-    content: `[OpenCursor] Long session: ${messages.length} messages trimmed to the latest turn. Answer the current request; re-read files if needed.`,
+    content: `[AiWorkHarness] Long session: ${messages.length} messages trimmed to the latest turn. Answer the current request; re-read files if needed.`,
   };
   return [...systemMessages, note, ...tail];
 }

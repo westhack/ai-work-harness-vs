@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -22,7 +22,7 @@ let onSlowRequest: (() => void) | undefined;
 const context = (key: string): ToolContext => ({ todos: [], shellSessionKey: key, getMode: () => "agent" });
 
 beforeAll(async () => {
-  const managed = process.env.OPENCURSOR_TEST_BROWSER === "managed";
+  const managed = process.env.AIWORKHARNESS_TEST_BROWSER === "managed";
   const candidates = managed ? [(await import("playwright-core")).chromium.executablePath()]
     : process.platform === "win32" ? ["C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"] : ["/usr/bin/google-chrome", "/usr/bin/chromium", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"];
   for (const candidate of candidates) { try { await fs.access(candidate); config.executable = candidate; break; } catch { /* optional local browser */ } }

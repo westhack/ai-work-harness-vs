@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -34,6 +34,7 @@ import { ApiProviderCard, apiKeysFor } from "./ApiProviderCard";
 import { ApiKeyDialog } from "./ApiKeyDialog";
 import { useApiKeyAction } from "./apiKeyActions";
 import { supportsOAuthQuota } from "../../../src/shared/oauthProviders";
+import { t as tr } from "../../shared/i18n";
 
 // Custom providers are OpenAI- or Anthropic-compatible endpoints only.
 const KIND_ORDER: ProviderKind[] = ["openai", "anthropic"];
@@ -115,23 +116,23 @@ function ProviderModal({ provider, method, isNew, onClose, onBack, onSave }: {
               : method === "custom" ? "Connect your own compatible server or gateway."
               : "Connect using an API key from your provider account."}</p></div>
         </div>
-        {method !== "api" && <label className="fc-field"><span>Name</span>
-          <input data-dialog-autofocus value={draft.name} onChange={event => set({ name: event.target.value })} placeholder="My provider" />
+        {method !== "api" && <label className="fc-field"><span>{tr("Name")}</span>
+          <input data-dialog-autofocus value={draft.name} onChange={event => set({ name: event.target.value })} placeholder={tr("My provider")} />
         </label>}
-        {method === "custom" && <label className="fc-field"><span>Type</span>
+        {method === "custom" && <label className="fc-field"><span>{tr("Type")}</span>
           <Select value={draft.kind} onChange={event => { const kind = event.target.value as ProviderKind; set({ kind, baseUrl: PROVIDER_PRESETS[kind].baseUrl }); }}>
             {KIND_ORDER.map(kind => <option key={kind} value={kind}>{customKindLabel(kind)}</option>)}
           </Select>
         </label>}
-        <label className="fc-field"><span>Base URL</span>
+        <label className="fc-field"><span>{tr("Base URL")}</span>
           <input type="url" readOnly={method === "api"} value={draft.baseUrl} onChange={event => set({ baseUrl: event.target.value })} placeholder="https://example.com/v1" />
         </label>
-        {showKey && <label className="fc-field"><span>API key{draft.hasKey ? " (saved)" : method === "custom" ? " (optional)" : ""}</span>
-          <input aria-label="API key" type="password" autoComplete="off" spellCheck={false} data-dialog-autofocus={method === "api" || undefined}
+        {showKey && <label className="fc-field"><span>{tr("API key")}{draft.hasKey ? " (saved)" : method === "custom" ? " (optional)" : ""}</span>
+          <input aria-label={tr("API key")} type="password" autoComplete="off" spellCheck={false} data-dialog-autofocus={method === "api" || undefined}
             value={keyDraft} placeholder={draft.hasKey ? "Leave blank to keep the saved key" : "Enter API key"}
             onChange={event => { setKeyDraft(event.target.value); resetTest(); }} />
         </label>}
-        {showKey && <p className="panel-hint">Keys are stored in VS Code's secure storage.</p>}
+        {showKey && <p className="panel-hint">{tr("Keys are stored in VS Code's secure storage.")}</p>}
         {error && <div className="fc-error" role="alert">{error}</div>}
         <div className="test-row">
           <button type="button" className="btn-ghost" onClick={runTest} disabled={test.status === "testing" || (requiresKey && !keyDraft.trim())}>
@@ -141,8 +142,8 @@ function ProviderModal({ provider, method, isNew, onClose, onBack, onSave }: {
         </div>
       </div>
       <div className="modal-foot provider-connection-actions">
-        <button type="button" className="btn-ghost provider-back" onClick={onBack}><Icon name="chevL" size={14} /> Back to providers</button>
-        <button type="button" className="btn-ghost" onClick={onClose}>Cancel</button>
+        <button type="button" className="btn-ghost provider-back" onClick={onBack}><Icon name="chevL" size={14} /> {tr("Back to providers")}</button>
+        <button type="button" className="btn-ghost" onClick={onClose}>{tr("Cancel")}</button>
         <button type="submit" className="btn-primary" disabled={requiresKey && !keyDraft.trim()}>{isNew ? "Connect" : "Save"}</button>
       </div>
     </form>
@@ -258,15 +259,15 @@ export function OAuthAccountCard({ account, defaultOpen, refreshToken = 0, group
           <Icon name={open ? "chevD" : "chevR"} size={14} />
           {!grouped && <><ProviderIcon provider={account.kind} size={20} /><span>{OAUTH_LABEL[account.kind]}</span></>}
           <span className={grouped ? "oauth-account-name" : "row-desc"}>{!grouped && "· "}{account.email || account.accountId || `Account ${account.id.slice(-6)}`}</span>
-          {!enabled && <span className="badge-tag">Disabled</span>}
+          {!enabled && <span className="badge-tag">{tr("Disabled")}</span>}
         </div>
         <div style={{ display: "flex", gap: 4, alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
           {open && (
-            <button className="icon-btn" onClick={refresh} title="Refresh limits" disabled={loading || resetting}>
+            <button className="icon-btn" onClick={refresh} title={tr("Refresh limits")} disabled={loading || resetting}>
               <Icon name="reset" size={14} />
             </button>
           )}
-          <button className="icon-btn" onClick={() => vscode.postMessage({ type: "oauthDisconnect", id: account.id })} title="Sign out">
+          <button className="icon-btn" onClick={() => vscode.postMessage({ type: "oauthDisconnect", id: account.id })} title={tr("Sign out")}>
             <Icon name="trash" size={14} />
           </button>
           <Toggle label={`Enable ${OAUTH_LABEL[account.kind]} ${account.email || account.accountId || "account"}`} checked={enabled} onChange={(v) => vscode.postMessage({ type: "oauthSetEnabled", id: account.id, enabled: v })} />
@@ -277,7 +278,7 @@ export function OAuthAccountCard({ account, defaultOpen, refreshToken = 0, group
           {loading && <div className="row-desc" role="status">{limits === null ? "Loading limits…" : "Refreshing limits…"}</div>}
           {error && <div className="row-desc" role="alert">{error}{limits !== null && " Showing the last available limits."}</div>}
           {limits && limits.length === 0 ? (
-            <div className="row-desc">No usage limits available.</div>
+            <div className="row-desc">{tr("No usage limits available.")}</div>
           ) : (
             (limits || []).map((l) => {
               const pct = Math.max(0, Math.min(100, Math.round(l.remaining)));
@@ -296,8 +297,8 @@ export function OAuthAccountCard({ account, defaultOpen, refreshToken = 0, group
           )}
           {account.kind === "codex" && resetCredits !== undefined && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, paddingTop: 10, borderTop: "1px solid var(--vscode-panel-border, #333)" }}>
-              <span className="row-desc">Reset credits: {resetCredits}{resetMsg ? ` · ${resetMsg}` : ""}</span>
-              <button className="btn-ghost" onClick={doReset} disabled={resetting || loading || resetNeedsRefresh || resetCredits <= 0} title="Spend one credit to reset your rate-limit windows now">
+              <span className="row-desc">{tr("Reset credits:")} {resetCredits}{resetMsg ? ` · ${resetMsg}` : ""}</span>
+              <button className="btn-ghost" onClick={doReset} disabled={resetting || loading || resetNeedsRefresh || resetCredits <= 0} title={tr("Spend one credit to reset your rate-limit windows now")}>
                 {resetting ? "Resetting…" : "Reset windows"}
               </button>
             </div>
@@ -329,23 +330,23 @@ function OAuthLoginProgress({ status, starting, onCancel }: { status: OAuthStatu
     vscode.postMessage({ type: "oauthManualCallback", kind: pending, url: manual.trim() });
   };
   if (!pending) return null;
-  return <div className="oauth-progress" role="region" aria-label="Account sign-in"><div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+  return <div className="oauth-progress" role="region" aria-label={tr("Account sign-in")}><div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span>{status.pending ? "Signing in to" : "Starting sign-in to"} {OAUTH_LABEL[pending]}…</span>
-            <button className="btn-ghost" onClick={onCancel}>Cancel</button>
+            <button className="btn-ghost" onClick={onCancel}>{tr("Cancel")}</button>
           </div>
-          {status.userCode && <label className="fc-field"><span>Device sign-in code</span><input aria-label="Device sign-in code" readOnly value={status.userCode} onFocus={event => event.currentTarget.select()} /></label>}
+          {status.userCode && <label className="fc-field"><span>{tr("Device sign-in code")}</span><input aria-label={tr("Device sign-in code")} readOnly value={status.userCode} onFocus={event => event.currentTarget.select()} /></label>}
           {status.authorizationUrl && (
             <>
-              <p className="panel-hint" style={{ margin: 0 }}>If the browser did not open, open or copy this link.</p>
-              <input aria-label="Authorization URL" readOnly value={status.authorizationUrl} onFocus={(event) => event.currentTarget.select()} style={{ width: "100%", boxSizing: "border-box" }} />
+              <p className="panel-hint" style={{ margin: 0 }}>{tr("If the browser did not open, open or copy this link.")}</p>
+              <input aria-label={tr("Authorization URL")} readOnly value={status.authorizationUrl} onFocus={(event) => event.currentTarget.select()} style={{ width: "100%", boxSizing: "border-box" }} />
               <div style={{ display: "flex", gap: 6 }}>
-                <button className="btn-ghost" onClick={() => vscode.postMessage({ type: "oauthOpenLogin", kind: pending })}>Open browser</button>
+                <button className="btn-ghost" onClick={() => vscode.postMessage({ type: "oauthOpenLogin", kind: pending })}>{tr("Open browser")}</button>
                 <button className="btn-ghost" onClick={() => vscode.postMessage({ type: "oauthCopyLogin", kind: pending })}>{copied ? "Copied" : "Copy link"}</button>
               </div>
             </>
           )}
-          {deviceLogin ? <p className="panel-hint" style={{ margin: 0 }}>Enter the code in your browser. OpenCursor will finish connecting when you approve the sign-in.</p> : <>
+          {deviceLogin ? <p className="panel-hint" style={{ margin: 0 }}>{tr("Enter the code in your browser. AiWorkHarness will finish connecting when you approve the sign-in.")}</p> : <>
           <p className="panel-hint" style={{ margin: 0 }}>{importLogin ? "Paste your provider access token to connect this account. It will be saved in VS Code's secure storage." : "After signing in, if the browser cannot return to VS Code, paste the full callback URL from its address bar below."}</p>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             <input
@@ -357,7 +358,7 @@ function OAuthLoginProgress({ status, starting, onCancel }: { status: OAuthStatu
               onChange={(e) => setManual(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") submitManual(); }}
             />
-            <button className="btn-ghost" disabled={!manual.trim()} onClick={submitManual}>Submit</button>
+            <button className="btn-ghost" disabled={!manual.trim()} onClick={submitManual}>{tr("Submit")}</button>
           </div>
           </>}
         </div></div>;
@@ -376,13 +377,13 @@ function GitLabAccountSetup({ onClose, onConnect }: { onClose: () => void; onCon
       onConnect({ clientId: clientId.trim(), baseUrl: url.href.replace(/\/+$/, "") });
     } catch { setError("Enter an HTTPS GitLab URL without credentials or query parameters."); }
   };
-  return <SettingsDialog title="Connect GitLab Duo" onClose={onClose} className="provider-connection"><form onSubmit={submit}>
+  return <SettingsDialog title={tr("Connect GitLab Duo")} onClose={onClose} className="provider-connection"><form onSubmit={submit}>
     <div className="modal-body">
-      <p className="panel-hint">Use the application ID for your GitLab OAuth application, then sign in through your browser.</p>
-      <label className="fc-field"><span>GitLab URL</span><input aria-label="GitLab URL" type="url" value={baseUrl} onChange={event => setBaseUrl(event.target.value)} /></label>
-      <label className="fc-field"><span>Application ID</span><input aria-label="GitLab application ID" data-dialog-autofocus value={clientId} onChange={event => setClientId(event.target.value)} /></label>
+      <p className="panel-hint">{tr("Use the application ID for your GitLab OAuth application, then sign in through your browser.")}</p>
+      <label className="fc-field"><span>{tr("GitLab URL")}</span><input aria-label={tr("GitLab URL")} type="url" value={baseUrl} onChange={event => setBaseUrl(event.target.value)} /></label>
+      <label className="fc-field"><span>{tr("Application ID")}</span><input aria-label={tr("GitLab application ID")} data-dialog-autofocus value={clientId} onChange={event => setClientId(event.target.value)} /></label>
       {error && <div className="fc-error" role="alert">{error}</div>}
-    </div><div className="modal-foot"><button type="button" className="btn-ghost" onClick={onClose}>Cancel</button><button type="submit" className="btn-primary" disabled={!clientId.trim()}>Continue to sign in</button></div>
+    </div><div className="modal-foot"><button type="button" className="btn-ghost" onClick={onClose}>{tr("Cancel")}</button><button type="submit" className="btn-primary" disabled={!clientId.trim()}>{tr("Continue to sign in")}</button></div>
   </form></SettingsDialog>;
 }
 
@@ -447,33 +448,33 @@ export function ProvidersPanel({ features, setFeatures, oauthStatus }: {
   const freeProviders = features.providers.filter(provider => provider.id.startsWith("popular:") && !PROVIDER_PRESETS[provider.kind].needsKey);
   const customProviders = features.providers.filter(provider => !provider.id.startsWith("popular:"));
   return <>
-    <div className="providers-heading"><h1 className="page-title">Providers</h1>
-      <button className="btn-primary" onClick={() => setPickerScope(tab)}><Icon name="plus" size={14} /> Add provider</button>
+    <div className="providers-heading"><h1 className="page-title">{tr("Providers")}</h1>
+      <button className="btn-primary" onClick={() => setPickerScope(tab)}><Icon name="plus" size={14} /> {tr("Add provider")}</button>
     </div>
     <div className="sub-tabs">
-      <button className={"sub-tab" + (tab === "api" ? " active" : "")} onClick={() => setTab("api")}>API Providers</button>
-      <button className={"sub-tab" + (tab === "accounts" ? " active" : "")} onClick={() => setTab("accounts")}>OAuth Accounts</button>
-      <button className={"sub-tab" + (tab === "free" ? " active" : "")} onClick={() => setTab("free")}>No-auth Providers</button>
-      <button className={"sub-tab" + (tab === "custom" ? " active" : "")} onClick={() => setTab("custom")}>Custom Providers</button>
+      <button className={"sub-tab" + (tab === "api" ? " active" : "")} onClick={() => setTab("api")}>{tr("API Providers")}</button>
+      <button className={"sub-tab" + (tab === "accounts" ? " active" : "")} onClick={() => setTab("accounts")}>{tr("OAuth Accounts")}</button>
+      <button className={"sub-tab" + (tab === "free" ? " active" : "")} onClick={() => setTab("free")}>{tr("No-auth Providers")}</button>
+      <button className={"sub-tab" + (tab === "custom" ? " active" : "")} onClick={() => setTab("custom")}>{tr("Custom Providers")}</button>
     </div>
     {pending && <OAuthLoginProgress status={oauthStatus} starting={starting} onCancel={cancelLogin} />}
     {tab === "api" && <>
-      <p className="panel-hint">Add your providers, then manage their keys and load balancing here.</p>
-      {!apiProviders.length && <div className="empty-card">No API providers added. Click Add provider to connect your first key.</div>}
+      <p className="panel-hint">{tr("Add your providers, then manage their keys and load balancing here.")}</p>
+      {!apiProviders.length && <div className="empty-card">{tr("No API providers added. Click Add provider to connect your first key.")}</div>}
       {apiProviders.map(provider => <ApiProviderCard key={provider.id} provider={provider}
         onAdd={() => setApiEditing({ provider })} onEdit={credential => setApiEditing({ provider, credential })}
         onToggle={enabled => toggleEnabled(provider.id, enabled)} />)}
     </>}
     {tab === "accounts" && <>
           <div className="oauth-warning">
-            ⚠️ This isn't an official integration. Your provider's terms may not allow it, so the account could be rate-limited, restricted, or banned. Use at your own risk.
+            ⚠️ {tr("This isn't an official integration. Your provider's terms may not allow it, so the account could be rate-limited, restricted, or banned. Use at your own risk.")}
           </div>
-          <p className="panel-hint">Sign in with your existing subscription. Tokens are stored securely and refreshed automatically. You can add multiple accounts.</p>
+          <p className="panel-hint">{tr("Sign in with your existing subscription. Tokens are stored securely and refreshed automatically. You can add multiple accounts.")}</p>
           {[...OAUTH_PROVIDERS].sort((a, b) => Number(b.kind === oauthStatus.pending) - Number(a.kind === oauthStatus.pending))
             .filter((provider) => oauthStatus.errors[provider.kind])
             .map((provider) => <div className="fc-error" role="alert" key={provider.kind}><strong>{provider.label}:</strong> {oauthStatus.errors[provider.kind]}</div>)}
           {oauthStatus.accounts.length === 0 ? (
-            <div className="empty-card">No accounts connected. Click “Add account”.</div>
+            <div className="empty-card">{tr("No accounts connected. Click “Add account”.")}</div>
           ) : (
             [...new Set(oauthStatus.accounts.map(account => account.kind))].map(kind => {
               const accounts = oauthStatus.accounts.filter(account => account.kind === kind);
@@ -486,50 +487,50 @@ export function ProvidersPanel({ features, setFeatures, oauthStatus }: {
                   <span className="provider-logo"><ProviderIcon provider={kind} size={24} /></span>
                   <div className="pr-text"><div className="pr-name">{label}</div><div className="pr-sub">{accounts.length} {accounts.length === 1 ? "account" : "accounts"} · {accounts.filter(account => !account.disabled).length} enabled</div></div>
                   <button className="btn-ghost sm" disabled={!!pending} onClick={() => startOAuth(kind)}>
-                    <Icon name="plus" size={13} /> Add account</button>
+                    <Icon name="plus" size={13} /> {tr("Add account")}</button>
                 </div>
                 <div className="api-provider-routing">
-                  <label><span>Load balancing</span><Select aria-label={`${label} account load balancing`} value={strategy}
+                  <label><span>{tr("Load balancing")}</span><Select aria-label={`${label} account load balancing`} value={strategy}
                     onChange={event => vscode.postMessage({ type: "oauthSetBalance", kind, strategy: event.target.value })}>
-                    {options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    {options.map(option => <option key={option.value} value={option.value}>{tr(option.label)}</option>)}
                   </Select></label>
-                  <p className="panel-hint">{options.find(option => option.value === strategy)?.desc}. Automatic failover uses another enabled {label} account before a response starts.</p>
+                  <p className="panel-hint">{tr(options.find(option => option.value === strategy)?.desc ?? "")}. Automatic failover uses another enabled {label} {tr("account before a response starts.")}</p>
                 </div>
                 <div className="oauth-account-list">{accounts.map(account => <OAuthAccountCard key={account.id} account={account} grouped />)}</div>
               </section>;
             })
           )}
       <div className="panel-actions"><button className="btn-ghost" onClick={() => setPickerScope("accounts")}>
-        <Icon name="plus" size={14} /> Add account</button></div>
+        <Icon name="plus" size={14} /> {tr("Add account")}</button></div>
     </>}
     {tab === "free" && <>
-      <p className="panel-hint">Connect providers that accept requests without an API key or account.</p>
+      <p className="panel-hint">{tr("Connect providers that accept requests without an API key or account.")}</p>
       {customActions.error && <div className="fc-error" role="alert">{customActions.error}</div>}
-      {!freeProviders.length && <div className="empty-card">No no-auth providers added. Click Add provider to choose one.</div>}
+      {!freeProviders.length && <div className="empty-card">{tr("No no-auth providers added. Click Add provider to choose one.")}</div>}
       {freeProviders.map(provider => <section className="api-provider-card" key={provider.id} aria-label={`${provider.name} no-auth provider`}>
         <div className="api-provider-head">
           <span className="provider-logo"><ProviderIcon provider={provider.kind} size={24} /></span>
-          <div className="pr-text"><div className="pr-name">{provider.name}</div><div className="pr-sub">No authentication required · {provider.baseUrl}</div></div>
+          <div className="pr-text"><div className="pr-name">{provider.name}</div><div className="pr-sub">{tr("No authentication required ·")} {provider.baseUrl}</div></div>
           <label className="api-key-toggle"><input type="checkbox" aria-label={`Enable ${provider.name}`} checked={provider.enabled !== false}
-            onChange={event => toggleEnabled(provider.id, event.target.checked)} disabled={customActions.pending} /> Enabled</label>
-          <button className="icon-btn" aria-label={`Remove ${provider.name} provider`} title="Remove provider" disabled={customActions.pending} onClick={() => remove(provider.id)}><Icon name="trash" size={14} /></button>
+            onChange={event => toggleEnabled(provider.id, event.target.checked)} disabled={customActions.pending} /> {tr("Enabled")}</label>
+          <button className="icon-btn" aria-label={`Remove ${provider.name} provider`} title={tr("Remove provider")} disabled={customActions.pending} onClick={() => remove(provider.id)}><Icon name="trash" size={14} /></button>
         </div>
       </section>)}
     </>}
     {tab === "custom" && <>
-      <p className="panel-hint">Connect your own OpenAI-compatible or Anthropic-compatible server or gateway.</p>
+      <p className="panel-hint">{tr("Connect your own OpenAI-compatible or Anthropic-compatible server or gateway.")}</p>
       {customActions.error && <div className="fc-error" role="alert">{customActions.error}</div>}
-      {!customProviders.length && <div className="empty-card">No custom providers yet.</div>}
+      {!customProviders.length && <div className="empty-card">{tr("No custom providers yet.")}</div>}
       {customProviders.map(provider => <div className={"provider-row" + (provider.enabled !== false ? " active" : "")} key={provider.id}>
         <span className="provider-logo"><ProviderIcon provider={provider.kind} size={24} /></span>
         <div className="pr-text"><div className="pr-name">{provider.name || "(unnamed)"}</div>
           <div className="pr-sub">{customKindLabel(provider.kind)} · {provider.baseUrl}{provider.hasKey ? " · key set" : ""}</div></div>
         <button className="btn-ghost sm" onClick={() => setEditing({ provider, isNew: false, method: PROVIDER_PRESETS[provider.kind].needsKey ? "custom" : "local" })}>
-          <Icon name="settings" size={13} /> Edit</button>
+          <Icon name="settings" size={13} /> {tr("Edit")}</button>
         <button className="icon-btn" disabled={customActions.pending} onClick={() => remove(provider.id)} title={`Remove ${provider.name}`}><Icon name="trash" size={14} /></button>
         <Toggle label={`Enable ${provider.name}`} checked={provider.enabled !== false} onChange={value => toggleEnabled(provider.id, value)} />
       </div>)}
-      <div className="panel-actions"><button className="btn-ghost" onClick={() => setPickerScope("custom")}><Icon name="plus" size={14} /> Add Custom Provider</button></div>
+      <div className="panel-actions"><button className="btn-ghost" onClick={() => setPickerScope("custom")}><Icon name="plus" size={14} /> {tr("Add Custom Provider")}</button></div>
     </>}
     {pickerScope && <ProviderPickerDialog scope={pickerScope} features={features} status={{ ...oauthStatus, pending }} onSelect={choose} onClose={() => setPickerScope(null)} />}
     {gitLabSetup && <GitLabAccountSetup onClose={() => setGitLabSetup(false)} onConnect={options => {

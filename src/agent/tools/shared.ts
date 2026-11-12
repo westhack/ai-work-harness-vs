@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -344,7 +344,7 @@ async function getTranscriptDirectory(): Promise<string> {
   if (!transcriptDirectory) transcriptDirectory = (async () => {
     // A private per-host directory prevents account/session collisions. The common
     // root is checked before following it; old host directories expire after 24h.
-    const root = path.join(os.tmpdir(), `opencursor-terminal-${process.getuid?.() ?? "user"}`);
+    const root = path.join(os.tmpdir(), `aiworkharness-terminal-${process.getuid?.() ?? "user"}`);
     await fs.mkdir(root, { recursive: true, mode: 0o700 });
     const stat = await fs.lstat(root);
     if (!stat.isDirectory() || stat.isSymbolicLink() || (process.getuid && stat.uid !== process.getuid())) {

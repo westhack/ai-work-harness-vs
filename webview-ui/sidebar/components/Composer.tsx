@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -23,6 +23,7 @@ import { ComposerEditor, type ComposerCodeBlock } from "./ComposerEditor";
 import { CodeLanguagePicker } from "./CodeLanguagePicker";
 import { getCodeLanguage } from "../../shared/codeLanguages";
 import type { ApprovalPolicy, Attachment, FileIconInfo, MentionCategory, MentionItem, Mode, ModelDef, ModelOption, OutMessage, PersonaInfo, TeamInfo } from "../types";
+import { t as tr } from "../../shared/i18n";
 
 /** Top-level @ menu categories. */
 const MENTION_CATEGORIES: { id: MentionCategory; label: string; icon: IconName; leaf?: boolean }[] = [
@@ -264,9 +265,9 @@ function ContextRing({ used, total }: { used: number; total: number }) {
         />
       </svg>
       <AnimatedTooltip open={open} elementRef={tooltipRef} id={tooltipId} style={style}>
-        <span>Context window:</span>
+        <span>{tr("Context window:")}</span>
         <span>{percent}% used ({100 - percent}% left)</span>
-        <span>{tokens(used)} / {tokens(total)} tokens used</span>
+        <span>{tokens(used)} / {tokens(total)} {tr("tokens used")}</span>
       </AnimatedTooltip>
     </button>
   );
@@ -402,7 +403,7 @@ function ModePicker({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void })
       type="button"
       ref={triggerRef}
       className="pill mode-pill"
-      aria-label="Choose mode"
+      aria-label={tr("Choose mode")}
       aria-expanded={open}
       aria-haspopup="menu"
       aria-controls={open ? menuId : undefined}
@@ -413,10 +414,10 @@ function ModePicker({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void })
       }}
     >
       <Icon name={meta.icon} />
-      <span>{meta.label}</span>
+      <span>{tr(meta.label)}</span>
       <Icon name="chevD" className="cd" />
       {present && createPortal(
-        <div ref={menuRef} id={menuId} role="menu" aria-label="Chat mode" className="mode-dropdown"
+        <div ref={menuRef} id={menuId} role="menu" aria-label={tr("Chat mode")} className="mode-dropdown"
           data-state={exiting ? "closing" : "open"} data-side={side} inert={exiting || undefined} aria-hidden={exiting || undefined}
           style={{ ...style, maxHeight: maxH, overflowY: "auto", pointerEvents: exiting ? "none" : undefined }} onKeyDown={nav.menuKey} onClick={event => event.stopPropagation()}>
           {MODES.map((o, index) => (
@@ -438,7 +439,7 @@ function ModePicker({ mode, onMode }: { mode: Mode; onMode: (m: Mode) => void })
               <span className="mi-icon">
                 <Icon name={o.icon} />
               </span>
-              <span className="mi-label">{o.label}</span>
+              <span className="mi-label">{tr(o.label)}</span>
               {o.id === mode && (
                 <span className="mi-check">
                   <Icon name="check" />
@@ -464,7 +465,7 @@ function TeamPicker({ teams, selected, onChange }: { teams: TeamInfo[]; selected
   const { style, maxH, side } = useAnchoredMenu(open, triggerRef, menuRef, [teams.length]);
   const nav = usePickerNavigation(open, setOpen, triggerRef, menuRef, teams.findIndex(team => selected.includes(team.id)), teams.length, maxH);
   const picked = teams.filter((t) => selected.includes(t.id));
-  const label = picked.length === 0 ? "No team" : picked.length === 1 ? picked[0].name : `${picked.length} teams`;
+  const label = picked.length === 0 ? tr("No team") : picked.length === 1 ? tr(picked[0].name) : tr("{count} teams", { count: picked.length });
   const toggle = (id: string) => {
     if (!open) return;
     onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id]);
@@ -474,12 +475,12 @@ function TeamPicker({ teams, selected, onChange }: { teams: TeamInfo[]; selected
       type="button"
       ref={triggerRef}
       className="pill mode-pill"
-      aria-label="Choose teams"
+      aria-label={tr("Choose teams")}
       aria-haspopup="menu"
       aria-expanded={open}
       aria-controls={open ? menuId : undefined}
       onKeyDown={nav.triggerKey}
-      title={picked.length ? picked.map((t) => `${t.name}: ${t.members.join(", ")}`).join("\n") : "Select the team(s) that will work on this task"}
+      title={picked.length ? picked.map((t) => `${tr(t.name)}: ${t.members.map((m) => tr(m)).join(", ")}`).join("\n") : tr("Select the team(s) that will work on this task")}
       onClick={(e) => {
         e.stopPropagation();
         if (open) nav.close(); else nav.show();
@@ -489,10 +490,10 @@ function TeamPicker({ teams, selected, onChange }: { teams: TeamInfo[]; selected
       <span>{label}</span>
       <Icon name="chevD" className="cd" />
       {present && createPortal(
-        <div ref={menuRef} id={menuId} role="menu" aria-label="Teams" className="mode-dropdown team-dropdown"
+        <div ref={menuRef} id={menuId} role="menu" aria-label={tr("Teams")} className="mode-dropdown team-dropdown"
           data-state={exiting ? "closing" : "open"} data-side={side} inert={exiting || undefined} aria-hidden={exiting || undefined}
           style={{ ...style, maxHeight: maxH, overflowY: "auto", pointerEvents: exiting ? "none" : undefined }} onKeyDown={nav.menuKey} onClick={event => event.stopPropagation()}>
-          {teams.length === 0 && <div className="mode-item" role="presentation">No teams configured</div>}
+          {teams.length === 0 && <div className="mode-item" role="presentation">{tr("No teams configured")}</div>}
           {teams.map((t, index) => (
             <div
               key={t.id}
@@ -511,8 +512,8 @@ function TeamPicker({ teams, selected, onChange }: { teams: TeamInfo[]; selected
                 <Icon name="users" />
               </span>
               <span className="mi-label">
-                {t.name}
-                <span className="mi-sub">{t.members.join(", ") || "no members"}</span>
+                {tr(t.name)}
+                <span className="mi-sub">{t.members.map((m) => tr(m)).join(", ") || tr("no members")}</span>
               </span>
               {selected.includes(t.id) && (
                 <span className="mi-check">
@@ -564,13 +565,13 @@ function ThinkingControl({ value, values, onChange }: { value: string; values: s
   const adaptive = value === "adaptive";
   return (
     <div className="mo-thinking">
-      <div className="mo-toggle" role="switch" tabIndex={0} aria-checked={on} aria-label="Thinking" onKeyDown={(event) => activateFromKeyboard(event, () => onChange(on ? "disabled" : onValue))} onClick={() => onChange(on ? "disabled" : onValue)}>
-        <span className="mo-label">Thinking</span>
+      <div className="mo-toggle" role="switch" tabIndex={0} aria-checked={on} aria-label={tr("Thinking")} onKeyDown={(event) => activateFromKeyboard(event, () => onChange(on ? "disabled" : onValue))} onClick={() => onChange(on ? "disabled" : onValue)}>
+        <span className="mo-label">{tr("Thinking")}</span>
         <span className={"mo-switch" + (on ? " on" : "")}><span className="mo-knob" /></span>
       </div>
       {on && canChooseAdaptive && (
-        <div className="mo-toggle sub" role="switch" tabIndex={0} aria-checked={adaptive} aria-label="Adaptive thinking" onKeyDown={(event) => activateFromKeyboard(event, () => onChange(adaptive ? "enabled" : "adaptive"))} onClick={() => onChange(adaptive ? "enabled" : "adaptive")}>
-          <span className="mo-label">Adaptive</span>
+        <div className="mo-toggle sub" role="switch" tabIndex={0} aria-checked={adaptive} aria-label={tr("Adaptive thinking")} onKeyDown={(event) => activateFromKeyboard(event, () => onChange(adaptive ? "enabled" : "adaptive"))} onClick={() => onChange(adaptive ? "enabled" : "adaptive")}>
+          <span className="mo-label">{tr("Adaptive")}</span>
           <span className={"mo-switch" + (adaptive ? " on" : "")}><span className="mo-knob" /></span>
         </div>
       )}
@@ -595,7 +596,7 @@ function ModelOptions({ model, onChange }: { model: ModelDef; onChange: (opts: M
   const descriptionId = React.useId();
   const setOpt = (i: number, value: string) => onChange(model.options.map((o, idx) => (idx === i ? { ...o, value } : o)));
   if (model.options.length === 0) {
-    return <div className="mo-empty">No options for this model.</div>;
+    return <div className="mo-empty">{tr("No options for this model.")}</div>;
   }
   return (
     <div className="model-options">
@@ -608,19 +609,19 @@ function ModelOptions({ model, onChange }: { model: ModelDef; onChange: (opts: M
             className="mo-toggle"
             role="switch"
             tabIndex={0}
-            aria-label={o.label}
+            aria-label={tr(o.label)}
             aria-checked={o.value === "true"}
             onKeyDown={(event) => activateFromKeyboard(event, () => setOpt(i, o.value === "true" ? "false" : "true"))}
             onClick={() => setOpt(i, o.value === "true" ? "false" : "true")}
           >
-            <span className="mo-label">{o.label}</span>
+            <span className="mo-label">{tr(o.label)}</span>
             <span className={"mo-switch" + (o.value === "true" ? " on" : "")}>
               <span className="mo-knob" />
             </span>
           </div>
         ) : (
           <div key={i} className="mo-group">
-            <div className="mo-group-label">{o.label}</div>
+            <div className="mo-group-label">{tr(o.label)}</div>
             {o.description && <p id={`${descriptionId}-${i}`} className="mo-description">{o.description}</p>}
             {(o.values || []).map((v) => (
               <div key={v} className={"mo-item" + (v === o.value ? " active" : "")} role="button" tabIndex={0} aria-label={`${o.label}: ${VALUE_LABELS[v] ?? v}`} aria-describedby={o.description ? `${descriptionId}-${i}` : undefined} aria-pressed={v === o.value} onKeyDown={(event) => activateFromKeyboard(event, () => setOpt(i, v))} onClick={() => setOpt(i, v)}>
@@ -671,10 +672,10 @@ function ModelRow({
       {optionSummary(m.options) && <span className="model-item-sum">{optionSummary(m.options)}</span>}
       {editable && (
         <span className="model-item-actions" onClick={(e) => e.stopPropagation()}>
-          <button className={"mia-btn" + (reset ? " ok" : "")} title="Reset options" onClick={doReset}>
+          <button className={"mia-btn" + (reset ? " ok" : "")} title={tr("Reset options")} onClick={doReset}>
             <Icon name={reset ? "check" : "reset"} />
           </button>
-          <button className="mia-btn" title="Edit options" onClick={() => onEdit(m.id)}>
+          <button className="mia-btn" title={tr("Edit options")} onClick={() => onEdit(m.id)}>
             <Icon name="edit" />
           </button>
         </span>
@@ -689,7 +690,7 @@ function HeadReset({ onReset }: { onReset: () => void }) {
   return (
     <button
       className={"mp-reset" + (ok ? " ok" : "")}
-      title="Reset to defaults"
+      title={tr("Reset to defaults")}
       onClick={() => {
         onReset();
         setOk(true);
@@ -784,7 +785,7 @@ function ModelPicker({
       className="model-select"
       role="button"
       tabIndex={0}
-      aria-label="Choose model"
+      aria-label={tr("Choose model")}
       aria-expanded={open}
       title={[selLabel, summary].filter(Boolean).join(" · ")}
       onKeyDown={(e) => {
@@ -812,8 +813,8 @@ function ModelPicker({
           {editing ? (
             <div className="model-picker-view">
               <div className="mp-head">
-                <button className="mp-back" title="Back" onClick={() => setEditingId(null)}>
-                  <Icon name="chevR" className="mp-back-icon" /> Back
+                <button className="mp-back" title={tr("Back")} onClick={() => setEditingId(null)}>
+                  <Icon name="chevR" className="mp-back-icon" /> {tr("Back")}
                 </button>
                 <span className="mp-head-title">{editing.name}</span>
                 <HeadReset onReset={() => onResetOptions(editing.id)} />
@@ -829,7 +830,7 @@ function ModelPicker({
                 <input
                   ref={searchRef}
                   value={query}
-                  placeholder="Search models"
+                  placeholder={tr("Search models")}
                   onChange={(e) => setQuery(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                 />
@@ -843,7 +844,7 @@ function ModelPicker({
                   {selected === "auto" && <Icon name="check" className="model-item-check" />}
                 </div>
                 */}
-                {filtered.length === 0 && <div className="model-item dim">No matches</div>}
+                {filtered.length === 0 && <div className="model-item dim">{tr("No matches")}</div>}
                 {byProvider.map(([provName, list]) => (
                   <React.Fragment key={provName}>
                     <div className="mp-group-label">{provName}</div>
@@ -852,11 +853,11 @@ function ModelPicker({
                     ))}
                   </React.Fragment>
                 ))}
-                {llamacppLocal.length > 0 && <div className="mp-group-label">Local · llama.cpp</div>}
+                {llamacppLocal.length > 0 && <div className="mp-group-label">{tr("Local · llama.cpp")}</div>}
                 {llamacppLocal.map((m) => (
                   <ModelRow key={m.id} m={m} selected={selected} editingId={editingId} onSelect={pick} onEdit={setEditingId} onReset={onResetOptions} />
                 ))}
-                {ollamaLocal.length > 0 && <div className="mp-group-label">Local · Ollama</div>}
+                {ollamaLocal.length > 0 && <div className="mp-group-label">{tr("Local · Ollama")}</div>}
                 {ollamaLocal.map((m) => (
                   <ModelRow key={m.id} m={m} selected={selected} editingId={editingId} onSelect={pick} onEdit={setEditingId} onReset={onResetOptions} />
                 ))}
@@ -871,7 +872,7 @@ function ModelPicker({
                   }}
                 >
                   <Icon name="plus" className="model-item-ico" />
-                  <span className="model-item-name">Add models</span>
+                  <span className="model-item-name">{tr("Add models")}</span>
                 </div>
               </div>
             </div>
@@ -1426,7 +1427,7 @@ export function Composer({
       >
         {dragOver && (
           <div className="drop-hint">
-            <Icon name="at" size={13} /> Drop to mention &nbsp;·&nbsp; hold <kbd>Shift</kbd> if it opens the file instead
+            <Icon name="at" size={13} /> {tr("Drop to mention  ·  hold")} <kbd>{tr("Shift")}</kbd> {tr("if it opens the file instead")}
           </div>
         )}
         {attachments.length > 0 && (
@@ -1478,7 +1479,7 @@ export function Composer({
                       onClick={() => pickCategory(c.id)}
                     >
                       <Icon name={c.icon} size={14} />
-                      <span className="mi-name">{c.label}</span>
+                      <span className="mi-name">{tr(c.label)}</span>
                       {!c.leaf && <Icon name="chevR" size={12} className="mi-chev" />}
                     </div>
                   );
@@ -1487,7 +1488,7 @@ export function Composer({
             ) : (
               <>
                 <div className="mention-head">
-                  <Icon name="at" size={11} /> {MENTION_CATEGORIES.find((c) => c.id === mentionCat)?.label ?? mentionCat}
+                  <Icon name="at" size={11} /> {tr(MENTION_CATEGORIES.find((c) => c.id === mentionCat)?.label ?? mentionCat)}
                 </div>
                 {mentionItems.length === 0 ? (
                   <div className="mention-empty">{mentionCat === "link" ? "Type or paste a URL after @" : "No matches"}</div>
@@ -1514,9 +1515,9 @@ export function Composer({
           className={"editor" + (showPlaceholder && attachments.length === 0 ? " empty" : "")}
           contentEditable
           role="textbox"
-          aria-label={editing ? "Edit message" : "Message OpenCursor"}
+          aria-label={editing ? tr("Edit message") : tr("Message AiWorkHarness")}
           aria-multiline="true"
-          data-placeholder={isFirst ? "Ask OpenCursor anything, @ to add context" : "Add a follow-up"}
+          data-placeholder={isFirst ? tr("Ask AiWorkHarness anything, @ to add context") : tr("Add a follow-up")}
           suppressContentEditableWarning
           onDragOver={(e) => e.preventDefault()}
           onClick={(e) => {
@@ -1686,11 +1687,11 @@ export function Composer({
             <CodeLanguagePicker value={block.language} detectedLabel={codeLabels.get(block.id) || ""}
               onChange={language => richEditor.current?.setCodeLanguage(block.id, language)} />
             <div className="composer-code-actions">
-              <button type="button" aria-label="Insert text before code block" title="Insert text before code block"
+              <button type="button" aria-label={tr("Insert text before code block")} title={tr("Insert text before code block")}
                 onClick={() => richEditor.current?.insertTextBesideCode(block.id, -1)}><Icon name="arrowUp" size={14} /></button>
-              <button type="button" aria-label="Insert text after code block" title="Insert text after code block"
+              <button type="button" aria-label={tr("Insert text after code block")} title={tr("Insert text after code block")}
                 onClick={() => richEditor.current?.insertTextBesideCode(block.id, 1)}><Icon name="arrowDown" size={14} /></button>
-              <button type="button" aria-label="Remove code block" title="Remove code block"
+              <button type="button" aria-label={tr("Remove code block")} title={tr("Remove code block")}
                 onClick={() => richEditor.current?.removeCodeBlock(block.id)}><Icon name="trash" size={14} /></button>
             </div>
           </div>,
@@ -1727,14 +1728,14 @@ export function Composer({
             })()}
             <ModelPicker models={models} modelList={modelList} selected={selectedModel} onSelect={onSelectModel} onSaveOptions={onSaveModelOptions} onResetOptions={onResetModelOptions} />
             {editing && (
-              <button className="attach-btn" title="Cancel edit (Esc)" onClick={() => onCancelEdit?.()}>
+              <button className="attach-btn" title={tr("Cancel edit (Esc)")} onClick={() => onCancelEdit?.()}>
                 <Icon name="close" size={15} />
               </button>
             )}
             <button
               className={"send-btn" + (showStop ? " stop" : canSend ? "" : " disabled")}
-              title={showStop ? "Stop" : `${editing ? "Resend" : isRunning ? "Queue message" : "Send"} (${submitWithCtrlEnter ? "Ctrl+Enter" : "Enter"})`}
-              aria-label={showStop ? "Stop" : editing ? "Resend" : isRunning ? "Queue message" : "Send"}
+              title={showStop ? tr("Stop") : `${editing ? tr("Resend") : isRunning ? tr("Queue message") : tr("Send")} (${submitWithCtrlEnter ? "Ctrl+Enter" : "Enter"})`}
+              aria-label={showStop ? tr("Stop") : editing ? tr("Resend") : isRunning ? tr("Queue message") : tr("Send")}
               disabled={!showStop && !canSend}
               onClick={showStop ? onCancel : submit}
             >
@@ -1754,7 +1755,7 @@ export function Composer({
           <ModePicker mode={mode} onMode={onMode} />
           {mode === "project" && <TeamPicker teams={teams ?? []} selected={activeTeamIds ?? []} onChange={(ids) => onTeams?.(ids)} />}
         </div>
-        {persona && persona.id !== "default" && <span className="composer-persona" title={persona.description}><Icon name="agent" size={13} />{persona.name}</span>}
+        {persona && persona.id !== "default" && <span className="composer-persona" title={tr(persona.description)}><Icon name="agent" size={13} />{tr(persona.name)}</span>}
       </div>
       <ImagePreview images={previewImages} activeId={previewImageId} onClose={() => setPreviewImageId(null)} />
     </div>

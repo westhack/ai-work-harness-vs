@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -17,7 +17,7 @@ import { DefaultExecutor } from "./default.js";
  * CodeBuddy is OpenAI-compatible but rejects non-stream chat requests
  * (HTTP 400, code 11101 "Non-stream chat request is currently not supported").
  * The same-format (openai→openai) translator path leaves body.stream as the
- * client sent it, so we force it true here — OpenCursor still re-aggregates the
+ * client sent it, so we force it true here — AiWorkHarness still re-aggregates the
  * SSE into a JSON response for non-streaming clients.
  */
 export class CodeBuddyExecutor extends DefaultExecutor {
@@ -59,7 +59,7 @@ export class CodeBuddyExecutor extends DefaultExecutor {
     }
 
     // CodeBuddy only surfaces model reasoning when the request carries the CLI's
-    // OpenAI-style params: reasoning_effort + reasoning_summary:"auto". OpenCursor's
+    // OpenAI-style params: reasoning_effort + reasoning_summary:"auto". AiWorkHarness's
     // thinking pipeline sets reasoning_effort only when the client asks, and never
     // sets reasoning_summary — so reasoning never shows. Mirror the CLI here.
     const eff = transformed.reasoning_effort;

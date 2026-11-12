@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -24,6 +24,7 @@ import type {
 } from "../../src/shared/turns";
 import type { ChatWorkspaceState, ConversationGoal, GoalStatus, QueuedMessage, ReviewTarget } from "../../src/shared/chatSession";
 import type { ApprovalPolicy } from "../../src/agent/approvalPolicy";
+import type { UiLanguage } from "../../src/shared/i18n";
 export type { ApprovalPolicy } from "../../src/agent/approvalPolicy";
 export type {
   Mode,
@@ -105,14 +106,14 @@ export type UiPrefs = { chatTextSize: string; motion?: "full" | "system" | "redu
 /** A subagent team as shown in the composer's Project-mode picker. */
 export type TeamInfo = { id: string; name: string; description: string; members: string[] };
 export type InMessage =
-  | { type: "initialState"; mode: Mode; selectedModel: string; activeId?: string; turns: Turn[]; personas: PersonaInfo[]; activePersonaId: string; hasProviders: boolean; teams?: TeamInfo[]; activeTeamIds?: string[]; runningConvIds?: string[]; uiPrefs?: UiPrefs; usedTokens?: number; workspaceState?: ChatWorkspaceState; workspaceRoot?: string; approvalPolicy?: ApprovalPolicy; allowModelOutputEdits?: boolean }
+  | { type: "initialState"; mode: Mode; selectedModel: string; activeId?: string; turns: Turn[]; personas: PersonaInfo[]; activePersonaId: string; hasProviders: boolean; teams?: TeamInfo[]; activeTeamIds?: string[]; runningConvIds?: string[]; uiPrefs?: UiPrefs; usedTokens?: number; workspaceState?: ChatWorkspaceState; workspaceRoot?: string; approvalPolicy?: ApprovalPolicy; allowModelOutputEdits?: boolean; language?: UiLanguage }
   | { type: "workflowState"; queues: Record<string, QueuedMessage[]>; steeringQueues?: Record<string, QueuedMessage[]>; goals: Record<string, ConversationGoal> }
   | { type: "queueSteeringResult"; convId: string; requestId: string; accepted: boolean }
   | { type: "requestAccepted"; requestId: string; convId: string; created: boolean }
   | { type: "steeringAccepted"; convId: string }
   | { type: "queueDraft"; convId: string; draft: { text: string; attachments: Attachment[] } }
   | { type: "conversationSearchResults"; requestId: number; list: ConversationSummary[] }
-  | { type: "configState"; personas: PersonaInfo[]; activePersonaId: string; hasProviders: boolean; teams?: TeamInfo[]; activeTeamIds?: string[]; uiPrefs?: UiPrefs; approvalPolicy?: ApprovalPolicy }
+  | { type: "configState"; personas: PersonaInfo[]; activePersonaId: string; hasProviders: boolean; teams?: TeamInfo[]; activeTeamIds?: string[]; uiPrefs?: UiPrefs; approvalPolicy?: ApprovalPolicy; language?: UiLanguage }
   | { type: "modelsFetched"; models: string[]; modelList?: ModelDef[] }
   | { type: "modelSelected"; model: string }
   | { type: "conversations"; list: ConversationSummary[]; activeId?: string; runningConvIds?: string[] }

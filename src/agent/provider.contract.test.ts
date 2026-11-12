@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -25,8 +25,8 @@ beforeEach(async () => {
   requests = [];
   const kinds = ["claude-code", "codex", "antigravity"] as const;
   initOAuth({
-    globalState: { get: (key: string, fallback: unknown) => key === "ocursor.oauth.accountIds" ? kinds.map((kind) => `contract-${kind}`) : fallback },
-    secrets: { get: async (key: string) => JSON.stringify({ id: key.replace("ocursor.oauth.acct.", ""), kind: kinds.find((kind) => key.endsWith(kind)), accessToken: "fixture", refreshToken: "fixture", expiresAt: Date.now() + 3_600_000, projectId: "fixture" }) },
+    globalState: { get: (key: string, fallback: unknown) => key === "aiworkharness.oauth.accountIds" ? kinds.map((kind) => `contract-${kind}`) : fallback },
+    secrets: { get: async (key: string) => JSON.stringify({ id: key.replace("aiworkharness.oauth.acct.", ""), kind: kinds.find((kind) => key.endsWith(kind)), accessToken: "fixture", refreshToken: "fixture", expiresAt: Date.now() + 3_600_000, projectId: "fixture" }) },
   } as unknown as Parameters<typeof initOAuth>[0]);
   await vi.waitFor(() => expect(kinds.every(isConnected)).toBe(true));
   fetchMock = vi.fn(async (url: string, init: RequestInit) => {
@@ -156,7 +156,7 @@ describe("complete provider request contracts", () => {
       { kind: "assistant", text: "Checking.", thinking: "Different UI-only thought", calls: [tool.call], chatReasoning: state.reasoning },
       { kind: "tool-result", callId: "read", name: "Read", output: "file contents", status: "completed" },
     ]));
-    await collect({ apiBaseUrl: `${apiBaseUrl}/`, model, messages: buildMessages("OpenCursor", saved) });
+    await collect({ apiBaseUrl: `${apiBaseUrl}/`, model, messages: buildMessages("AiWorkHarness", saved) });
     const assistant = requests[0].body.messages.find((message: any) => message.role === "assistant");
     expect(assistant.reasoning_content).toBe("Inspect the file first.");
     expect(assistant.tool_calls[0].id).toBe("read");
@@ -202,7 +202,7 @@ describe("complete provider request contracts", () => {
       const ids = Array.from({ length: turn === 3 ? 25 : 1 }, (_, i) => `read-${turn}-${i}`);
       history.push({ kind: "assistant", text: "", calls: ids.map(id => ({ id, name: "Read", arguments: '{"path":"app.ts"}' })) },
         ...ids.map(id => ({ kind: "tool-result" as const, callId: id, name: "Read", output: `Result ${id}`, status: "completed" as const })));
-      const messages = buildMessages("OpenCursor", history);
+      const messages = buildMessages("AiWorkHarness", history);
       const source = JSON.stringify(messages);
       await collect({ messages, anthropic: true, oauthKind, model: "claude-sonnet-4-6" });
       const body = requests[requests.length - 1].body;
@@ -218,10 +218,10 @@ describe("complete provider request contracts", () => {
     const context = snapshotUserContext({ userInfo: "Workspace rules", openFiles: "app.ts", timestamp: "first" });
     const history: Step[] = [{ kind: "user", text: "First request", context }, { kind: "assistant", text: "First answer", calls: [] }];
     const options = { oauthKind, ...(oauthKind === "claude-code" ? { model: "claude-sonnet-4-6", anthropic: true } : {}) };
-    await collect({ ...options, messages: buildMessages("OpenCursor", history) });
+    await collect({ ...options, messages: buildMessages("AiWorkHarness", history) });
     const restored: Step[] = JSON.parse(JSON.stringify(history));
     restored.push({ kind: "user", text: "Follow-up", context: snapshotUserContext({ ...context, timestamp: "second" }, context) });
-    await collect({ ...options, messages: buildMessages("OpenCursor", restored) });
+    await collect({ ...options, messages: buildMessages("AiWorkHarness", restored) });
     // Anthropic's four supported cache markers roll forward independently of
     // content. Their positions are provider metadata, not instruction changes.
     const contentOnly = (value: unknown) => JSON.parse(JSON.stringify(value, (key, item) => key === "cache_control" ? undefined : item));

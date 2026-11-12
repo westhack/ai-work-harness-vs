@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -175,7 +175,7 @@ export class McpConnection {
     await this._request("initialize", {
         protocolVersion: "2024-11-05",
         capabilities: this.host?.elicit ? { elicitation: { form: {}, url: {} } } : {},
-        clientInfo: { name: "ocursor", version: "1.0.0" },
+        clientInfo: { name: "aiworkharness", version: "1.0.0" },
       }, undefined, timeoutMs);
     this._notify("notifications/initialized", {});
 
@@ -200,7 +200,7 @@ export class McpConnection {
       // Do not forward arbitrary configured secret headers through HTTP redirects.
       return fetch(input, { ...init, headers, redirect: "error" });
     };
-    const client = new Client({ name: "opencursor", version: "0.1.5" }, { capabilities: this.host?.elicit ? { elicitation: { form: {}, url: {} } } : {} });
+    const client = new Client({ name: "aiworkharness", version: "0.1.5" }, { capabilities: this.host?.elicit ? { elicitation: { form: {}, url: {} } } : {} });
     client.onerror = (error) => { this.lastError = error.message; };
     client.onclose = () => { if (this.client === client) this.connected = false; };
     client.setNotificationHandler(ToolListChangedNotificationSchema, async () => { await this.refreshTools().catch((error) => { this.lastError = String(error); }); this.host?.notification?.(this.config.name, "notifications/tools/list_changed", {}); });

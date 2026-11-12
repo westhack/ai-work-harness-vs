@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -31,7 +31,7 @@ export async function containerGraderArguments(profile: ExecutionProfile, worksp
   const mount = args.findIndex(value => value.startsWith("type=bind,"));
   args[mount] += ",readonly";
   const workdir = args.indexOf("--workdir"); args[workdir + 1] = "/grader";
-  args.splice(args.length - 1, 0, "--mount", `type=bind,source=${directory},target=/grader,readonly`, "--env", "OPENCURSOR_EVAL_WORKSPACE=/workspace", "--env", `OPENCURSOR_EVAL_BASE_REVISION=${baseRevision}`);
+  args.splice(args.length - 1, 0, "--mount", `type=bind,source=${directory},target=/grader,readonly`, "--env", "AIWORKHARNESS_EVAL_WORKSPACE=/workspace", "--env", `AIWORKHARNESS_EVAL_BASE_REVISION=${baseRevision}`);
   args.push(grader.executable, ...grader.args);
   return args;
 }
@@ -56,9 +56,9 @@ export async function evaluate(manager: JobManager, manifest: EvaluationCase[], 
       const grader = item.grader;
       let output: string;
       try {
-        const container = profile.kind === "container" ? `ocursor-grader-${randomUUID()}` : undefined;
+        const container = profile.kind === "container" ? `aiworkharness-grader-${randomUUID()}` : undefined;
         const args = container ? await containerGraderArguments(profile, workspace, grader, state.baseRevision!, container) : grader.args;
-        const env: NodeJS.ProcessEnv = { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, TEMP: process.env.TEMP, HOME: process.env.HOME, OPENCURSOR_EVAL_WORKSPACE: workspace, OPENCURSOR_EVAL_BASE_REVISION: state.baseRevision };
+        const env: NodeJS.ProcessEnv = { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, TEMP: process.env.TEMP, HOME: process.env.HOME, AIWORKHARNESS_EVAL_WORKSPACE: workspace, AIWORKHARNESS_EVAL_BASE_REVISION: state.baseRevision };
         // These configure the trusted Docker CLI, not the grader process. Only
         // the two explicit --env values above are forwarded into the container.
         if (container) for (const key of ["DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG", "DOCKER_TLS_VERIFY", "DOCKER_CERT_PATH", "XDG_RUNTIME_DIR"]) env[key] = process.env[key];

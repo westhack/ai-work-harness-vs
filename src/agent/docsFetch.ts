@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -51,7 +51,7 @@ export async function fetchDocResource(url: string, options: {
       options.budget.requests++;
       const res = await withDocAbort(fetch(current, {
         signal, redirect: "manual",
-        headers: { "user-agent": "OpenCursor-Docs", accept: options.metadata ? "text/plain,application/xml,text/xml,text/markdown" : "text/html,text/markdown,text/plain;q=0.9", "accept-language": "en;q=0.9" },
+        headers: { "user-agent": "AiWorkHarness-Docs", accept: options.metadata ? "text/plain,application/xml,text/xml,text/markdown" : "text/html,text/markdown,text/plain;q=0.9", "accept-language": "en;q=0.9" },
       }), signal);
       if ([301, 302, 303, 307, 308].includes(res.status)) {
         await res.body?.cancel().catch(() => {});
@@ -144,7 +144,7 @@ export function parseDocRobots(text: string): {
     }
   }
   groups.push(group);
-  const specific = groups.filter(g => g.agents.includes("opencursor-docs"));
+  const specific = groups.filter(g => g.agents.includes("aiworkharness-docs"));
   const applicable = specific.length ? specific : groups.filter(g => g.agents.includes("*"));
   const rules = applicable.flatMap(g => g.rules);
   const inputSignals = [...globalInputSignals, ...applicable.flatMap(g => g.inputSignals)];

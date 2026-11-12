@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -10,12 +10,18 @@
 import * as vscode from "vscode";
 import { SettingsManager } from "../stores/settingsManager";
 import { runAgent } from "../agent/loop";
+import { runExternalEngine, type EngineId } from "../agent/engines/dispatch";
 import { AgentEvent, Mode, Attachment } from "../agent/types";
-import { listModels, generateTitle, pickModel } from "../agent/provider";
+import { listModels, generateTitle, pickModel, streamChat } from "../agent/provider";
 import { providerApiKeyPool, type ApiKeyPool } from "../agent/provider/apiKeyPool";
+import { ensureBridge, setBridgeDeps } from "../agent/bridge";
+import { setBridgeModelSource } from "../agent/engines/bridgeEnv";
+import { pickBridgeModel } from "../agent/bridge/pickModel";
+import type { BridgeModelResolution } from "../agent/bridge/server";
 import { OAUTH_KINDS, isOAuthProviderKind } from "../shared/oauthProviders";
 import { PROVIDER_PRESETS } from "../shared/providerCatalog";
 import { renderWebviewHtml, webviewResourceRoots } from "./webviewHtml";
+import { currentLanguage, hostText, type UiLanguage } from "../shared/i18n";
 import { ConversationStore, capRunEvents, titleFromText } from "../stores/conversationStore";
 import { applyModelOutputEdit, type ModelOutputEdit } from "./sidebar/modelOutputEdit";
 import * as os from "node:os";
@@ -51,8 +57,27 @@ function isWebUrl(value: unknown): value is string {
   try { const url = new URL(value); return url.protocol === "http:" || url.protocol === "https:"; } catch { return false; }
 }
 
+/** Lazily created diagnostics channel for the external-engine bridge. */
+let bridgeLogChannel: vscode.OutputChannel | undefined;
+
+function bridgeLog(level: "info" | "warn" | "error", message: string): void {
+  try {
+    const output = (bridgeLogChannel ??= vscode.window.createOutputChannel("AiWorkHarness Bridge"));
+    const stamp = new Date().toTimeString().slice(0, 8);
+    output.appendLine(`[${stamp}] ${level} ${message}`);
+  } catch {
+    // Diagnostics must never break a request.
+  }
+}
+
+/** CLI-facing English error (see _bridgeResolveModel); keeps the host's reason. */
+function bridgeProviderError(error: unknown): Error {
+  const reason = error instanceof Error ? error.message : "";
+  return new Error(`No provider is configured for the selected model${reason ? `: ${reason}` : ""}`);
+}
+
 export class SidebarProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "ocursor.chatView";
+  public static readonly viewType = "aiworkharness.chatView";
   private _view?: vscode.WebviewView;
   /** One independent agent run per conversation, so chats run concurrently. */
   private _sessions = new Map<string, RunSession>();
@@ -70,7 +95,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   /** Mentions requested before the webview reported `ready` (e.g. the first Ctrl+L). */
   private _pendingMentions: HostMentionItem[] = [];
   private _webviewReady = false;
-  /** Shared debug/log output channel (View → Output → "OpenCursor"). */
+  /** Shared debug/log output channel (View → Output → "AiWorkHarness"). */
   public static get log(): vscode.OutputChannel {
     return getLog();
   }
@@ -89,7 +114,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private _fetchedCache: { providerId: string; ids: string[] }[] | null = null;
   private _fetchInflight: Promise<void> | null = null;
   private _fetchNeedsRefresh = false;
-  private static readonly MODELS_CACHE_KEY = "ocursor.modelsFetched.v1";
+  private static readonly MODELS_CACHE_KEY = "aiworkharness.modelsFetched.v1";
 
   constructor(
     private readonly context: vscode.ExtensionContext,
@@ -102,10 +127,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       SidebarProvider.MODELS_CACHE_KEY,
     );
     if (disk?.fetched?.length) this._fetchedCache = disk.fetched;
+    // External engines receive the model the bridge would resolve, so the CLI's
+    // own model ids never reach providers that do not serve them.
+    setBridgeModelSource(() => {
+      const forced = this.featureStore.get().engineBridgeModel?.trim();
+      const id = forced || this.settingsManager.getSettings().model || undefined;
+      return id ? stripModelScope(id) : undefined;
+    });
   }
 
   public async newChat(): Promise<void> {
-    await vscode.commands.executeCommand("ocursor.chatView.focus");
+    await vscode.commands.executeCommand("aiworkharness.chatView.focus");
     await this._newConversation();
   }
 
@@ -116,6 +148,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     await Promise.allSettled([...this._queueWorkers.values()]);
     await this._store.flush();
     await Promise.all([...this._journals.values()].map((journal) => journal.flush()));
+    bridgeLogChannel?.dispose();
+    bridgeLogChannel = undefined;
+    setBridgeModelSource(undefined);
   }
 
   private _sendWorkflowState() {
@@ -410,7 +445,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     if (!["uncommitted", "baseBranch", "commit", "custom"].includes(target.type)) throw new Error("Invalid review target.");
     const conversation = await this._store.create();
     await this._store.update(conversation.id, { title: "Code review", reviewTarget: target, workspaceRoot });
-    await vscode.commands.executeCommand("ocursor.chatView.focus");
+    await vscode.commands.executeCommand("aiworkharness.chatView.focus");
     await this._selectConversation(conversation.id);
     await this._submitMessage({ convId: conversation.id, text: reviewInstructions(target), mode: "ask" });
   }
@@ -420,7 +455,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     if (!uri || typeof line !== "number") {
       const editor = vscode.window.activeTextEditor;
       if (!editor || editor.document.uri.scheme !== "file") {
-        void vscode.window.showInformationMessage("OpenCursor: place the cursor on a TODO comment, or use the \"Implement with OpenCursor\" CodeLens.");
+        void vscode.window.showInformationMessage("AiWorkHarness: place the cursor on a TODO comment, or use the \"Implement with AiWorkHarness\" CodeLens.");
         return;
       }
       uri = editor.document.uri;
@@ -479,7 +514,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     // A freshly created webview cannot receive messages until it reports ready.
     if (this._view && this._webviewReady) void this._view.webview.postMessage({ type: "insertMention", mention });
     else this._pendingMentions.push(mention);
-    void vscode.commands.executeCommand("ocursor.chatView.focus");
+    void vscode.commands.executeCommand("aiworkharness.chatView.focus");
   }
 
   public resolveWebviewView(
@@ -612,7 +647,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           await this._browseAttachments();
           break;
         case "openSettings":
-          vscode.commands.executeCommand("ocursor.openSettings", data.section);
+          vscode.commands.executeCommand("aiworkharness.openSettings", data.section);
           break;
         case "setApprovalPreset":
           await this._setApprovalPreset(data.preset);
@@ -831,7 +866,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       } catch (error) {
         logError("sidebar.action", error, { action: data.type });
         const message = error instanceof Error ? error.message : String(error);
-        vscode.window.showErrorMessage(`OpenCursor: ${message}`);
+        vscode.window.showErrorMessage(`AiWorkHarness: ${message}`);
         this._view?.webview.postMessage({ type: "error", convId: data.convId ?? this._activeId, message });
       }
       });
@@ -876,7 +911,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     });
     await this._store.update(id, { turns: result.turns, steps: result.steps, contextState: result.contextState });
     this._view?.webview.postMessage({ type: "modelOutputEdited", convId: id, turns: result.turns });
-    if (!result.historyUpdated) void vscode.window.showInformationMessage("OpenCursor: the edit is shown in the chat, but this part of the conversation was already summarized for the model, so the model will keep seeing the summary.");
+    if (!result.historyUpdated) void vscode.window.showInformationMessage("AiWorkHarness: the edit is shown in the chat, but this part of the conversation was already summarized for the model, so the model will keep seeing the summary.");
   }
 
   /** Line counts per changed file; every agent edit re-sends the bar, but only edited files need a new diff. */
@@ -911,9 +946,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       return;
     }
     try {
-      await vscode.commands.executeCommand("ocursor.viewDiff", relPath, scope);
+      await vscode.commands.executeCommand("aiworkharness.viewDiff", relPath, scope);
     } catch (err: any) {
-      vscode.window.showErrorMessage(`OpenCursor: Could not show diff: ${err?.message}`);
+      vscode.window.showErrorMessage(`AiWorkHarness: Could not show diff: ${err?.message}`);
     }
   }
 
@@ -994,7 +1029,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         }
         case "terminal": {
           const t = vscode.window.terminals.find((t) => t.name === p);
-          t ? t.show() : vscode.window.showWarningMessage(`OpenCursor: terminal "${p}" not found`);
+          t ? t.show() : vscode.window.showWarningMessage(`AiWorkHarness: terminal "${p}" not found`);
           break;
         }
         case "rule":
@@ -1067,7 +1102,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       }
     } catch (err: any) {
       logError("ui.open-file", err, { path: relPath });
-      vscode.window.showErrorMessage(`OpenCursor: Could not open ${relPath}: ${err?.message || err}`);
+      vscode.window.showErrorMessage(`AiWorkHarness: Could not open ${relPath}: ${err?.message || err}`);
     }
   }
 
@@ -1083,6 +1118,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const features = this.featureStore.get();
     this._view?.webview.postMessage({
       type: "initialState",
+      language: this._uiLanguage(),
       mode: this._currentMode,
       selectedModel: settings.model,
       approvalPolicy: this._approvalPolicy(),
@@ -1273,6 +1309,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const active = this._activeId ? this._store.getMetadata(this._activeId) : undefined;
     this._view?.webview.postMessage({
       type: "configState",
+      language: this._uiLanguage(),
       approvalPolicy: this._approvalPolicy(),
       personas: allPersonas(features.customPersonas).map((p) => ({ id: p.id, name: p.name, description: p.description })),
       activePersonaId: active?.personaId ?? features.activePersonaId,
@@ -1583,6 +1620,45 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     return { baseUrl: "", apiKey: "", model: modelId, anthropic: false };
   }
 
+  /**
+   * Resolve a model id requested by a bridged external engine. The engine's own
+   * id is honored only when this installation serves it; otherwise the bridge
+   * model (or the selected model) is used, so unknown engine ids never fail a
+   * request. Provider selection still goes through the normal enabled-provider
+   * path.
+   */
+  private async _bridgeResolveModel(requested: string): Promise<BridgeModelResolution> {
+    const forced = this.featureStore.get().engineBridgeModel?.trim();
+    const fallback = this.settingsManager.getSettings().model?.trim() || "";
+    // allModels() can be large; consult it once per resolution, never per retry.
+    const known = forced ? [] : this.featureStore.allModels().map((model) => model.id);
+    const modelId = pickBridgeModel({ forced, requested, known, fallback });
+    if (!modelId) {
+      // Bridge errors are read by the external CLI, not the VS Code UI, so this
+      // message stays in English instead of going through the host i18n catalog.
+      throw new Error("No AiWorkHarness model is selected. Choose a model or set a bridge model.");
+    }
+    let resolved: Awaited<ReturnType<SidebarProvider["_resolveProviderForModel"]>>;
+    try {
+      resolved = await this._resolveProviderForModel(modelId);
+    } catch (error) {
+      if (!fallback || fallback === modelId) throw bridgeProviderError(error);
+      try {
+        resolved = await this._resolveProviderForModel(fallback);
+      } catch {
+        throw bridgeProviderError(error);
+      }
+    }
+    return {
+      apiBaseUrl: resolved.baseUrl,
+      apiKey: resolved.apiKey,
+      ...(resolved.apiKeyPool ? { apiKeyPool: resolved.apiKeyPool } : {}),
+      model: resolved.model,
+      anthropic: resolved.anthropic,
+      ...(resolved.oauthKind ? { oauthKind: resolved.oauthKind } : {}),
+    };
+  }
+
   /** Context window for a model: llama.cpp ctx length, else the model's
    *  max_context option ("200k"/"1m"…), else a safe 200k default. */
   private _contextTokensFor(modelId: string, oauthKind?: string): number {
@@ -1883,7 +1959,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     edit?: { convId?: string | null; fromIndex?: number; model?: string; mode?: string; revertFiles?: boolean; runId?: string },
   ) {
     if (!text.trim() && (!attachments || attachments.length === 0)) {
-      vscode.window.showWarningMessage("OpenCursor: Message cannot be empty");
+      vscode.window.showWarningMessage("AiWorkHarness: Message cannot be empty");
       return;
     }
 
@@ -1940,7 +2016,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const apiKey = prov.apiKey;
 
     if (!apiKey && !prov.apiKeyPool && prov.anthropic) {
-      vscode.window.showErrorMessage("OpenCursor: Missing API key. Please open settings to add one.");
+      vscode.window.showErrorMessage("AiWorkHarness: Missing API key. Please open settings to add one.");
       this._view?.webview.postMessage({
         type: "error",
         convId,
@@ -1999,7 +2075,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         this._sessions.delete(convId);
         session.resolveDone();
         this._view?.webview.postMessage({ type: "agentEvent", convId, event: { type: "run-status", status: "cancelled" } });
-        if (!session.abort.signal.aborted) vscode.window.showWarningMessage(`OpenCursor: prompt blocked by hook — ${veto}`);
+        if (!session.abort.signal.aborted) vscode.window.showWarningMessage(`AiWorkHarness: prompt blocked by hook — ${veto}`);
         return;
       }
     }
@@ -2131,7 +2207,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         }
         // OS notification when a run completes while the window is unfocused.
         if (ev.status === "finished" && features.notifyOnComplete !== false && !vscode.window.state.focused) {
-          vscode.window.showInformationMessage("OpenCursor: Agent finished responding.");
+          vscode.window.showInformationMessage("AiWorkHarness: Agent finished responding.");
           runHooks(features.hooks, "notification", { message: "Agent finished responding." });
         }
       } else if (ev.type === "usage") {
@@ -2211,7 +2287,58 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       const modelKind = prov.oauthKind ?? (prov.providerId === "ollama" || prov.providerId === "llamacpp"
         ? prov.providerId : features.providers.find((p) => p.id === prov.providerId)?.kind);
       let steeringBatch: QueuedMessage[] = [];
-      await runAgent({
+      const drainSteering = async (): Promise<string[]> => {
+        const messages = this._store.getMetadata(convId)?.steeringQueue ?? [];
+        if (!messages.length) return [];
+        // Delivery cannot outrun persistence. The mailbox remains recoverable
+        // until onRunEvent saves it together with the updated model history.
+        await this._store.flush();
+        if (session.abort.signal.aborted || session.settled) return [];
+        const pending = new Set(this._store.getMetadata(convId)?.steeringQueue?.map(item => item.id));
+        steeringBatch = messages.filter(item => pending.has(item.id));
+        return steeringBatch.map(item => item.text);
+      };
+      // External engine adapters drive the whole turn; AiWorkHarness stays the
+      // chat/approval UI. Failures surface through the shared catch below.
+      const engineId = (features.agentEngine ?? "builtin") as EngineId;
+      if (engineId !== "builtin") {
+        // Bridged engines call AiWorkHarness's configured providers through the
+        // local loopback server; start it only inside a workspace.
+        if (features.engineBridgeEnabled === true && findWorkspaceRoot()) {
+          setBridgeDeps({
+            streamChat,
+            resolveModel: (requested) => this._bridgeResolveModel(requested),
+            listModels: () => this.featureStore.allModels().map((model) => model.id),
+            log: bridgeLog,
+          });
+          await ensureBridge();
+        }
+        await runExternalEngine(engineId, {
+          workspaceRoot: findWorkspaceRoot() ?? getWorkspaceRoot(),
+          conversationId: convId,
+          prompt: mentionContext ? `${text}\n\n${mentionContext}` : text,
+          history,
+          mode,
+          runId: activeRunId,
+          signal: session.abort.signal,
+          emit,
+          approve: (toolName, input, callId) => this._approveTool(convId, session, toolName, input, callId),
+          drainSteering,
+          onAfterEdit: (path) => runHooks(features.hooks, "afterEdit", { path }),
+          // External engines write with their own tools; register their net
+          // file changes so the pending-changes bar and Keep/Undo All cover
+          // them. The store's digest guard refuses to silently overwrite
+          // user edits made after the run.
+          registerChanges: async (owner, records) => {
+            for (const record of records) {
+              pendingChanges.recordBytes(record.path, record.before, record.after, owner);
+            }
+            await pendingChanges.flush().catch(() => { /* durability retries on the next change */ });
+            this._sendPendingChanges();
+          },
+        });
+      } else {
+        await runAgent({
         workspaceRoot: findWorkspaceRoot(),
         runId: activeRunId,
         goal: this._store.getMetadata(convId)?.goal?.status === "active" ? this._store.getMetadata(convId)?.goal : undefined,
@@ -2223,17 +2350,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           const goal = this._store.getMetadata(convId)?.goal;
           if (goal) void this._store.update(convId, { goal: { ...goal, status, updatedAt: Date.now() } }).then(() => this._sendWorkflowState());
         },
-        drainSteering: async () => {
-          const messages = this._store.getMetadata(convId)?.steeringQueue ?? [];
-          if (!messages.length) return [];
-          // Delivery cannot outrun persistence. The mailbox remains recoverable
-          // until onRunEvent saves it together with the updated model history.
-          await this._store.flush();
-          if (session.abort.signal.aborted || session.settled) return [];
-          const pending = new Set(this._store.getMetadata(convId)?.steeringQueue?.map(item => item.id));
-          steeringBatch = messages.filter(item => pending.has(item.id));
-          return steeringBatch.map(item => item.text);
-        },
+        drainSteering,
         onRunEvent: async (event) => {
           const data = event.data as { runId?: string; text?: string } | undefined;
           if (event.type === "steering" && data?.runId === activeRunId) {
@@ -2314,6 +2431,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         signal: session.abort.signal,
         emit,
       });
+      }
     } catch (err: unknown) {
       logError("agent.run", err, { conversationId: convId });
       try {
@@ -2321,7 +2439,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           emit({ type: "run-status", status: "cancelled" });
         } else {
           const message = err instanceof Error ? err.message : String(err);
-          vscode.window.showErrorMessage(`OpenCursor: Agent failed: ${message}`);
+          vscode.window.showErrorMessage(`AiWorkHarness: Agent failed: ${message}`);
           emit({ type: "error", message } as AgentEvent);
           emit({ type: "run-status", status: "error" });
         }
@@ -2402,7 +2520,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     });
   }
 
+  /** Resolved UI language, shared with the settings webview through FeatureStore. */
+  private _uiLanguage(): UiLanguage {
+    return currentLanguage(this.featureStore.get().language);
+  }
+
   private _getHtmlForWebview(webview: vscode.Webview) {
-    return renderWebviewHtml(webview, this.context.extensionUri, "sidebar", "OpenCursor Chat");
+    const language = this._uiLanguage();
+    return renderWebviewHtml(webview, this.context.extensionUri, "sidebar", hostText("AiWorkHarness Chat", language), language);
   }
 }

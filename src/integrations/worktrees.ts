@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -71,7 +71,7 @@ export async function createConversationWorktree(repositoryRoot: string, storage
   const name = `${slug}-${randomUUID().slice(0, 12)}`;
   const target = path.resolve(directory, name);
   if (!within(directory, target)) throw new Error("Invalid worktree destination.");
-  const branch = `opencursor/${name}`;
+  const branch = `aiworkharness/${name}`;
   await git(repository, ["worktree", "add", "-b", branch, "--", target, baseCommit]);
   const record: ConversationWorktree = { path: target, branch, baseCommit, repositoryRoot: repository, createdAt: Date.now() };
   try { await fs.writeFile(path.join(directory, `${name}.json`), JSON.stringify({ version: 1, ...record }, null, 2), { flag: "wx", mode: 0o600 }); }
@@ -114,7 +114,7 @@ export async function listConversationWorktrees(repositoryRoot: string, storageD
 export async function removeConversationWorktree(repositoryRoot: string, storageDirectory: string, worktreePath: string): Promise<void> {
   const target = path.resolve(worktreePath);
   const owned = (await listConversationWorktrees(repositoryRoot, storageDirectory)).find((record) => identity(record.path) === identity(target));
-  if (!owned) throw new Error("This worktree is not owned by OpenCursor for the selected repository.");
+  if (!owned) throw new Error("This worktree is not owned by AiWorkHarness for the selected repository.");
   if ((await git(target, ["status", "--porcelain", "--untracked-files=all"])).trim()) throw new Error("This worktree has uncommitted changes. Commit or preserve them before removing it.");
   await git(owned.repositoryRoot, ["worktree", "remove", "--", target]);
   await fs.rm(path.join(path.dirname(target), `${path.basename(target)}.json`), { force: true });

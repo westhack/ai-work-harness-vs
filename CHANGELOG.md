@@ -1,15 +1,15 @@
 <!--
-Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+Copyright (c) 2026 Yao
 
-This file is part of OpenCursor — AI coding agent chat inside VS Code.
-https://github.com/PawanOsman/OpenCursor
+This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+https://github.com/westhack/ai-work-harness
 
 Licensed under the MIT License. See LICENSE file in the project root.
 -->
 
 # Change Log
 
-All notable changes to the "ocursor" extension will be documented in this file.
+All notable changes to the "aiworkharness" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
@@ -47,7 +47,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Markdown output is sanitised with an allowlist (no inline styles, forms, or event handlers).
 - OAuth tokens stay in sync across VS Code windows; sign-in callbacks time out; Antigravity sign-in uses PKCE.
 - pnpm dependency overrides now apply; runtime-manifest checks work with CRLF checkouts.
-- OpenCode Free requests now use a TLS fingerprint the free tier accepts, matching 9router. The optional `wreq-js` runtime is installed on first use into `~/.opencursor/runtime`; without it, requests fall back to the standard connection.
+- OpenCode Free requests now use a TLS fingerprint the free tier accepts, matching 9router. The optional `wreq-js` runtime is installed on first use into `~/.aiworkharness/runtime`; without it, requests fall back to the standard connection.
 - The Indexing page no longer shows "Loading…" while the embedding model is idle; it shows the configured device and only reports loading while a model is actually loading.
 - Choosing a model or changing settings no longer refetches every provider's model list.
 
@@ -214,7 +214,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Subagent cards show a status badge, the resolved model name and step count as separate chips, a compact list of the two most recent steps, and a live activity line ("Planning next move…")
 - Running spinners double as kill switches: hovering any in-flight tool, terminal, or subagent spinner turns it into a stop button that force-terminates that task
 - `ListDir` output opens with a one-line legend (`trailing / = directory`) so directories are never mistaken for files
-- Centralized `OpenCursor` output channel with structured `logError` reporting, replacing silently swallowed startup/index/tool failures
+- Centralized `AiWorkHarness` output channel with structured `logError` reporting, replacing silently swallowed startup/index/tool failures
 - Portable `/workspace` path alias accepted from the model on every host OS
 
 ### Fixed

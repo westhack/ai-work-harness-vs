@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -12,6 +12,7 @@ import { Icon } from "../../shared/icons";
 import { ProviderIcon } from "../../shared/ProviderIcon";
 import { OAUTH_PROVIDERS, POPULAR_KINDS, FREE_KINDS, PROVIDER_PRESETS, type FeatureConfig, type OAuthKind, type OAuthStatus, type ProviderKind } from "../features";
 import { SettingsDialog } from "./SettingsDialog";
+import { t as tr } from "../../shared/i18n";
 
 export type ProviderChoice =
   | { method: "oauth"; kind: OAuthKind; label: string }
@@ -48,12 +49,12 @@ export function ProviderPickerDialog({ scope, features, status, onSelect, onClos
       <p className="panel-hint">{PICKER_COPY[scope].hint}</p>
       <div className="provider-search">
         <Icon name="search" size={16} />
-        <input type="search" aria-label="Search providers" placeholder="Search providers…" data-dialog-autofocus value={query} onChange={event => setQuery(event.target.value)} />
+        <input type="search" aria-label={tr("Search providers")} placeholder={tr("Search providers…")} data-dialog-autofocus value={query} onChange={event => setQuery(event.target.value)} />
       </div>
     </div>
     <div className="provider-picker-list">
       {filtered.map(group => <section key={group.label} className="provider-picker-group" aria-label={group.label}>
-        <h3>{group.label}</h3>
+        <h3>{tr(group.label)}</h3>
         <div className="provider-choice-grid">
           {group.items.map(choice => {
             const id = `${choice.method}:${choice.kind}`;
@@ -69,8 +70,8 @@ export function ProviderPickerDialog({ scope, features, status, onSelect, onClos
           })}
         </div>
       </section>)}
-      {!filtered.length && <div className="provider-picker-empty" role="status">No providers match “{query}” in this section. Try another search.</div>}
+      {!filtered.length && <div className="provider-picker-empty" role="status">{tr("No providers match “")}{query}” {tr("in this section. Try another search.")}</div>}
     </div>
-    <div className="modal-foot"><button className="btn-ghost" onClick={onClose}>Cancel</button></div>
+    <div className="modal-foot"><button className="btn-ghost" onClick={onClose}>{tr("Cancel")}</button></div>
   </SettingsDialog>;
 }

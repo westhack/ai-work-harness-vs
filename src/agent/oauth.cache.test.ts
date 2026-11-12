@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -27,7 +27,7 @@ beforeEach(async () => {
   // Seed the real OAuth account loader using an in-memory extension context.
   // The future expiry prevents refresh; HTTP is replaced below.
   initOAuth({
-    globalState: { get: (key: string, fallback: unknown) => key === "ocursor.oauth.accountIds" ? ["fixture-account"] : fallback },
+    globalState: { get: (key: string, fallback: unknown) => key === "aiworkharness.oauth.accountIds" ? ["fixture-account"] : fallback },
     secrets: { get: async () => JSON.stringify({
       id: "fixture-account", kind: "codex", accessToken: "fixture-access", refreshToken: "fixture-refresh",
       expiresAt: Date.now() + 3_600_000,

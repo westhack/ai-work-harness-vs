@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -269,7 +269,7 @@ export async function installLlamacpp(): Promise<void> {
   if (!plan) {
     const open = "Open Releases";
     const choice = await vscode.window.showInformationMessage(
-      "OpenCursor: Install llama.cpp with your distribution's package manager, or download a release build. Re-check status once it is on PATH.",
+      "AiWorkHarness: Install llama.cpp with your distribution's package manager, or download a release build. Re-check status once it is on PATH.",
       open,
     );
     if (choice === open) await vscode.env.openExternal(vscode.Uri.parse(LLAMACPP_RELEASES_URL));
@@ -277,7 +277,7 @@ export async function installLlamacpp(): Promise<void> {
   }
   const run = "Run in Terminal";
   const choice = await vscode.window.showWarningMessage(
-    "OpenCursor: Install llama.cpp?",
+    "AiWorkHarness: Install llama.cpp?",
     { modal: true, detail: `This runs the following command in a new terminal:\n\n${plan.command}` },
     run,
   );
@@ -286,7 +286,7 @@ export async function installLlamacpp(): Promise<void> {
   term.show();
   term.sendText(plan.command);
   vscode.window.showInformationMessage(
-    "OpenCursor: Installing llama.cpp in the terminal. Re-check status once it finishes."
+    "AiWorkHarness: Installing llama.cpp in the terminal. Re-check status once it finishes."
   );
 }
 
@@ -529,7 +529,7 @@ async function startModel(m: LlamacppModel, globalCfg: LlamacppServerConfig | nu
       appendLog(m.id, warning);
       if (!warnedExposed.has(`${m.id}@${cfg.host}`)) {
         warnedExposed.add(`${m.id}@${cfg.host}`);
-        void vscode.window.showWarningMessage(`OpenCursor: ${warning.replace("[warning] ", "")}`);
+        void vscode.window.showWarningMessage(`AiWorkHarness: ${warning.replace("[warning] ", "")}`);
       }
     }
     for (let attempt = 1; attempt <= 3; attempt++) {

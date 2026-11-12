@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -81,7 +81,7 @@ if (require.main === module) {
   const work = extra.length || (flag && flag !== '--clean-profile')
     ? Promise.reject(new Error('Usage: node scripts/start-extension-debug.cjs <Code executable> <port> [--clean-profile]'))
     : startExtensionDebug(executable, Number(rawPort), { cleanProfile: flag === '--clean-profile' });
-  work.then(() => console.log(`OpenCursor extension inspector is ready at 127.0.0.1:${rawPort}.`), (error) => {
+  work.then(() => console.log(`AiWorkHarness extension inspector is ready at 127.0.0.1:${rawPort}.`), (error) => {
     console.error(error.message);
     process.exitCode = 1;
   });

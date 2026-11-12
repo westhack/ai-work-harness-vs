@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -213,7 +213,7 @@ describe("Claude OAuth streaming contract", () => {
   it.each([undefined, "fast"] as const)("sends %s speed through the real account router and preserves tool/usage streaming", async (speed) => {
     const model = speed === "fast" ? "claude-opus-5-5" : "claude-sonnet-4-6";
     initOAuth({
-      globalState: { get: (key: string, fallback: unknown) => key === "ocursor.oauth.accountIds" ? ["claude-contract"] : fallback },
+      globalState: { get: (key: string, fallback: unknown) => key === "aiworkharness.oauth.accountIds" ? ["claude-contract"] : fallback },
       secrets: { get: async () => JSON.stringify({
         id: "claude-contract", kind: "claude-code", accessToken: "contract-access", refreshToken: "contract-refresh",
         expiresAt: Date.now() + 24 * 60 * 60 * 1000,

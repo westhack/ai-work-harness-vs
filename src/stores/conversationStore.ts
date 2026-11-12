@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -91,9 +91,9 @@ export function trimArchivedConversation(conversation: Conversation): Conversati
   };
 }
 
-const KEY = "ocursor.conversations";
-const ACTIVE_KEY = "ocursor.activeConversation";
-const UI_KEY = "ocursor.chatWorkspace.v1";
+const KEY = "aiworkharness.conversations";
+const ACTIVE_KEY = "aiworkharness.activeConversation";
+const UI_KEY = "aiworkharness.chatWorkspace.v1";
 /** Composer drafts arrive per keystroke; storage only needs the settled text. */
 const UI_WRITE_DELAY_MS = 250;
 /** Transcript bodies kept in memory once their file is current (LRU beyond this). */

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -11,6 +11,7 @@ import * as vscode from "vscode";
 import { SettingsManager, Settings } from "../stores/settingsManager";
 import { listModels } from "../agent/provider";
 import { renderWebviewHtml, webviewResourceRoots } from "./webviewHtml";
+import { currentLanguage, hostText, type UiLanguage } from "../shared/i18n";
 import { FeatureStore, MODEL_CATALOG, getProviderApiKeys } from "../stores/featureStore";
 import { ProviderKeyStore, type ProviderKeyAction } from "../stores/providerKeys";
 import { PROVIDER_PRESETS } from "../shared/providerCatalog";
@@ -25,6 +26,7 @@ import { createDocPolicy } from "../agent/docsDiscovery";
 import { docIndexSettingsChanged, normalizeDocSourceSettings } from "../shared/docSourceSettings";
 import { findWorkspaceRoot } from "../context/workspaceUtils";
 import * as path from "node:path";
+import * as fs from "node:fs";
 import * as llama from "../agent/llamacpp";
 import type { LlamacppModel } from "../agent/llamacpp";
 import * as ollama from "../agent/ollama";
@@ -33,6 +35,9 @@ import * as oauth from "../agent/oauth";
 import { getUsage, resetUsage, flushUsage, onUsageChanged } from "../stores/usageStore";
 import { listExternalHooks, saveExternalHook, deleteExternalHook } from "../integrations/externalHooks";
 import { getAllModels, onAllModels, refreshAllModels, applyEmbedModel } from "../stores/modelRegistry";
+import { cachedAvailability, describeEngineBinary, getLocalEnginesRoot, listEngines, setEngineOverrides, type EngineBinarySource } from "../agent/engines/registry";
+import { ENGINE_INSTALL_SPECS, engineInstallCommand, installEngine } from "../agent/engines/install";
+import type { EngineId } from "../agent/engines/types";
 
 /** External links from webviews may only open ordinary web pages. */
 export function isWebUrl(value: unknown): boolean {
@@ -50,10 +55,18 @@ function isInsideSkillsDirectory(folder: string): boolean {
   const index = parts.findIndex(part => part === "skills" || part === "skills-cursor");
   return index >= 0 && index < parts.length - 1;
 }
+/** A user-picked engine path must be an existing regular file, never a folder. */
+function isSelectableExecutable(file: string): boolean {
+  try {
+    return fs.existsSync(file) && fs.statSync(file).isFile();
+  } catch {
+    return false;
+  }
+}
 
 export class SettingsPanel {
   public static currentPanel: SettingsPanel | undefined;
-  public static readonly viewType = "ocursor.settingsPanel";
+  public static readonly viewType = "aiworkharness.settingsPanel";
   private readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
   private _resettingUsage = false;
@@ -67,8 +80,10 @@ export class SettingsPanel {
 
   public static createOrShow(context: vscode.ExtensionContext, settingsManager: SettingsManager, featureStore: FeatureStore, section?: string) {
     const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
+    const language = currentLanguage(featureStore.get().language);
 
     if (SettingsPanel.currentPanel) {
+      SettingsPanel.currentPanel._panel.title = hostText("AiWorkHarness Settings", language);
       SettingsPanel.currentPanel._panel.reveal(column);
       if (section) {
         SettingsPanel.currentPanel._panel.webview.postMessage({ type: "navigate", section });
@@ -78,7 +93,7 @@ export class SettingsPanel {
 
     const panel = vscode.window.createWebviewPanel(
       SettingsPanel.viewType,
-      "OpenCursor Settings",
+      hostText("AiWorkHarness Settings", language),
       column || vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -151,11 +166,11 @@ export class SettingsPanel {
       async (message) => {
         switch (message.type) {
           case "managePlugins":
-            await vscode.commands.executeCommand("ocursor.managePlugins");
+            await vscode.commands.executeCommand("aiworkharness.managePlugins");
             await this._sendFeatures();
             break;
           case "browserSettings":
-            await vscode.commands.executeCommand("workbench.action.openSettings", "ocursor.browserExecutablePath");
+            await vscode.commands.executeCommand("workbench.action.openSettings", "aiworkharness.browserExecutablePath");
             break;
           case "getSettings": {
             await this._sendSettingsToWebview();
@@ -181,10 +196,10 @@ export class SettingsPanel {
                 }
               }
               this.featureStore.notifyChanged();
-              vscode.window.showInformationMessage("OpenCursor: Settings saved successfully.");
+              vscode.window.showInformationMessage(hostText("AiWorkHarness: Settings saved successfully.", this._uiLanguage()));
               this._panel.webview.postMessage({ type: "saveSuccess" });
             } catch (err: any) {
-              vscode.window.showErrorMessage(`OpenCursor: Failed to save settings: ${err.message}`);
+              vscode.window.showErrorMessage(`AiWorkHarness: Failed to save settings: ${err.message}`);
             }
             break;
           case "fetchModels":
@@ -205,13 +220,13 @@ export class SettingsPanel {
               const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(target));
               await vscode.window.showTextDocument(doc, { preview: false });
             } catch (e: any) {
-              vscode.window.showErrorMessage(`OpenCursor: could not open file: ${e?.message || e}`);
+              vscode.window.showErrorMessage(`AiWorkHarness: could not open file: ${e?.message || e}`);
             }
             break;
           }
           case "createRule": {
             const root = findWorkspaceRoot();
-            if (!root) { vscode.window.showErrorMessage("OpenCursor: open a workspace first."); break; }
+            if (!root) { vscode.window.showErrorMessage("AiWorkHarness: open a workspace first."); break; }
             const name = await vscode.window.showInputBox({ prompt: "Rule name", placeHolder: "my-rule" });
             if (!name) break;
             const slug = name.trim().toLowerCase().replace(/[^a-z0-9-_]+/g, "-").replace(/^-+|-+$/g, "") || "rule";
@@ -230,7 +245,7 @@ export class SettingsPanel {
           }
           case "createSkill": {
             const root = findWorkspaceRoot();
-            if (!root) { vscode.window.showErrorMessage("OpenCursor: open a workspace first."); break; }
+            if (!root) { vscode.window.showErrorMessage("AiWorkHarness: open a workspace first."); break; }
             const name = await vscode.window.showInputBox({ prompt: "Skill name", placeHolder: "my-skill" });
             if (!name) break;
             const slug = name.trim().toLowerCase().replace(/[^a-z0-9-_]+/g, "-").replace(/^-+|-+$/g, "") || "skill";
@@ -249,13 +264,13 @@ export class SettingsPanel {
           }
           case "deleteRule": {
             const target = (await listRules()).find(rule => samePath(rule.path, message.path))?.path;
-            if (!target) { vscode.window.showErrorMessage("OpenCursor: that rule is no longer listed."); await this._sendFeatures(); break; }
+            if (!target) { vscode.window.showErrorMessage("AiWorkHarness: that rule is no longer listed."); await this._sendFeatures(); break; }
             const ok = await vscode.window.showWarningMessage(`Delete rule "${message.name}"?`, { modal: true }, "Delete");
             if (ok !== "Delete") break;
             try {
               await vscode.workspace.fs.delete(vscode.Uri.file(target), { useTrash: true });
             } catch (e: any) {
-              vscode.window.showErrorMessage(`OpenCursor: could not delete rule: ${e?.message || e}`);
+              vscode.window.showErrorMessage(`AiWorkHarness: could not delete rule: ${e?.message || e}`);
             }
             await this._sendFeatures();
             break;
@@ -265,13 +280,13 @@ export class SettingsPanel {
             // its own folder: never an arbitrary path supplied by the webview.
             const skill = (await listSkills()).find(item => !item.pluginId && samePath(item.path, message.path));
             const folder = skill && path.basename(skill.path) === "SKILL.md" ? path.dirname(skill.path) : undefined;
-            if (!folder || !isInsideSkillsDirectory(folder)) { vscode.window.showErrorMessage("OpenCursor: that skill is no longer listed."); await this._sendFeatures(); break; }
+            if (!folder || !isInsideSkillsDirectory(folder)) { vscode.window.showErrorMessage("AiWorkHarness: that skill is no longer listed."); await this._sendFeatures(); break; }
             const ok = await vscode.window.showWarningMessage(`Delete skill "${message.name}"?`, { modal: true }, "Delete");
             if (ok !== "Delete") break;
             try {
               await vscode.workspace.fs.delete(vscode.Uri.file(folder), { recursive: true, useTrash: true });
             } catch (e: any) {
-              vscode.window.showErrorMessage(`OpenCursor: could not delete skill: ${e?.message || e}`);
+              vscode.window.showErrorMessage(`AiWorkHarness: could not delete skill: ${e?.message || e}`);
             }
             await this._sendFeatures();
             break;
@@ -299,12 +314,17 @@ export class SettingsPanel {
           case "getFeatures":
             await this._sendFeatures();
             break;
-          case "saveFeatures":
-            await this._providerKeys.saveFeatures(message.features);
+          case "saveFeatures": {
+            const saved = await this._providerKeys.saveFeatures(message.features);
+            // A changed engine path must invalidate the binary/availability caches.
+            if (message.features && typeof message.features === "object" && "enginePaths" in message.features) {
+              setEngineOverrides(saved.enginePaths);
+            }
             // Re-sync MCP connections if servers changed.
             await mcpManager.sync(this.featureStore.get().mcpServers);
             await this._sendFeatures();
             break;
+          }
           case "getExternalHooks":
             try {
               this._panel.webview.postMessage({ type: "externalHooks", hooks: listExternalHooks() });
@@ -358,12 +378,109 @@ export class SettingsPanel {
           case "getDocLogs":
             this._panel.webview.postMessage({ type: "docLogs", id: message.id, lines: getDocLogs(message.id) });
             break;
+          case "getEngineStatus":
+            await this._sendEngineStatus();
+            break;
+          case "pickEnginePath": {
+            const id = message.id as EngineId;
+            if (id === "builtin" || !(id in ENGINE_INSTALL_SPECS)) break;
+            const language = this._uiLanguage();
+            const label = listEngines().find((engine) => engine.id === id)?.label ?? id;
+            const picked = await vscode.window.showOpenDialog({
+              canSelectFiles: true,
+              canSelectMany: false,
+              openLabel: hostText("Select", language),
+              title: hostText("Select the {name} executable", language).replace("{name}", label),
+            });
+            const file = picked?.[0]?.fsPath;
+            if (!file) {
+              this._panel.webview.postMessage({ type: "enginePathPicked", id, cancelled: true });
+              break;
+            }
+            if (!isSelectableExecutable(file)) {
+              vscode.window.showErrorMessage(hostText("Select is not a file", language));
+              this._panel.webview.postMessage({ type: "enginePathPicked", id, cancelled: true });
+              break;
+            }
+            try {
+              const enginePaths = { ...(this.featureStore.get().enginePaths ?? {}), [id]: file };
+              const saved = await this._providerKeys.saveFeatures({ enginePaths });
+              setEngineOverrides(saved.enginePaths);
+              await this._sendEngineStatus();
+              this._panel.webview.postMessage({ type: "enginePathPicked", id, path: file });
+            } catch (error) {
+              vscode.window.showErrorMessage(`${hostText("Could not save the engine path", language)}: ${String((error as Error)?.message || error)}`);
+              this._panel.webview.postMessage({ type: "enginePathPicked", id, cancelled: true });
+            }
+            break;
+          }
+          case "clearEnginePath": {
+            const id = message.id as EngineId;
+            if (id === "builtin") break;
+            const enginePaths = { ...(this.featureStore.get().enginePaths ?? {}) };
+            delete enginePaths[id];
+            const saved = await this._providerKeys.saveFeatures({ enginePaths });
+            setEngineOverrides(saved.enginePaths);
+            await this._sendEngineStatus();
+            break;
+          }
+          case "installEngine": {
+            const id = message.id as EngineId;
+            if (id === "builtin" || !(id in ENGINE_INSTALL_SPECS)) break;
+            const engineId = id as Exclude<EngineId, "builtin">;
+            const label = listEngines().find((engine) => engine.id === id)?.label ?? id;
+            if (!ENGINE_INSTALL_SPECS[engineId].npm) {
+              this._panel.webview.postMessage({ type: "engineInstallDone", id, ok: false, detail: "This engine has no npm package — install it manually." });
+              break;
+            }
+            const language = this._uiLanguage();
+            const installLabel = hostText("Install", language);
+            // The default target is the extension folder, so the prompt must match it.
+            const prompt = getLocalEnginesRoot()
+              ? hostText("Install {name} into the extension folder?", language)
+              : hostText("Install {name} globally with npm?", language);
+            const choice = await vscode.window.showWarningMessage(
+              prompt.replace("{name}", label),
+              { modal: true },
+              installLabel
+            );
+            if (choice !== installLabel) break;
+            this._panel.webview.postMessage({ type: "engineInstallStarted", id });
+            // Batch log lines so a noisy npm run cannot flood the webview.
+            const pending: string[] = [];
+            let flushTimer: NodeJS.Timeout | undefined;
+            const flush = () => {
+              if (flushTimer) { clearTimeout(flushTimer); flushTimer = undefined; }
+              for (const line of pending.splice(0)) {
+                this._panel.webview.postMessage({ type: "engineInstallProgress", id, line });
+              }
+            };
+            let result: { ok: boolean; detail?: string };
+            try {
+              result = await installEngine(engineId, (line) => {
+                pending.push(line);
+                if (pending.length >= 20) flush();
+                else if (!flushTimer) flushTimer = setTimeout(flush, 150);
+              });
+            } catch (error) {
+              result = { ok: false, detail: String((error as Error)?.message || error) };
+            } finally {
+              flush();
+            }
+            this._panel.webview.postMessage({ type: "engineInstallDone", id, ok: result.ok, detail: result.detail });
+            if (!result.ok) {
+              const firstLine = (result.detail ?? "").split("\n")[0];
+              vscode.window.showErrorMessage(`${hostText("Install failed", language)}${firstLine ? `: ${firstLine}` : ""}`);
+            }
+            await this._sendEngineStatus();
+            break;
+          }
           case "openExternal":
             if (isWebUrl(message.url)) await vscode.env.openExternal(vscode.Uri.parse(String(message.url)));
             break;
-          case "openCursorignore": {
+          case "aiWorkHarnessignore": {
             const root = findWorkspaceRoot();
-            if (!root) { vscode.window.showErrorMessage("OpenCursor: open a workspace first."); break; }
+            if (!root) { vscode.window.showErrorMessage("AiWorkHarness: open a workspace first."); break; }
             const uri = vscode.Uri.file(`${root}/.cursorignore`);
             try {
               await vscode.workspace.fs.stat(uri);
@@ -609,7 +726,7 @@ export class SettingsPanel {
           case "ollamaSetEndpoint": {
             try {
               ollama.setOllamaHost(String(message.endpoint));
-              await this.context.globalState.update("ocursor.ollamaEndpoint", ollama.getStatus().endpoint);
+              await this.context.globalState.update("aiworkharness.ollamaEndpoint", ollama.getStatus().endpoint);
               await ollama.refreshStatus(); await this._sendOllamaModels();
             } catch (error) { this._panel.webview.postMessage({ type: "localModelError", error: String(error) }); }
             break;
@@ -868,6 +985,48 @@ export class SettingsPanel {
     });
   }
 
+  /** Probe every external engine; one failure only marks that engine unavailable. */
+  private async _sendEngineStatus() {
+    const installScope: "extension" | "global" = getLocalEnginesRoot() ? "extension" : "global";
+    const engines: {
+      id: EngineId;
+      label: string;
+      available: boolean;
+      binaryPath?: string;
+      source?: EngineBinarySource;
+      installScope: "extension" | "global";
+      installCommand?: string;
+      docsUrl?: string;
+      manual: boolean;
+    }[] = [];
+    for (const engine of listEngines()) {
+      if (engine.id === "builtin") continue;
+      const id = engine.id as Exclude<EngineId, "builtin">;
+      const spec = ENGINE_INSTALL_SPECS[id];
+      const status = {
+        id,
+        label: engine.label,
+        available: false,
+        installScope,
+        installCommand: engineInstallCommand(id),
+        docsUrl: spec.docsUrl,
+        manual: !spec.npm,
+      };
+      try {
+        const binary = await describeEngineBinary(id);
+        const availability = await cachedAvailability(id, binary?.path, () => engine.available()).catch(() => ({ ok: false }));
+        engines.push({
+          ...status,
+          available: availability.ok,
+          ...(binary ? { binaryPath: binary.path, source: binary.source } : {}),
+        });
+      } catch {
+        engines.push(status);
+      }
+    }
+    this._panel.webview.postMessage({ type: "engineStatus", engines });
+  }
+
   private async _handleProviderKeyAction(message: ProviderKeyAction & { requestId?: unknown }) {
     try {
       if (typeof message.requestId !== "string" || !message.requestId) throw new Error("Missing API key action request id.");
@@ -890,6 +1049,7 @@ export class SettingsPanel {
     );
     this._panel.webview.postMessage({
       type: "features",
+      language: this._uiLanguage(),
       features: { ...features, providers },
       mcpStatus: mcpManager.status(),
       rules,
@@ -921,7 +1081,13 @@ export class SettingsPanel {
     }
   }
 
+  /** Resolved UI language, kept in sync with the chat webview via FeatureStore. */
+  private _uiLanguage(): UiLanguage {
+    return currentLanguage(this.featureStore.get().language);
+  }
+
   private _getHtmlForWebview(webview: vscode.Webview) {
-    return renderWebviewHtml(webview, this.context.extensionUri, "settings", "OpenCursor Settings");
+    const language = this._uiLanguage();
+    return renderWebviewHtml(webview, this.context.extensionUri, "settings", hostText("AiWorkHarness Settings", language), language);
   }
 }

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -49,7 +49,7 @@ export function browserViewport(width?: number, height?: number): { width: numbe
 }
 
 async function executable(): Promise<string> {
-  const configured = vscode.workspace.getConfiguration("ocursor").get<string>("browserExecutablePath", "").trim();
+  const configured = vscode.workspace.getConfiguration("aiworkharness").get<string>("browserExecutablePath", "").trim();
   const candidates = configured ? [configured] : process.platform === "win32" ? [
     path.join(process.env.PROGRAMFILES ?? "C:\\Program Files", "Google", "Chrome", "Application", "chrome.exe"),
     path.join(process.env["PROGRAMFILES(X86)"] ?? "C:\\Program Files (x86)", "Microsoft", "Edge", "Application", "msedge.exe"),
@@ -59,7 +59,7 @@ async function executable(): Promise<string> {
   for (const candidate of candidates) {
     try { if ((await fs.stat(candidate)).isFile()) return candidate; } catch { /* try next installed browser */ }
   }
-  throw new Error("No installed Chrome or Edge was found. Set ocursor.browserExecutablePath to its executable; no browser is downloaded automatically.");
+  throw new Error("No installed Chrome or Edge was found. Set aiworkharness.browserExecutablePath to its executable; no browser is downloaded automatically.");
 }
 
 function addBounded(list: string[], text: string) { list.push(text.slice(0, 1500)); if (list.length > 40) list.shift(); }

@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
 /*!
- * OpenCursor model catalog.
+ * AiWorkHarness model catalog.
  * MIT License
  * 
  * Copyright (c) 2024-2026 decolua and contributors
@@ -31,7 +31,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-/** OpenCursor's provider-scoped chat models and supported request formats. */
+/** AiWorkHarness's provider-scoped chat models and supported request formats. */
 export interface ProviderModelSpec { id:string; name:string; kind:string; contextLength?:number; upstreamModelId?:string; targetFormat?:string; supportedFormats?:string[]; }
 export const PROVIDER_MODELS: ProviderModelSpec[] = [
   {

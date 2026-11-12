@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -118,7 +118,7 @@ export function buildAuthorizeUrl(publicKey: string, redirectUri: string, keyNam
 
 /**
  * Get or create a stable key name for this installation.
- * Stored in the OpenCursor data dir so re-auth reuses the same name.
+ * Stored in the AiWorkHarness data dir so re-auth reuses the same name.
  */
 export function getKeyName() {
   // Use a deterministic name based on machine — avoids needing filesystem writes
@@ -128,5 +128,5 @@ export function getKeyName() {
     .update(`${process.platform}-${process.env.COMPUTERNAME || process.env.HOSTNAME || "unknown"}`)
     .digest("hex")
     .slice(0, 8);
-  return `opencursor-xmd-${machineId}`;
+  return `aiworkharness-xmd-${machineId}`;
 }

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -775,7 +775,7 @@ function toolNameAndSchema(tool: ProtocolValue) {
  */
 export function encodeMcpToolDefinition(tool: ProtocolValue) {
     const { name, description, schema } = toolNameAndSchema(tool);
-    return concatArrays(encodeField(MTD_NAME, WIRE_TYPE.LEN, name), encodeField(MTD_DESCRIPTION, WIRE_TYPE.LEN, description), encodeField(MTD_INPUT_SCHEMA, WIRE_TYPE.LEN, encodeAgentValue(schema)), encodeField(MTD_PROVIDER, WIRE_TYPE.LEN, "opencursor"), encodeField(MTD_TOOL_NAME, WIRE_TYPE.LEN, name));
+    return concatArrays(encodeField(MTD_NAME, WIRE_TYPE.LEN, name), encodeField(MTD_DESCRIPTION, WIRE_TYPE.LEN, description), encodeField(MTD_INPUT_SCHEMA, WIRE_TYPE.LEN, encodeAgentValue(schema)), encodeField(MTD_PROVIDER, WIRE_TYPE.LEN, "aiworkharness"), encodeField(MTD_TOOL_NAME, WIRE_TYPE.LEN, name));
 }
 /**
  * Encode AgentRunRequest.mcp_tools: repeated McpToolDefinition under field 1.

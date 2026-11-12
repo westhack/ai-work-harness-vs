@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -19,7 +19,7 @@ import type { ProtocolValue, ProtocolRecord } from "../wireTypes.js";
  *   - schema-specific native effort fields for supported GPT and Claude models
  *   - legacy `<thinking_mode>` system-prompt injection for other models
  *
- * Kiro upstream does not advertise `-agentic` model IDs; they are a OpenCursor
+ * Kiro upstream does not advertise `-agentic` model IDs; they are a AiWorkHarness
  * fiction. The suffix is stripped before the request leaves this process.
  */
 import { extractThinking, parseSuffix } from "../translator/concerns/thinkingUnified.js";
@@ -115,7 +115,7 @@ export function normalizeKiroUpstreamModelId(model: string): string {
 }
 /**
  * Resolve a Kiro model after consuming the generic model(level) suffix.
- * The suffix is a OpenCursor request override, not part of Kiro's upstream model id.
+ * The suffix is a AiWorkHarness request override, not part of Kiro's upstream model id.
  */
 export function resolveKiroModelIntent(model: string) {
     const { cleanModel, override } = parseSuffix(model);
@@ -345,7 +345,7 @@ export function isThinkingEnabled(body: ProtocolRecord, headers: ProtocolValue, 
     return resolveKiroThinkingBudget(body, headers, model) !== null;
 }
 /**
- * Detect whether a model id refers to a OpenCursor synthetic agentic variant.
+ * Detect whether a model id refers to a AiWorkHarness synthetic agentic variant.
  * Agentic variants share the same upstream model as the base; the only
  * difference is the chunked-write system prompt this module injects.
  *
@@ -367,7 +367,7 @@ export function stripAgenticSuffix(model: string) {
     return model.slice(0, -KIRO_AGENTIC_SUFFIX.length);
 }
 /**
- * Detect whether a model id is a OpenCursor synthetic thinking variant
+ * Detect whether a model id is a AiWorkHarness synthetic thinking variant
  * (e.g. `claude-sonnet-4.5-thinking`). Same upstream model as the base; the
  * only difference is `<thinking_mode>enabled</thinking_mode>` injection.
  *
@@ -393,7 +393,7 @@ export function stripThinkingSuffix(model: string) {
     return model.slice(0, -KIRO_THINKING_SUFFIX.length);
 }
 /**
- * Resolve a OpenCursor model id to the real upstream Kiro model id, plus flags
+ * Resolve a AiWorkHarness model id to the real upstream Kiro model id, plus flags
  * describing which behaviours the suffixes implied.
  *
  *   resolveKiroModel("claude-sonnet-4.5-thinking-agentic")

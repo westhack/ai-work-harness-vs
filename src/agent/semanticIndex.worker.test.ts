@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -42,7 +42,7 @@ export async function pipeline(task, repo, options) {
 
 let fixture: string;
 beforeEach(async () => {
-  fixture = await fs.mkdtemp(path.join(tmpdir(), "ocursor-embed-worker-"));
+  fixture = await fs.mkdtemp(path.join(tmpdir(), "aiworkharness-embed-worker-"));
   const entry = path.join(fixture, "fake-transformers.mjs");
   await fs.writeFile(entry, FAKE_TRANSFORMERS);
   vi.mocked(resolveRuntimeDepEntry).mockResolvedValue(pathToFileURL(entry).href);

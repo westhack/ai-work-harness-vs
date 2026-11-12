@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -20,7 +20,7 @@ import { deleteExternalHook, listExternalHooks, readProjectHookFile, saveExterna
 const projectHooks = () => listExternalHooks().filter((hook) => hook.source === "cursor-project");
 const hookFile = () => path.join(workspace, ".cursor", "hooks.json");
 
-beforeEach(() => { workspace = fs.mkdtempSync(path.join(os.tmpdir(), "ocursor-hooks-")); });
+beforeEach(() => { workspace = fs.mkdtempSync(path.join(os.tmpdir(), "aiworkharness-hooks-")); });
 afterEach(() => { fs.rmSync(workspace, { recursive: true, force: true }); });
 
 describe("external hook file cache", () => {

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -13,6 +13,7 @@ import { Icon } from "../../shared/icons";
 import { vscode } from "../../shared/vscode";
 import { FeatureConfig, HOOK_EVENTS, HookDef, HookEvent, uid } from "../features";
 import { Toggle } from "./Toggle";
+import { t as tr } from "../../shared/i18n";
 
 /** Unified label for a native (Cursor/Claude) event name; falls back to the raw name. */
 function unifiedLabel(nativeEvent: string, matcher?: string): string {
@@ -72,26 +73,26 @@ function ExternalHookEditor({
     <div className="feature-card">
       <div className="fc-body">
         <label className="fc-field">
-          <span>Event</span>
+          <span>{tr("Event")}</span>
           <Select value={event} onChange={(e) => setEvent(e.target.value as HookEvent)}>
             {events.map((ev) => (
-              <option key={ev.id} value={ev.id}>{ev.label}</option>
+              <option key={ev.id} value={ev.id}>{tr(ev.label)}</option>
             ))}
           </Select>
         </label>
         {source.claude && (
           <label className="fc-field">
-            <span>Matcher (optional, e.g. Bash or Edit|Write)</span>
+            <span>{tr("Matcher (optional, e.g. Bash or Edit|Write)")}</span>
             <input value={matcher} onChange={(e) => setMatcher(e.target.value)} placeholder={HOOK_EVENTS.find((e) => e.id === event)?.claudeMatcher || "*"} />
           </label>
         )}
         <label className="fc-field">
-          <span>Command</span>
-          <input value={command} onChange={(e) => setCommand(e.target.value)} placeholder="node hook.js" autoFocus />
+          <span>{tr("Command")}</span>
+          <input value={command} onChange={(e) => setCommand(e.target.value)} placeholder={tr("node hook.js")} autoFocus />
         </label>
         <div style={{ display: "flex", gap: 8 }}>
-          <button className="btn-secondary" onClick={save} disabled={!command.trim()}>Save</button>
-          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn-secondary" onClick={save} disabled={!command.trim()}>{tr("Save")}</button>
+          <button className="btn-ghost" onClick={onClose}>{tr("Cancel")}</button>
         </div>
       </div>
     </div>
@@ -110,12 +111,12 @@ function ExternalHooksSection({ hooks, error }: { hooks: ExternalHook[]; error?:
           <div key={src.id} style={{ marginBottom: 16 }}>
             <div className="section-label" style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ flex: 1 }}>{src.label}</span>
-              <button className="icon-btn" title="Add hook" onClick={() => setEditing({ source: src.id })}>
+              <button className="icon-btn" title={tr("Add hook")} onClick={() => setEditing({ source: src.id })}>
                 <Icon name="plus" size={14} />
               </button>
             </div>
             {list.length === 0 && !(editing && editing.source === src.id && !editing.hook) && (
-              <p className="panel-hint">No hooks configured.</p>
+              <p className="panel-hint">{tr("No hooks configured.")}</p>
             )}
             {list.map((h) =>
               editing && editing.hook?.ref === h.ref && editing.source === src.id ? (
@@ -126,12 +127,12 @@ function ExternalHooksSection({ hooks, error }: { hooks: ExternalHook[]; error?:
                     <span className="badge">{unifiedLabel(h.event, h.matcher)}</span>
                     {h.matcher && <span className="badge">{h.matcher}</span>}
                     <code style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.command}</code>
-                    <button className="icon-btn" title="Edit" onClick={() => setEditing({ source: src.id, hook: h })}>
+                    <button className="icon-btn" title={tr("Edit")} onClick={() => setEditing({ source: src.id, hook: h })}>
                       <Icon name="edit" size={14} />
                     </button>
                     <button
                       className="icon-btn"
-                      title="Delete"
+                      title={tr("Delete")}
                       onClick={() => vscode.postMessage({ type: "deleteExternalHook", source: src.id, ref: h.ref })}
                     >
                       <Icon name="trash" size={14} />
@@ -176,40 +177,40 @@ export function HooksPanel({ features, setFeatures }: { features: FeatureConfig;
 
   return (
     <>
-      <h1 className="page-title">Hooks</h1>
-      <div className="section-label">Lifecycle Hooks</div>
-      <p className="panel-hint">Run shell commands on agent lifecycle events. Context is passed via OPENCURSOR_* env vars.</p>
+      <h1 className="page-title">{tr("Hooks")}</h1>
+      <div className="section-label">{tr("Lifecycle Hooks")}</div>
+      <p className="panel-hint">{tr("Run shell commands on agent lifecycle events. Context is passed via AIWORKHARNESS_* env vars.")}</p>
       {features.hooks.map((h, i) => (
         <div className="feature-card" key={h.id}>
           <div className="fc-head">
-            <Select aria-label="Hook event" value={h.event} onChange={(e) => update(i, { event: e.target.value as HookDef["event"] })}>
+            <Select aria-label={tr("Hook event")} value={h.event} onChange={(e) => update(i, { event: e.target.value as HookDef["event"] })}>
               {HOOK_EVENTS.map((ev) => (
                 <option key={ev.id} value={ev.id}>
-                  {ev.label}
+                  {tr(ev.label)}
                 </option>
               ))}
             </Select>
             <Toggle label={`Enable ${HOOK_EVENTS.find(event => event.id === h.event)?.label ?? h.event} hook`} checked={h.enabled} onChange={(v) => update(i, { enabled: v })} />
-            <button className="icon-btn" onClick={() => remove(i)} title="Remove">
+            <button className="icon-btn" onClick={() => remove(i)} title={tr("Remove")}>
               <Icon name="trash" size={14} />
             </button>
           </div>
           <div className="fc-body">
             <label className="fc-field">
-              <span>Command</span>
-              <input value={h.command} onChange={(e) => update(i, { command: e.target.value })} placeholder="pnpm lint" />
+              <span>{tr("Command")}</span>
+              <input value={h.command} onChange={(e) => update(i, { command: e.target.value })} placeholder={tr("pnpm lint")} />
             </label>
           </div>
         </div>
       ))}
       <div className="panel-actions">
         <button className="btn-ghost" onClick={add}>
-          <Icon name="plus" size={14} /> Add Hook
+          <Icon name="plus" size={14} /> {tr("Add Hook")}
         </button>
       </div>
 
-      <div className="section-label" style={{ marginTop: 24 }}>External Hooks</div>
-      <p className="panel-hint">Hooks from Cursor (<code>hooks.json</code>) and Claude Code (<code>settings.json</code>), user and project level. Changes write directly to those files.</p>
+      <div className="section-label" style={{ marginTop: 24 }}>{tr("External Hooks")}</div>
+      <p className="panel-hint">{tr("Hooks from Cursor (")}<code>hooks.json</code>) and Claude Code (<code>settings.json</code>), {tr("user and project level. Changes write directly to those files.")}</p>
       <ExternalHooksSection hooks={external} error={extError} />
     </>
   );

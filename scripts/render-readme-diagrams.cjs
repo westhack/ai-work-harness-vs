@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor, AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness, AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -39,10 +39,10 @@ const icon = (name, x, y, color = colors.violet, size = 28) => `<g transform="tr
 const badge = (x, y, label, width, color = colors.violet) => rect(x, y, width, 30, colors.ink, colors.line, 15) + text(x + width / 2, y + 20, label, 15, color, 500, 'text-anchor="middle"');
 const header = (eyebrow, title, subtitle) => text(48, 49, eyebrow, 15, colors.violet, 600, 'letter-spacing="2.2"') + text(48, 102, title, 42, colors.white, 650) + text(48, 144, subtitle, 23, colors.muted);
 const copyright = `<!--
-Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+Copyright (c) 2026 Yao
 
-This file is part of OpenCursor, AI coding agent chat inside VS Code.
-https://github.com/PawanOsman/OpenCursor
+This file is part of AiWorkHarness, AI coding agent chat inside VS Code.
+https://github.com/westhack/ai-work-harness
 
 Licensed under the MIT License. See LICENSE file in the project root.
 -->`;
@@ -78,7 +78,7 @@ function providers() {
   body += arrow(1223, 346, 1223, 359);
   body += rect(1054, 370, 338, 124) + icon('chat', 1076, 392, colors.mint) + text(1123, 416, 'Chat + tools', 25, colors.white, 600) + text(1076, 467, 'Pick a model and get to work', 20, colors.muted);
   body += line(48, 548, 1392, 548) + icon('check', 48, 579, colors.mint, 23) + text(84, 598, 'Keep multiple credentials. Configure routing separately for each provider.', 23, colors.muted);
-  return canvas('Model connections in OpenCursor', 'Accounts, API keys, local models, and no-auth endpoints become configured provider connections. Account and API providers can optionally use multiple credentials with failover or load balancing. Enabled connections make models available to chat.', body);
+  return canvas('Model connections in AiWorkHarness', 'Accounts, API keys, local models, and no-auth endpoints become configured provider connections. Account and API providers can optionally use multiple credentials with failover or load balancing. Enabled connections make models available to chat.', body);
 }
 
 function localStack() {
@@ -95,7 +95,7 @@ function localStack() {
   }
   body += rect(48, 552, 1344, 54, '#242d2a', '#3d5147', 14) + icon('folder', 68, 566, colors.mint, 25) + text(108, 587, 'Workspace, settings, and conversation history stay on your machine.', 23, '#cae8d9');
   body += text(48, 639, 'Initial runtime and model downloads need internet access. Your selected chat provider determines where requests go.', 19, colors.muted);
-  return canvas('Local models and retrieval in OpenCursor', 'llama.cpp supports GGUF models, Ollama connects a local model server, and local embeddings provide semantic retrieval. Workspace, settings, and conversation history are stored locally. Initial downloads require internet access, and chat requests go to the configured provider.', body, 674);
+  return canvas('Local models and retrieval in AiWorkHarness', 'llama.cpp supports GGUF models, Ollama connects a local model server, and local embeddings provide semantic retrieval. Workspace, settings, and conversation history are stored locally. Initial downloads require internet access, and chat requests go to the configured provider.', body, 674);
 }
 
 function semanticSearch() {

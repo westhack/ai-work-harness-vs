@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -13,7 +13,7 @@ import * as path from "path";
 import { getWorkspaceRoot } from "../context/workspaceUtils";
 
 /**
- * CRUD for hooks defined outside OpenCursor:
+ * CRUD for hooks defined outside AiWorkHarness:
  * - Cursor hooks:      ~/.cursor/hooks.json and <workspace>/.cursor/hooks.json
  *   { "version": 1, "hooks": { "<event>": [{ "command": "..." }] } }
  * - Claude Code hooks: ~/.claude/settings.json and <workspace>/.claude/settings.json

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -24,7 +24,7 @@ import { SSE_DONE } from "../utils/sseConstants.js";
  * Upstream returns AI SDK v5 NDJSON (one JSON event per line, no `data:` prefix).
  * We translate each event to an OpenAI chat.completion.chunk and emit it as SSE so
  * both the streaming and non-streaming (forced SSE → JSON) downstream handlers in
- * OpenCursor can consume it without further format translation.
+ * AiWorkHarness can consume it without further format translation.
  */
 export class CommandCodeExecutor extends BaseExecutor {
   constructor() {

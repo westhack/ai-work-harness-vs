@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -12,7 +12,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
-const origin = process.env.OPENCURSOR_PREVIEW_ORIGIN || 'http://127.0.0.1:4178';
+const origin = process.env.AIWORKHARNESS_PREVIEW_ORIGIN || 'http://127.0.0.1:4178';
 const screenshots = path.resolve(__dirname, '../dist/visual-qa');
 const source = { id: 'doc-fixture', name: 'Streaming reference', url: 'https://example.test/docs/api', scope: 'section', scopePath: '/docs/api', maxPages: 30,
   focus: 'Streaming, retries', excludePaths: ['/docs/api/archive'], useAi: false, pages: 12, chunks: 42, indexedAt: 1_800_000_000_000,

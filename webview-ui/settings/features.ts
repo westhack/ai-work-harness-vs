@@ -1,11 +1,13 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
+
+import type { LanguagePreference } from "../../src/shared/i18n";
 
 export interface McpServerConfig {
   name: string;
@@ -38,7 +40,7 @@ export interface TeamDef {
   builtin?: boolean;
 }
 
-/** Unified hook events covering OpenCursor, Cursor and Claude Code trigger points. */
+/** Unified hook events covering AiWorkHarness, Cursor and Claude Code trigger points. */
 export type HookEvent =
   | "beforeSubmit"
   | "beforeShell"
@@ -233,6 +235,10 @@ export interface OAuthAccountInfo {
 
 export type OAuthBalanceStrategy = "first" | "round-robin" | "highest-limit" | "nearest-reset";
 
+/** Mirror of src/agent/engines/types.ts */
+export type EngineId = "builtin" | "claude-code" | "opencode" | "dsh"
+  | "gemini" | "qwen" | "kimi" | "crush" | "zcode" | "pi" | "codex";
+
 export const BALANCE_OPTIONS: { value: OAuthBalanceStrategy; label: string; desc: string }[] = [
   { value: "first", label: "First account", desc: "Prefer the first enabled account, then fail over" },
   { value: "round-robin", label: "Round robin", desc: "Rotate between enabled accounts per request" },
@@ -290,6 +296,12 @@ export interface FeatureConfig {
   notifyOnComplete: boolean;
   autoGenerateTitles: boolean;
   trackUsage: boolean;
+  /** Which engine drives agent turns: the built-in loop or an external CLI adapter. */
+  agentEngine?: EngineId;
+  /** Route external engine model calls through the in-extension protocol bridge. */
+  engineBridgeEnabled?: boolean;
+  /** Force one AiWorkHarness model for bridged engines; empty = honor the engine's requested model. */
+  engineBridgeModel?: string;
   chatTextSize: "compact" | "default" | "large";
   motion: "full" | "system" | "reduced";
   submitWithCtrlEnter: boolean;
@@ -308,6 +320,8 @@ export interface FeatureConfig {
   indexForGrep: boolean;
   /** Device for local embeddings: "cpu" (default), "dml:<adapter>", "cuda:<index>" or "coreml". */
   embedAccelerator?: string;
+  /** UI language: "auto" follows VS Code's display language. */
+  language?: LanguagePreference;
 }
 
 // ---- Approval policy (mirror of src/agent/approvalPolicy.ts) ----
@@ -390,6 +404,9 @@ export const EMPTY_FEATURES: FeatureConfig = {
   notifyOnComplete: true,
   autoGenerateTitles: true,
   trackUsage: true,
+  agentEngine: "builtin",
+  engineBridgeEnabled: false,
+  engineBridgeModel: "",
   chatTextSize: "default",
   motion: "full",
   submitWithCtrlEnter: false,
@@ -405,6 +422,7 @@ export const EMPTY_FEATURES: FeatureConfig = {
   indexingEnabled: true,
   indexNewFolders: true,
   indexForGrep: true,
+  language: "auto",
 };
 
 export function uid(prefix: string): string {

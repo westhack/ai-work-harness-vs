@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -18,7 +18,7 @@ import { downloadModelFile } from "./modelDownload";
 let root: string, destination: string, server: Server, url: string;
 const bytes = Buffer.from("GGUF fixture weights for integrity checks");
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "ocursor-download-"));
+  root = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-download-"));
   destination = path.join(root, "fixture.gguf");
   server = createServer();
   await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));

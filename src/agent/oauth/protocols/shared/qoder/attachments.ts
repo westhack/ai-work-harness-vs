@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -12,7 +12,7 @@ import type { ProtocolValue, ProtocolRecord, ProtocolError } from "../../wireTyp
  * Native qodercli does NOT stuff image/PDF bytes into agent_chat_generation.
  * It PUTs them to /algo/api/v2/image/upload (COSY-signed multipart) and then
  * sends the returned OSS URL. Agents like Claude Code send OpenAI/Claude
- * data-URIs instead, which OpenCursor previously forwarded verbatim — 10MB
+ * data-URIs instead, which AiWorkHarness previously forwarded verbatim — 10MB
  * images become 30MB+ JSON and upstream 413s even though the model window
  * is ~200k tokens.
  *
@@ -59,7 +59,7 @@ function stubText({ name, mime, bytes, reason }: ProtocolValue) {
     return `[file omitted: ${label}${size} — ${reason}]`;
 }
 export function buildMultipartFile(buffer: ProtocolValue, { fieldName = "file", fileName, mediaType }: ProtocolValue = {}) {
-    const boundary = `----OpenCursorQoder${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
+    const boundary = `----AiWorkHarnessQoder${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`;
     const filename = fileName || `upload.${mimeExt(mediaType)}`;
     const head = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="${fieldName}"; filename="${filename}"\r\nContent-Type: ${mediaType || "application/octet-stream"}\r\n\r\n`);
     const tail = Buffer.from(`\r\n--${boundary}--\r\n`);

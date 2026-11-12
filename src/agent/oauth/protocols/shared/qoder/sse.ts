@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -14,7 +14,7 @@ import type { ProtocolValue, ProtocolRecord } from "../../wireTypes.js";
  * itself often lives on `delta.finish_reason` rather than the choice.
  *
  * Downstream (Claude translator, OpenAI clients, Claude Code) look for usage
- * on the finish chunk or drop `choices: []` entirely. OpenCursor's own dashboard
+ * on the finish chunk or drop `choices: []` entirely. AiWorkHarness's own dashboard
  * still sees tokens because extractUsage runs on every forwarded frame.
  *
  * Coalesce: hold empty finish + usage-only frames, then emit one OpenAI

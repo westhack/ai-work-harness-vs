@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -24,10 +24,10 @@ async function main(): Promise<void> {
   if (!config.directory || !config.repositories || !Object.keys(config.repositories).length || !config.models?.length || !config.apiBaseUrl) throw new Error("Configure directory, repositories, models and apiBaseUrl");
   const endpoint = new URL(config.apiBaseUrl);
   if (!["http:", "https:"].includes(endpoint.protocol) || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) throw new Error("Provider endpoint must be an HTTP(S) URL without embedded credentials or query parameters");
-  if (config.execution?.kind === "local" && process.env.OPENCURSOR_TRUSTED_LOCAL_WORKER !== "1") throw new Error("Host execution requires OPENCURSOR_TRUSTED_LOCAL_WORKER=1. Default container execution requires Docker and a pre-pulled image.");
+  if (config.execution?.kind === "local" && process.env.AIWORKHARNESS_TRUSTED_LOCAL_WORKER !== "1") throw new Error("Host execution requires AIWORKHARNESS_TRUSTED_LOCAL_WORKER=1. Default container execution requires Docker and a pre-pulled image.");
   config.directory = path.resolve(path.dirname(path.resolve(configPath)), config.directory);
   for (const [name, root] of Object.entries(config.repositories)) config.repositories[name] = path.resolve(path.dirname(path.resolve(configPath)), root);
-  config.apiKey = process.env.OPENCURSOR_API_KEY ?? "";
+  config.apiKey = process.env.AIWORKHARNESS_API_KEY ?? "";
   const manager = new JobManager(config, runAgent);
   await manager.initialize();
   const storage = path.join(config.directory, "runtime");
@@ -38,11 +38,11 @@ async function main(): Promise<void> {
     finally { await manager.close(); }
     return;
   }
-  const server = createWorkerServer(manager, process.env.OPENCURSOR_WORKER_TOKEN ?? "");
+  const server = createWorkerServer(manager, process.env.AIWORKHARNESS_WORKER_TOKEN ?? "");
   server.requestTimeout = 30_000; server.headersTimeout = 15_000;
-  const port = Number(process.env.OPENCURSOR_WORKER_PORT ?? 7337);
+  const port = Number(process.env.AIWORKHARNESS_WORKER_PORT ?? 7337);
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("Invalid worker port");
-  server.listen(port, "127.0.0.1", () => console.log(`OpenCursor worker ready at http://127.0.0.1:${port}/v1 (use an SSH tunnel for remote access)`));
+  server.listen(port, "127.0.0.1", () => console.log(`AiWorkHarness worker ready at http://127.0.0.1:${port}/v1 (use an SSH tunnel for remote access)`));
   server.on("error", error => { console.error(error.message); process.exitCode = 1; });
   const stop = () => { server.close(); void manager.close().then(() => pendingChanges.flush()).catch(error => { console.error(error.message); process.exitCode = 1; }); };
   process.once("SIGINT", stop); process.once("SIGTERM", stop);

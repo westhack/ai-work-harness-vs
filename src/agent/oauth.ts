@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -106,8 +106,8 @@ class OAuthConnectionError extends Error {
 }
 
 /** Index of account ids persisted in globalState. */
-const INDEX_KEY = "ocursor.oauth.accountIds";
-const SECRET_KEY = (id: string) => `ocursor.oauth.acct.${id}`;
+const INDEX_KEY = "aiworkharness.oauth.accountIds";
+const SECRET_KEY = (id: string) => `aiworkharness.oauth.acct.${id}`;
 
 export function initOAuth(context: vscode.ExtensionContext) {
   const generation = ++contextGeneration;
@@ -134,7 +134,7 @@ export function initOAuth(context: vscode.ExtensionContext) {
   })).then(() => { if (ctx === context && generation === contextGeneration) emit(); });
 }
 
-const SECRET_PREFIX = "ocursor.oauth.acct.";
+const SECRET_PREFIX = "aiworkharness.oauth.acct.";
 let secretWatch: vscode.Disposable | undefined;
 
 function parseStoredAccount(id: string, raw: string | undefined): OAuthAccount | undefined {
@@ -200,7 +200,7 @@ export function getStatus(): OAuthStatus {
 
 // ---- Enable/disable + load balancing ----
 
-const STRATEGY_KEY = "ocursor.oauth.balanceStrategy";
+const STRATEGY_KEY = "aiworkharness.oauth.balanceStrategy";
 let balancePersistence: Promise<void> = Promise.resolve();
 /** Round-robin cursor per kind (session-scoped). */
 const rrCursor = new Map<OAuthKind, number>();
@@ -381,12 +381,12 @@ export async function login(kind: OAuthKind, options?: OAuthLoginOptions) {
       if (pending.get(kind) !== attempt || attempt.completing) { reply(409, "This sign-in attempt is no longer waiting for a callback."); return; }
       const code = url.searchParams.get("code") || "";
       const retState = url.searchParams.get("state") || "";
-      if (!retState || retState !== attempt.state) { reply(400, "OAuth state mismatch. Return to OpenCursor and use the current sign-in link."); return; }
+      if (!retState || retState !== attempt.state) { reply(400, "OAuth state mismatch. Return to AiWorkHarness and use the current sign-in link."); return; }
       if (url.searchParams.has("error")) {
         clearLoginAttempt(kind, attempt);
         loginErrors[kind] = "Sign-in was declined or cancelled in the browser. Add the account again to retry.";
         emit();
-        reply(400, "Sign-in was not completed. Return to OpenCursor to try again.");
+        reply(400, "Sign-in was not completed. Return to AiWorkHarness to try again.");
         return;
       }
       if (!code) { reply(400, "No authorization code returned. Finish signing in and try again."); return; }
@@ -395,7 +395,7 @@ export async function login(kind: OAuthKind, options?: OAuthLoginOptions) {
         "<html><body style='font-family:sans-serif;padding:40px'><h2>Login successful</h2><p>You can close this tab and return to VS Code.</p></body></html>"
       );
     } catch {
-      reply(400, "Sign-in failed. Return to OpenCursor to see the error and try again.");
+      reply(400, "Sign-in failed. Return to AiWorkHarness to see the error and try again.");
     }
   });
   const attempt: LoginAttempt = { verifier, state, server, authorizationUrl: buildAuthUrl(kind, challenge, state) };

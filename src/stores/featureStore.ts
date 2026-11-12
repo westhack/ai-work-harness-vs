@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -16,6 +16,8 @@ import type { Persona } from "../agent/personas";
 import type { LlamacppModel, LlamacppServerConfig } from "../agent/llamacpp";
 import { DEFAULT_APPROVAL, type ApprovalPolicy } from "../agent/approvalPolicy";
 import type { DocSource } from "../agent/docsIndex";
+import { DEFAULT_LANGUAGE, type LanguagePreference } from "../shared/i18n";
+import type { EngineId } from "../agent/engines/types";
 import { type TeamDef, type BuiltinSubagentOverrides, builtinSubagentOverrides, withBuiltinTeamSubagents, withBuiltinTeams, withoutBuiltinTeamSubagents, withoutBuiltinTeams } from "../agent/teams";
 
 export type { TeamDef };
@@ -32,7 +34,7 @@ export interface SubagentDef {
 	builtin?: boolean;
 }
 
-/** Unified hook events covering OpenCursor, Cursor and Claude Code trigger points. */
+/** Unified hook events covering AiWorkHarness, Cursor and Claude Code trigger points. */
 export type HookEvent =
 	| "preToolUse" | "postToolUse" | "permissionRequest" | "postCompact" | "subagentStart" | "interrupt"
 	| "beforeSubmit"
@@ -141,7 +143,7 @@ export function parseContextLabel(v?: string): number {
 
 /**
  * Popular text/coding models, refreshed against provider docs on 2026-09-23.
- * Context choices are OpenCursor working-context budgets up to the documented
+ * Context choices are AiWorkHarness working-context budgets up to the documented
  * window; choosing a smaller budget does not change the provider's model.
  * https://developers.openai.com/api/docs/models
  * https://platform.claude.com/docs/en/models/overview
@@ -340,6 +342,14 @@ export interface FeatureConfig {
 	autoGenerateTitles: boolean;
 	/** Track per-model token usage locally (Usage & Quota page). */
 	trackUsage: boolean;
+	/** Which engine drives agent turns: the built-in loop or an external CLI adapter. */
+	agentEngine?: EngineId;
+	/** Route external engine model calls through the in-extension protocol bridge. */
+	engineBridgeEnabled?: boolean;
+	/** Force one AiWorkHarness model for bridged engines; empty = honor the engine's requested model. */
+	engineBridgeModel?: string;
+	/** Per-engine absolute path to a CLI the user installed themselves. */
+	enginePaths?: Partial<Record<EngineId, string>>;
 	/** Conversation text size in the chat sidebar. */
 	chatTextSize: "compact" | "default" | "large";
 	/** Animation policy shared by the chat and settings webviews. */
@@ -372,6 +382,8 @@ export interface FeatureConfig {
 	indexNewFolders: boolean;
 	/** Index repositories to speed up grep searches (all data local). */
 	indexForGrep: boolean;
+	/** UI language: "auto" follows VS Code's display language. */
+	language: LanguagePreference;
 }
 
 const DEFAULTS: FeatureConfig = {
@@ -402,6 +414,7 @@ const DEFAULTS: FeatureConfig = {
 	notifyOnComplete: true,
 	autoGenerateTitles: true,
 	trackUsage: true,
+	agentEngine: "builtin",
 	chatTextSize: "default",
 	motion: "full",
 	submitWithCtrlEnter: false,
@@ -418,11 +431,12 @@ const DEFAULTS: FeatureConfig = {
 	indexingEnabled: true,
 	indexNewFolders: true,
 	indexForGrep: true,
+	language: DEFAULT_LANGUAGE,
 };
 
 /** Default base URLs + whether a key is required, per provider kind. */
 
-const KEY = "ocursor.features";
+const KEY = "aiworkharness.features";
 
 export class FeatureStore {
 	private readonly _onDidChange = new vscode.EventEmitter<void>();

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -132,7 +132,7 @@ export async function atomicReplace(file: string, data: Buffer | null, mode?: nu
     await beforeCommit?.(); assertNotAborted(signal); await fs.unlink(file); await syncDirectory(path.dirname(file)); return;
   }
   await fs.mkdir(path.dirname(file), { recursive: true });
-  const temporary = path.join(path.dirname(file), `.ocursor-${randomUUID()}.tmp`);
+  const temporary = path.join(path.dirname(file), `.aiworkharness-${randomUUID()}.tmp`);
   try {
     const handle = await fs.open(temporary, "wx", mode === undefined ? 0o666 : mode & 0o777);
     try { await handle.writeFile(data, { signal }); await handle.sync(); } finally { await handle.close(); }
@@ -157,7 +157,7 @@ export async function mutateFile<T>(input: string, options: MutationOptions, upd
       // Persist original bytes before the destructive operation. Backup failure
       // aborts the edit; it must never become an unrecoverable 'empty' snapshot.
       if (snapshot.data !== null) {
-        backupDirectory ??= fs.mkdtemp(path.join(os.tmpdir(), "ocursor-edit-backups-"));
+        backupDirectory ??= fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-edit-backups-"));
         backupPath = path.join(await backupDirectory, randomUUID());
         const backup = await fs.open(backupPath, "wx", 0o600);
         try { await backup.writeFile(snapshot.data, { signal: options.signal }); await backup.sync(); } finally { await backup.close(); }

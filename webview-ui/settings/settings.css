@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -595,3 +595,12 @@ body.vscode-high-contrast .msel-item.active, body.vscode-high-contrast-light .ms
   .row-control input[type="text"], .row-control input[type="password"], .model-select-container { width: min(240px, 100%); }
   .fc-head, .fc-inline-row, .provider-row { flex-wrap: wrap; }
 }
+
+/* Engine status (Agents page) */
+.engine-status-badge.ok { color: var(--accent); background: var(--vscode-inputValidation-infoBackground); }
+.engine-status-badge.missing { color: var(--warn); background: var(--vscode-inputValidation-warningBackground, var(--warn-weak)); }
+.engine-status-path { font-family: var(--vscode-editor-font-family, ui-monospace, monospace); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.engine-status-command { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.engine-status-command code { font-family: var(--vscode-editor-font-family, ui-monospace, monospace); font-size: 11px; background: var(--input-bg); border-radius: 4px; padding: 2px 6px; overflow-wrap: anywhere; }
+.engine-status-error { color: var(--error, #e06c75); white-space: pre-wrap; }
+.engine-status-log { margin-top: 8px; }

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -25,7 +25,7 @@ import {
  * trusted workspace. User-level hooks (~/.cursor, ~/.claude) are unaffected.
  */
 
-const APPROVALS_KEY = "ocursor.hooks.projectApprovals";
+const APPROVALS_KEY = "aiworkharness.hooks.projectApprovals";
 const MAX_APPROVALS = 200;
 
 let store: vscode.Memento | undefined;

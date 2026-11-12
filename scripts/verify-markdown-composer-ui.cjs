@@ -1,8 +1,8 @@
-﻿/*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+/*
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -23,7 +23,7 @@ async function paste(editor, text) {
 async function main() {
   const output = path.resolve(__dirname, '../dist/visual-qa');
   await fs.mkdir(output, { recursive: true });
-  const browser = await chromium.launch({ executablePath: process.env.OPENCURSOR_BROWSER || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+  const browser = await chromium.launch({ executablePath: process.env.AIWORKHARNESS_BROWSER || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
   try {
     for (const theme of ['light', 'dark']) for (const width of [375, 900]) {
       const context = await browser.newContext({ viewport: { width, height: 950 }, reducedMotion: 'reduce' });
@@ -43,9 +43,9 @@ async function main() {
           }; },
         });
       });
-      await page.goto(`${process.env.OPENCURSOR_PREVIEW_ORIGIN || 'http://127.0.0.1:4178'}/sidebar?theme=${theme}`);
+      await page.goto(`${process.env.AIWORKHARNESS_PREVIEW_ORIGIN || 'http://127.0.0.1:4178'}/sidebar?theme=${theme}`);
       await page.waitForFunction(() => document.querySelector('.model-select')?.textContent.includes('Example model'));
-      const editor = page.getByRole('textbox', { name: 'Message OpenCursor', exact: true });
+      const editor = page.getByRole('textbox', { name: 'Message AiWorkHarness', exact: true });
       if (theme === 'light' && width === 375) {
         for (const [shortcut, modifiedPreference] of [['Enter', false], ['Control+Enter', false], ['Meta+Enter', false], ['Control+Enter', true]]) {
           if (modifiedPreference) await send(page, { type: 'configState', personas: [], activePersonaId: 'default', hasProviders: true,

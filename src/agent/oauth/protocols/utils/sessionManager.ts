@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -38,10 +38,10 @@ if (cleanupInterval.unref)
  * Get or create a session ID for the given connection.
  *
  * The binary generates a session ID once at startup: `rs() + Date.now()`.
- * Since OpenCursor is long-running, we simulate this "per-launch" behavior by
+ * Since AiWorkHarness is long-running, we simulate this "per-launch" behavior by
  * storing a generated ID in memory for each connection.
  *
- * - If OpenCursor restarts, the ID changes (matching binary restart behavior).
+ * - If AiWorkHarness restarts, the ID changes (matching binary restart behavior).
  * - Within a running instance, the ID is stable for that connection.
  * - This enables prompt caching while using the EXACT random logic of the binary.
  *

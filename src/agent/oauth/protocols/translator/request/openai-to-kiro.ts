@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -277,7 +277,7 @@ function convertMessages(messages: ProtocolValue, model: string) {
 /**
  * Build Kiro payload from OpenAI format
  *
- * Two OpenCursor-specific behaviours implemented here:
+ * Two AiWorkHarness-specific behaviours implemented here:
  *
  * 1. `-agentic` model suffix. Synthetic variant — same upstream model, but we
  *    inject a chunked-write system prompt to keep large file writes under

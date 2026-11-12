@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -17,8 +17,8 @@ import { defaultAnthropicMaxTokens } from "../providerLimits";
 import { ANTHROPIC_API_VERSION, CLAUDE_CLI_VERSION, mergeAnthropicBeta, selectAnthropicBeta } from "./protocols/providers/shared.js";
 
 /**
- * OpenCursor's Claude OAuth transport. The CLI version is a compatibility identifier, not
- * OpenCursor's version or a claim about the installed SDK/runtime.
+ * AiWorkHarness's Claude OAuth transport. The CLI version is a compatibility identifier, not
+ * AiWorkHarness's version or a claim about the installed SDK/runtime.
  */
 export const CLAUDE_OAUTH_CONFIG = {
   authUrl: "https://claude.ai/oauth/authorize",

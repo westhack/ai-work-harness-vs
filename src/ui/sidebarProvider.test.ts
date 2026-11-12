@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -496,7 +496,7 @@ describe("durable host-owned follow-up queue", () => {
     vi.mocked(pendingChanges.get).mockReturnValueOnce({ path: "file.ts", before: "before", after: "after", existedBefore: true });
     await host._showDiff("file.ts");
     expect(pendingChanges.get).toHaveBeenCalledWith("file.ts", { conversationId: b.id });
-    expect(vscode.commands.executeCommand).toHaveBeenCalledWith("ocursor.viewDiff", "file.ts", { conversationId: b.id });
+    expect(vscode.commands.executeCommand).toHaveBeenCalledWith("aiworkharness.viewDiff", "file.ts", { conversationId: b.id });
   });
 
   it("persists interrupted request edits as drafts before removing them from the queue", async () => {
@@ -816,7 +816,7 @@ describe("durable host-owned follow-up queue", () => {
       // while the journal is blocked, so consumption must be in that snapshot.
       host._persistTurnsNow(a.id, host._sessions.get(a.id));
       await store.flush();
-      const persisted = host.context.workspaceState.get("ocursor.conversations").find((conversation: { id: string }) => conversation.id === a.id);
+      const persisted = host.context.workspaceState.get("aiworkharness.conversations").find((conversation: { id: string }) => conversation.id === a.id);
       expect(persisted.steeringQueue).toEqual([]);
       expect(persisted.steps).toContainEqual({ kind: "user", text: "Preserve the public API" });
       expect(persisted.turns.at(-1)).toMatchObject({ role: "assistant", blocks: expect.arrayContaining([expect.objectContaining({ kind: "steering", text: "Preserve the public API" })]) });

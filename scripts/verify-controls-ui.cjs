@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -137,10 +137,10 @@ async function popupBounds(page, width) {
 }
 
 async function main() {
-  const origin = process.env.OPENCURSOR_PREVIEW_ORIGIN || 'http://127.0.0.1:4178';
+  const origin = process.env.AIWORKHARNESS_PREVIEW_ORIGIN || 'http://127.0.0.1:4178';
   const output = path.resolve(__dirname, '../dist/visual-qa');
   await fs.mkdir(output, { recursive: true });
-  const browser = await chromium.launch({ executablePath: process.env.OPENCURSOR_BROWSER || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+  const browser = await chromium.launch({ executablePath: process.env.AIWORKHARNESS_BROWSER || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
   const results = [];
   try {
     for (const theme of ['light', 'dark']) for (const viewport of viewports) {

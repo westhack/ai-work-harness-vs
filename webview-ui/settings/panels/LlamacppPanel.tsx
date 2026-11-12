@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -14,6 +14,7 @@ import { vscode } from "../../shared/vscode";
 import { FeatureConfig, HfGgufResult, LlamacppServerConfig, LlamacppStatus } from "../features";
 import { fmtSize } from "./localShared";
 import { HardwareSummary, useLocalHardware } from "./LocalHardware";
+import { t as tr } from "../../shared/i18n";
 
 /** Editor for a llama-server launch config (global defaults or a per-model override). */
 function ServerConfigForm({ config, onChange }: { config: LlamacppServerConfig; onChange: (next: LlamacppServerConfig) => void }) {
@@ -24,19 +25,19 @@ function ServerConfigForm({ config, onChange }: { config: LlamacppServerConfig; 
   return (
     <div className="lc-config-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 8 }}>
       <label className="fc-field">
-        <span>Host</span>
+        <span>{tr("Host")}</span>
         <input value={c.host ?? ""} placeholder="127.0.0.1" onChange={(e) => set({ host: e.target.value || undefined })} />
       </label>
       <label className="fc-field">
-        <span>Port (0 = auto)</span>
+        <span>{tr("Port (0 = auto)")}</span>
         <input type="number" min={0} value={c.port ?? ""} placeholder="auto" onChange={(e) => set({ port: num(e.target.value) })} />
       </label>
       <label className="fc-field">
-        <span>Context size (tokens)</span>
+        <span>{tr("Context size (tokens)")}</span>
         <input type="number" min={0} step={1024} value={c.ctxSize ?? ""} placeholder="65536" onChange={(e) => set({ ctxSize: num(e.target.value) })} />
       </label>
       <label className="fc-field">
-        <span>Flash attention</span>
+        <span>{tr("Flash attention")}</span>
         <Select value={c.flashAttn ?? "auto"} onChange={(e) => set({ flashAttn: e.target.value as LlamacppServerConfig["flashAttn"] })}>
           <option value="auto">auto</option>
           <option value="on">on</option>
@@ -44,58 +45,58 @@ function ServerConfigForm({ config, onChange }: { config: LlamacppServerConfig; 
         </Select>
       </label>
       <label className="fc-field">
-        <span>GPU layers (-ngl)</span>
-        <input value={c.nGpuLayers ?? ""} placeholder="auto / all / 99" onChange={(e) => set({ nGpuLayers: e.target.value || undefined })} />
+        <span>{tr("GPU layers (-ngl)")}</span>
+        <input value={c.nGpuLayers ?? ""} placeholder={tr("auto / all / 99")} onChange={(e) => set({ nGpuLayers: e.target.value || undefined })} />
       </label>
       <label className="fc-field">
-        <span>Parallel slots</span>
+        <span>{tr("Parallel slots")}</span>
         <input type="number" min={1} value={c.parallel ?? ""} placeholder="1" onChange={(e) => set({ parallel: num(e.target.value) })} />
       </label>
       <label className="fc-field">
-        <span>Threads</span>
+        <span>{tr("Threads")}</span>
         <input type="number" min={1} value={c.threads ?? ""} placeholder="auto" onChange={(e) => set({ threads: num(e.target.value) })} />
       </label>
       <label className="fc-field">
-        <span>Batch / ubatch</span>
+        <span>{tr("Batch / ubatch")}</span>
         <span style={{ display: "flex", gap: 6 }}>
           <input type="number" min={1} value={c.batchSize ?? ""} placeholder="batch" onChange={(e) => set({ batchSize: num(e.target.value) })} />
           <input type="number" min={1} value={c.ubatchSize ?? ""} placeholder="ubatch" onChange={(e) => set({ ubatchSize: num(e.target.value) })} />
         </span>
       </label>
       <label className="fc-field">
-        <span>KV cache K / V type</span>
+        <span>{tr("KV cache K / V type")}</span>
         <span style={{ display: "flex", gap: 6 }}>
           <input value={c.cacheTypeK ?? ""} placeholder="f16" onChange={(e) => set({ cacheTypeK: e.target.value || undefined })} />
           <input value={c.cacheTypeV ?? ""} placeholder="f16" onChange={(e) => set({ cacheTypeV: e.target.value || undefined })} />
         </span>
       </label>
       <label className="fc-field">
-        <span>Multimodal projector (--mmproj)</span>
-        <input value={c.mmprojPath ?? ""} placeholder="path to mmproj .gguf" onChange={(e) => set({ mmprojPath: e.target.value || undefined })} />
+        <span>{tr("Multimodal projector (--mmproj)")}</span>
+        <input value={c.mmprojPath ?? ""} placeholder={tr("path to mmproj .gguf")} onChange={(e) => set({ mmprojPath: e.target.value || undefined })} />
       </label>
       <label className="fc-field" style={{ gridColumn: "1 / -1" }}>
-        <span>Draft model for speculative / MTP (-md)</span>
-        <input value={c.draftModelPath ?? ""} placeholder="path to draft .gguf" onChange={(e) => set({ draftModelPath: e.target.value || undefined })} />
+        <span>{tr("Draft model for speculative / MTP (-md)")}</span>
+        <input value={c.draftModelPath ?? ""} placeholder={tr("path to draft .gguf")} onChange={(e) => set({ draftModelPath: e.target.value || undefined })} />
       </label>
       <label className="fc-field">
-        <span>Draft tokens (--spec-draft-n-max)</span>
+        <span>{tr("Draft tokens (--spec-draft-n-max)")}</span>
         <input type="number" min={1} value={c.specDraftNMax ?? ""} placeholder="3" onChange={(e) => set({ specDraftNMax: num(e.target.value) })} />
       </label>
       <label className="fc-field">
-        <span>Draft GPU layers (-ngld)</span>
+        <span>{tr("Draft GPU layers (-ngld)")}</span>
         <input value={c.draftNGpuLayers ?? ""} placeholder="auto" onChange={(e) => set({ draftNGpuLayers: e.target.value || undefined })} />
       </label>
       <label className="fc-inline">
-        <input type="checkbox" checked={c.jinja !== false} onChange={(e) => set({ jinja: e.target.checked })} /> Jinja templates
+        <input type="checkbox" checked={c.jinja !== false} onChange={(e) => set({ jinja: e.target.checked })} /> {tr("Jinja templates")}
       </label>
       <label className="fc-inline">
-        <input type="checkbox" checked={!!c.noMmap} onChange={(e) => set({ noMmap: e.target.checked })} /> No mmap
+        <input type="checkbox" checked={!!c.noMmap} onChange={(e) => set({ noMmap: e.target.checked })} /> {tr("No mmap")}
       </label>
       <label className="fc-inline">
-        <input type="checkbox" checked={!!c.mlock} onChange={(e) => set({ mlock: e.target.checked })} /> mlock (lock in RAM)
+        <input type="checkbox" checked={!!c.mlock} onChange={(e) => set({ mlock: e.target.checked })} /> {tr("mlock (lock in RAM)")}
       </label>
       <label className="fc-field" style={{ gridColumn: "1 / -1" }}>
-        <span>Extra args (advanced, space-separated)</span>
+        <span>{tr("Extra args (advanced, space-separated)")}</span>
         <input value={c.extraArgs ?? ""} placeholder="--metrics --alias my-model" onChange={(e) => set({ extraArgs: e.target.value || undefined })} />
       </label>
     </div>
@@ -178,22 +179,22 @@ export function LlamacppPanel({
     <>
       <h1 className="page-title">llama.cpp</h1>
 
-      <div className="section-label">Runtime</div>
+      <div className="section-label">{tr("Runtime")}</div>
       <div className="row">
         <div className="row-text">
           <div className="row-title">llama.cpp {status.installed ? "installed" : "not found"}</div>
           <div className="row-desc">
-            Requires <code>llama-server</code> on your PATH. Windows: <code>irm https://llama.app/install.ps1 | iex</code> · Linux/Mac: <code>curl -LsSf https://llama.app/install.sh | sh</code>.
+            {tr("Requires")} <code>llama-server</code> {tr("on your PATH. Windows:")} <code>{tr("irm https://llama.app/install.ps1 | iex")}</code> · Linux/Mac: <code>{tr("curl -LsSf https://llama.app/install.sh | sh")}</code>.
           </div>
         </div>
         <div className="row-control" style={{ display: "flex", gap: 8 }}>
           {!status.installed && (
             <button className="btn-primary" onClick={() => vscode.postMessage({ type: "llamacppInstall" })}>
-              Install
+              {tr("Install")}
             </button>
           )}
           <button className="btn-ghost" onClick={() => vscode.postMessage({ type: "llamacppGet" })}>
-            <Icon name="reset" size={13} /> Re-check
+            <Icon name="reset" size={13} /> {tr("Re-check")}
           </button>
         </div>
       </div>
@@ -201,14 +202,14 @@ export function LlamacppPanel({
       <HardwareSummary hardware={hardware} />
       {operationError && <div className="fc-error" role="alert">{operationError}</div>}
       <div className="sub-tabs" style={{ marginTop: 20 }}>
-        <button className={"sub-tab" + (tab === "models" ? " active" : "")} onClick={() => setTab("models")}>Models</button>
-        <button className={"sub-tab" + (tab === "search" ? " active" : "")} onClick={() => setTab("search")}>Search &amp; Download</button>
-        <button className={"sub-tab" + (tab === "config" ? " active" : "")} onClick={() => setTab("config")}>Config</button>
+        <button className={"sub-tab" + (tab === "models" ? " active" : "")} onClick={() => setTab("models")}>{tr("Models")}</button>
+        <button className={"sub-tab" + (tab === "search" ? " active" : "")} onClick={() => setTab("search")}>{tr("Search & Download")}</button>
+        <button className={"sub-tab" + (tab === "config" ? " active" : "")} onClick={() => setTab("config")}>{tr("Config")}</button>
       </div>
 
       {tab === "config" && (<>
-      <div className="section-label" style={{ marginTop: 0 }}>Default Server Config</div>
-      <p className="panel-hint">Default <code>llama-server</code> launch flags applied to every model load unless a model overrides them below. Changes take effect on next load. Chat history auto-trims to the context size.</p>
+      <div className="section-label" style={{ marginTop: 0 }}>{tr("Default Server Config")}</div>
+      <p className="panel-hint">{tr("Default")} <code>llama-server</code> {tr("launch flags applied to every model load unless a model overrides them below. Changes take effect on next load. Chat history auto-trims to the context size.")}</p>
       <ServerConfigForm
         config={features.llamacppConfig || {}}
         onChange={(next) => vscode.postMessage({ type: "llamacppSetConfig", config: next })}
@@ -216,10 +217,10 @@ export function LlamacppPanel({
       </>)}
 
       {tab === "models" && (<>
-      <div className="section-label" style={{ marginTop: 0 }}>Your Models</div>
-      <p className="panel-hint">Load a model to serve it via an OpenAI-compatible endpoint. Auto-load starts it when the extension activates. Changing a model's context length takes effect on next load.</p>
+      <div className="section-label" style={{ marginTop: 0 }}>{tr("Your Models")}</div>
+      <p className="panel-hint">{tr("Load a model to serve it via an OpenAI-compatible endpoint. Auto-load starts it when the extension activates. Changing a model's context length takes effect on next load.")}</p>
       {models.length === 0 ? (
-        <div className="empty-card">No GGUF models yet. Search or import one below.</div>
+        <div className="empty-card">{tr("No GGUF models yet. Search or import one below.")}</div>
       ) : (
         models.map((m) => {
           const isRunning = !!status.running[m.id];
@@ -237,7 +238,7 @@ export function LlamacppPanel({
                   {isLoading && <span className="badge-tag loading"><span className="llama-spinner" /> loading…</span>}
                   {isRunning && !isLoading && <span className="badge-tag always">running</span>}
                 </div>
-                <label className="fc-inline" title="Load this model automatically on startup">
+                <label className="fc-inline" title={tr("Load this model automatically on startup")}>
                   <input
                     type="checkbox"
                     checked={m.autoLoad}
@@ -247,9 +248,9 @@ export function LlamacppPanel({
                 {isStopping ? <span className="badge-tag loading">stopping…</span> : isRunning || isLoading ? (
                   <button className="btn-ghost sm" onClick={() => vscode.postMessage({ type: "llamacppUnload", id: m.id })}>{isLoading ? "Cancel" : "Unload"}</button>
                 ) : (
-                  <button className="btn-ghost sm" disabled={!status.installed} onClick={() => vscode.postMessage({ type: "llamacppLoad", id: m.id })}>Load</button>
+                  <button className="btn-ghost sm" disabled={!status.installed} onClick={() => vscode.postMessage({ type: "llamacppLoad", id: m.id })}>{tr("Load")}</button>
                 )}
-                <button className="icon-btn" title="Remove" disabled={isLoading || isStopping} onClick={() => vscode.postMessage({ type: "llamacppRemove", id: m.id })}>
+                <button className="icon-btn" title={tr("Remove")} disabled={isLoading || isStopping} onClick={() => vscode.postMessage({ type: "llamacppRemove", id: m.id })}>
                   <Icon name="trash" size={14} />
                 </button>
               </div>
@@ -257,19 +258,19 @@ export function LlamacppPanel({
                 <div className="row-desc">
                   {m.file}{m.sizeBytes ? ` · ${fmtSize(m.sizeBytes)}` : ""}{m.repo ? ` · ${m.repo}` : " · imported"}
                 </div>
-                {status.endpoints?.[m.id] && <div className="row-desc">Endpoint: <code>{status.endpoints[m.id]}</code></div>}
+                {status.endpoints?.[m.id] && <div className="row-desc">{tr("Endpoint:")} <code>{status.endpoints[m.id]}</code></div>}
                 {fit && <div className="row-desc" style={{ marginTop: 8 }}>
-                  <strong>Memory fit: {fit.level}</strong>{fit.estimatedMemoryBytes ? ` · estimated ${fmtSize(fit.estimatedMemoryBytes)}` : ""}
+                  <strong>{tr("Memory fit:")} {fit.level}</strong>{fit.estimatedMemoryBytes ? ` · estimated ${fmtSize(fit.estimatedMemoryBytes)}` : ""}
                   <p>{fit.reason}</p>
                   <button className="btn-ghost sm" onClick={() => vscode.postMessage({ type: "llamacppSetModelConfig", id: m.id, useCustomConfig: true,
-                    config: { ...(m.config || features.llamacppConfig), ctxSize: fit.recommendedContext, threads: fit.recommendedThreads, parallel: 1 } })}>Use suggested context and threads</button>
+                    config: { ...(m.config || features.llamacppConfig), ctxSize: fit.recommendedContext, threads: fit.recommendedThreads, parallel: 1 } })}>{tr("Use suggested context and threads")}</button>
                 </div>}
-                <label className="fc-inline" style={{ marginTop: 8 }} title="Override the global server config for this model only">
+                <label className="fc-inline" style={{ marginTop: 8 }} title={tr("Override the global server config for this model only")}>
                   <input
                     type="checkbox"
                     checked={!!m.useCustomConfig}
                     onChange={(e) => vscode.postMessage({ type: "llamacppSetModelConfig", id: m.id, useCustomConfig: e.target.checked, config: m.config ?? { ...features.llamacppConfig } })}
-                  /> custom config
+                  /> {tr("custom config")}
                 </label>
                 {m.useCustomConfig && (
                   <ServerConfigForm
@@ -280,7 +281,7 @@ export function LlamacppPanel({
                 {err && <div className="fc-error">{err}</div>}
                 {log.length > 0 && (
                   <details className="llama-log" open={isLoading || !!err}>
-                    <summary>Server log ({log.length})</summary>
+                    <summary>{tr("Server log (")}{log.length})</summary>
                     <pre className="llama-log-pre" ref={(el) => { if (el) el.scrollTop = el.scrollHeight; }}>{log.join("\n")}</pre>
                   </details>
                 )}
@@ -291,22 +292,22 @@ export function LlamacppPanel({
       )}
       <div className="panel-actions">
         <button className="btn-ghost" onClick={() => vscode.postMessage({ type: "llamacppImport" })}>
-          <Icon name="plus" size={14} /> Import local .gguf
+          <Icon name="plus" size={14} /> {tr("Import local .gguf")}
         </button>
         <button className="btn-ghost" onClick={() => setTab("search")}>
-          <Icon name="database" size={14} /> Search &amp; download from Hugging Face
+          <Icon name="database" size={14} /> {tr("Search & download from Hugging Face")}
         </button>
       </div>
       </>)}
 
       {tab === "search" && (<>
-      <div className="section-label" style={{ marginTop: 0 }}>Search Hugging Face (GGUF)</div>
-      <p className="panel-hint">Interrupted downloads resume when the server supports validated ranges. GGUF headers and published SHA-256 checksums are checked before adding the model.</p>
+      <div className="section-label" style={{ marginTop: 0 }}>{tr("Search Hugging Face (GGUF)")}</div>
+      <p className="panel-hint">{tr("Interrupted downloads resume when the server supports validated ranges. GGUF headers and published SHA-256 checksums are checked before adding the model.")}</p>
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <input
           type="search"
           value={query}
-          placeholder="e.g. llama 3.1 8b instruct"
+          placeholder={tr("e.g. llama 3.1 8b instruct")}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") search(); }}
           style={{ flex: 1 }}
@@ -331,9 +332,9 @@ export function LlamacppPanel({
             {open && (
               <div className="fc-body">
                 {!files ? (
-                  <div className="row-desc">Loading files…</div>
+                  <div className="row-desc">{tr("Loading files…")}</div>
                 ) : files.length === 0 ? (
-                  <div className="row-desc">No .gguf files found.</div>
+                  <div className="row-desc">{tr("No .gguf files found.")}</div>
                 ) : (
                   files.map((f) => {
                     const id = `${r.repo}/${f.file}`;
@@ -349,10 +350,10 @@ export function LlamacppPanel({
                           <span className="badge-tag glob">added</span>
                         ) : pct != null ? (
                           <span style={{ display: "flex", gap: 8, alignItems: "center" }}><span className="row-desc">{pct}%</span>
-                            <button className="btn-ghost sm" onClick={() => vscode.postMessage({ type: "llamacppCancelDownload", id })}>Cancel</button></span>
+                            <button className="btn-ghost sm" onClick={() => vscode.postMessage({ type: "llamacppCancelDownload", id })}>{tr("Cancel")}</button></span>
                         ) : (
                           <button className="btn-ghost sm" onClick={() => download(r.repo, f.file)}>
-                            <Icon name="database" size={13} /> Download
+                            <Icon name="database" size={13} /> {tr("Download")}
                           </button>
                         )}
                       </div>

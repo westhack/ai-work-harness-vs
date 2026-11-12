@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -23,7 +23,7 @@ import type { ToolContext } from "./types";
 let root: string;
 let context: ToolContext;
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "ocursor-pty-")); fixture.root = root;
+  root = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-pty-")); fixture.root = root;
   context = { todos: [], shellSessionKey: `pty-${Date.now()}`, shellOwnerKey: `owner-${Date.now()}` };
   await fs.writeFile(path.join(root, "interactive.cjs"), `
 const readline = require('readline');

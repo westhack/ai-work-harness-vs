@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -25,6 +25,7 @@ import {
   ProviderKind,
 } from "../features";
 import { Toggle } from "./Toggle";
+import { t as tr } from "../../shared/i18n";
 
 // Default and custom models render as flat rows with an enable toggle only;
 // their sampling options are configured in the chat model picker.
@@ -38,7 +39,7 @@ function ModelRow({ model, enabled, onToggle, onRemove, badge }: { model: ModelD
         {badge && <span className="badge-tag" style={{ marginLeft: 8 }}>{badge}</span>}
       </div>
       {onRemove && (
-        <button className="icon-btn" onClick={onRemove} title="Remove model"><Icon name="trash" size={14} /></button>
+        <button className="icon-btn" onClick={onRemove} title={tr("Remove model")}><Icon name="trash" size={14} /></button>
       )}
       <Toggle label={`Enable ${model.name}`} checked={enabled} onChange={onToggle} />
     </div>
@@ -117,12 +118,12 @@ function ModelSection({
           <div className="row-desc" style={{ marginBottom: 8 }}>{spec.subtitle}</div>
           {spec.refreshError && <div className="fc-error">{spec.refreshError}</div>}
           {spec.models.length === 0 ? (
-            <div className="empty-card">No models{spec.connected ? "" : " — connect this provider in the Providers tab"}.</div>
+            <div className="empty-card">{tr("No models")}{spec.connected ? "" : " — connect this provider in the Providers tab"}.</div>
           ) : (
             <>
               <div className="fc-inline-row" style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-                <button className="btn-ghost sm" onClick={() => onEnableAll(spec.models.map((m) => m.id), true)}>Enable all</button>
-                <button className="btn-ghost sm" onClick={() => onEnableAll(spec.models.map((m) => m.id), false)}>Disable all</button>
+                <button className="btn-ghost sm" onClick={() => onEnableAll(spec.models.map((m) => m.id), true)}>{tr("Enable all")}</button>
+                <button className="btn-ghost sm" onClick={() => onEnableAll(spec.models.map((m) => m.id), false)}>{tr("Disable all")}</button>
               </div>
               <div className="model-grid">
                 {spec.models.map((m) => (
@@ -143,12 +144,12 @@ function ModelSection({
               <input
                 type="text"
                 value={draft}
-                placeholder="Add model by id (e.g. gpt-6-sol)"
+                placeholder={tr("Add model by id (e.g. gpt-6-sol)")}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") add(); }}
                 style={{ flex: 1 }}
               />
-              <button className="btn-ghost" disabled={!draft.trim()} onClick={add}><Icon name="plus" /> Add model</button>
+              <button className="btn-ghost" disabled={!draft.trim()} onClick={add}><Icon name="plus" /> {tr("Add model")}</button>
             </div>
           )}
         </div>
@@ -428,19 +429,19 @@ export function ModelsPanel({
 
   return (
     <>
-      <h1 className="page-title">Models</h1>
+      <h1 className="page-title">{tr("Models")}</h1>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <input
           className="model-search"
           type="search"
           value={query}
-          placeholder="Search models across all providers…"
+          placeholder={tr("Search models across all providers…")}
           onChange={(e) => setQuery(e.target.value)}
           style={{ flex: 1 }}
         />
-        <button className="btn-ghost" onClick={refreshAll} disabled={anyRefreshing} title="Refresh every connected provider">
-          {anyRefreshing ? <span className="llama-spinner" /> : <Icon name="reset" size={14} />} Refresh all
+        <button className="btn-ghost" onClick={refreshAll} disabled={anyRefreshing} title={tr("Refresh every connected provider")}>
+          {anyRefreshing ? <span className="llama-spinner" /> : <Icon name="reset" size={14} />} {tr("Refresh all")}
         </button>
       </div>
 
@@ -450,8 +451,8 @@ export function ModelsPanel({
         reasoning, thinking and context options using Edit options in the chat model picker.
       </p>
 
-      {q && visibleSections.length === 0 && <div className="empty-card">No models match "{query}".</div>}
-      {!q && visibleSections.length === 0 && <div className="empty-card">Connect and enable a provider in Providers to manage its models.</div>}
+      {q && visibleSections.length === 0 && <div className="empty-card">{tr("No models match \"")}{query}".</div>}
+      {!q && visibleSections.length === 0 && <div className="empty-card">{tr("Connect and enable a provider in Providers to manage its models.")}</div>}
 
       {visibleSections.map((s) => (
         <ModelSection

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -49,7 +49,7 @@ const readIndex = async () => JSON.parse(await fs.readFile(file(), "utf8")) as {
 
 beforeEach(async () => {
   setDocSourcesProvider(() => []);
-  storage = await fs.mkdtemp(path.join(tmpdir(), "ocursor-docs-"));
+  storage = await fs.mkdtemp(path.join(tmpdir(), "aiworkharness-docs-"));
   setDocsStorageDir(storage);
   embedding.fingerprint = "fixture-embedding-v1";
   embedding.texts.mockReset().mockImplementation(async (texts: string[]) => texts.map(() => [1, 0, 0]));
@@ -68,7 +68,7 @@ afterEach(async () => {
   vi.unstubAllGlobals();
   // Fixture deletion is restricted to the directory created for this test.
   const target = path.resolve(storage);
-  if (path.dirname(target) !== path.resolve(tmpdir()) || !path.basename(target).startsWith("ocursor-docs-")) throw new Error("Unsafe documentation test fixture path");
+  if (path.dirname(target) !== path.resolve(tmpdir()) || !path.basename(target).startsWith("aiworkharness-docs-")) throw new Error("Unsafe documentation test fixture path");
   await fs.rm(target, { recursive: true, force: true });
 });
 

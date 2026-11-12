@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -18,7 +18,7 @@ import assert from "node:assert/strict";
 const scanner = fileURLToPath(new URL("./check-secrets.mjs", import.meta.url));
 const googleApiKey = "AIza" + "aB3_-".repeat(7);
 function scan(files, afterStage = () => {}) {
-  const cwd = mkdtempSync(join(tmpdir(), "ocursor-security-"));
+  const cwd = mkdtempSync(join(tmpdir(), "aiworkharness-security-"));
   try {
     execFileSync("git", ["init", "--quiet"], { cwd });
     for (const [name, content] of Object.entries(files)) {

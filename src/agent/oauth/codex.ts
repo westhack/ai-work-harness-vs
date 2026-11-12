@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -15,7 +15,7 @@ import { PROVIDER_MODELS } from "../../shared/providerModels";
 import { supportsFastMode } from "../../shared/modelSpeed";
 import type { ModelParams } from "../provider/types";
 
-/** OpenCursor's Codex protocol compatibility identifiers. */
+/** AiWorkHarness's Codex protocol compatibility identifiers. */
 export const CODEX_CONFIG = {
   authUrl: "https://auth.openai.com/oauth/authorize",
   tokenUrl: "https://auth.openai.com/oauth/token",
@@ -52,7 +52,7 @@ export function codexHeaders(account: CodexCredentials, opts: { sessionId?: stri
 /** Preserve the existing UUIDv5 mapping across upgrades and token refreshes. */
 function codexSessionId(promptCacheKey: string): string {
   const namespace = Buffer.from("6ba7b8119dad11d180b400c04fd430c8", "hex");
-  const bytes = createHash("sha1").update(namespace).update(`OpenCursor:${promptCacheKey}`).digest().subarray(0, 16);
+  const bytes = createHash("sha1").update(namespace).update(`AiWorkHarness:${promptCacheKey}`).digest().subarray(0, 16);
   bytes[6] = (bytes[6] & 0x0f) | 0x50;
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
   const hex = bytes.toString("hex");
@@ -157,7 +157,7 @@ export function createCodexRequest(opts: CodexRequestOptions, account: CodexCred
   // stream_options, previous_response_id, and Chat Completions sampling parameters.
   const body = {
     model: upstreamModel,
-    instructions: instructions || "You are OpenCursor, an AI coding assistant inside VS Code.",
+    instructions: instructions || "You are AiWorkHarness, an AI coding assistant inside VS Code.",
     input: input.length ? input : [{ role: "user", content: [{ type: "input_text", text: "..." }] }],
     stream: true,
     store: false,

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -17,7 +17,7 @@ const esbuild = require('esbuild');
 const { hostBuildOptions } = require('../esbuild-options.cjs');
 function pdfFixture() {
   let pdf = '%PDF-1.4\n'; const offsets = [0];
-  const stream = 'BT /F1 24 Tf 72 720 Td (OpenCursor runtime smoke) Tj ET';
+  const stream = 'BT /F1 24 Tf 72 720 Td (AiWorkHarness runtime smoke) Tj ET';
   const objects = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
     '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>', `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`];
@@ -39,10 +39,10 @@ function pdfFixture() {
     await fs.writeFile(path.join(dir,'run.cjs'), `
 const path=require('node:path');
 const api=require('./features.cjs');
-api.initRuntimeDeps(process.env.OPENCURSOR_RUNTIME_SMOKE_CACHE || path.join(process.cwd(),'storage'));
+api.initRuntimeDeps(process.env.AIWORKHARNESS_RUNTIME_SMOKE_CACHE || path.join(process.cwd(),'storage'));
 (async()=>{
  const result=await api.readFileTool.execute({path:'fixture.pdf'});
- if(!result.output.includes('OpenCursor runtime smoke'))throw new Error(result.output);
+ if(!result.output.includes('AiWorkHarness runtime smoke'))throw new Error(result.output);
  console.log(process.version,'production-bundled Read(PDF) passed');
  const hub=await api.importRuntimeDep('@huggingface/hub');
  if(typeof hub.downloadFile!=='function')throw new Error('Hub initialization failed');
@@ -59,7 +59,7 @@ api.initRuntimeDeps(process.env.OPENCURSOR_RUNTIME_SMOKE_CACHE || path.join(proc
    terminal.once('close',exitCode=>{clearTimeout(timeout);exitCode===0 && output.includes('true')?resolve():reject(new Error('Packaged PTY failed: '+output));});
  });
  console.log('Pinned native PTY runtime executed in isolation');
- if(process.env.OPENCURSOR_SMOKE_NATIVE==='1'){
+ if(process.env.AIWORKHARNESS_SMOKE_NATIVE==='1'){
    const transformers=await api.importRuntimeDep('@huggingface/transformers');
    if(typeof transformers.pipeline!=='function')throw new Error('Transformers initialization failed');
    console.log('Pinned native transformers runtime initialized');

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -26,7 +26,7 @@ let temporaryRoot: string;
 let procs: (EventEmitter & { stdout: PassThrough; stderr: PassThrough; kill: ReturnType<typeof vi.fn> })[];
 const model: LlamacppModel = { id: "fixture", file: "fixture.gguf", filePath: "/tmp/fixture.gguf", name: "fixture", autoLoad: false, port: 0 };
 beforeEach(async () => {
-  temporaryRoot = await fs.mkdtemp(path.join(os.tmpdir(), "ocursor-llama-test-"));
+  temporaryRoot = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-llama-test-"));
   initLlamacpp({ globalStorageUri: { fsPath: temporaryRoot } } as Parameters<typeof initLlamacpp>[0]);
   model.filePath = path.join(temporaryRoot, "fixture.gguf");
   await fs.writeFile(model.filePath, "GGUF fixture model bytes");

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "./icons";
 import { usePresence } from "./usePresence";
 import "./ImagePreview.css";
+import { t as tr } from "./i18n";
 
 type PreviewImage = { id: string; name: string; data: string };
 type PreviewProps = { images: readonly PreviewImage[]; activeId: string | null; onClose: () => void };
@@ -110,7 +111,7 @@ function PreviewDialog({ images, activeId, open, exiting, onClose }: {
     onClick={event => { event.stopPropagation(); if (open && event.target === event.currentTarget) onClose(); }}
     onPointerDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()}
     onKeyDown={handleKeyDown}>
-    <section className="image-preview-dialog" role="dialog" aria-modal="true" aria-label="Image preview">
+    <section className="image-preview-dialog" role="dialog" aria-modal="true" aria-label={tr("Image preview")}>
       <header className="image-preview-toolbar">
         <div className="image-preview-info">
           <h2 className="image-preview-name" title={image.name}>{image.name}</h2>
@@ -121,13 +122,13 @@ function PreviewDialog({ images, activeId, open, exiting, onClose }: {
           title={zoomed ? "Fit image to window" : "Show actual size"} onClick={() => setZoomed(value => !value)}>
           {zoomed ? "Fit" : "100%"}
         </button>
-        <button ref={closeButton} type="button" className="image-preview-control" aria-label="Close image preview" title="Close image preview" onClick={onClose}>
+        <button ref={closeButton} type="button" className="image-preview-control" aria-label={tr("Close image preview")} title={tr("Close image preview")} onClick={onClose}>
           <Icon name="close" size={18} />
         </button>
       </header>
       <div ref={stage} className="image-preview-stage" data-zoomed={zoomed || undefined} aria-busy={!ready && !error}>
-        {error ? <div className="image-preview-message" role="status">This image could not be loaded.</div> : <>
-          {!ready && <div className="image-preview-message" role="status"><span className="image-preview-spinner" aria-hidden="true" />Loading image…</div>}
+        {error ? <div className="image-preview-message" role="status">{tr("This image could not be loaded.")}</div> : <>
+          {!ready && <div className="image-preview-message" role="status"><span className="image-preview-spinner" aria-hidden="true" />{tr("Loading image…")}</div>}
           <div className="image-preview-canvas">
             <img key={image.id} className="image-preview-image" src={image.data} alt={image.name} draggable={false}
               data-ready={ready || undefined}
@@ -137,9 +138,9 @@ function PreviewDialog({ images, activeId, open, exiting, onClose }: {
         </>}
       </div>
       {images.length > 1 && <footer className="image-preview-navigation">
-        <button type="button" className="image-preview-control" aria-label="Previous image" title="Previous image" onClick={() => navigate(-1)}><Icon name="chevL" /></button>
+        <button type="button" className="image-preview-control" aria-label={tr("Previous image")} title={tr("Previous image")} onClick={() => navigate(-1)}><Icon name="chevL" /></button>
         <span className="image-preview-position" aria-live="polite" aria-atomic="true">{index + 1} of {images.length}</span>
-        <button type="button" className="image-preview-control" aria-label="Next image" title="Next image" onClick={() => navigate(1)}><Icon name="chevR" /></button>
+        <button type="button" className="image-preview-control" aria-label={tr("Next image")} title={tr("Next image")} onClick={() => navigate(1)}><Icon name="chevR" /></button>
       </footer>}
     </section>
   </div>;

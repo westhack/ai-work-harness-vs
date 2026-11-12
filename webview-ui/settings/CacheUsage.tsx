@@ -1,14 +1,15 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
 import * as React from "react";
 import type { ModelUsage } from "./features";
+import { t as tr } from "../shared/i18n";
 
 function tokens(n: number): string {
   return n.toLocaleString("en-US");
@@ -25,8 +26,8 @@ export function CacheUsage({ usage }: { usage: ModelUsage }) {
   const reported = usage.cacheReadInputTokens !== undefined || cached > 0;
   return <span>
     {reported
-      ? <>{tokens(cached)} cached input · {tokens(noncached)} non-cached input{unknown > 0 && <> · {tokens(unknown)} input with cache status unknown</>}</>
-      : <>Cache read: not reported{unknown > 0 && <> for {tokens(unknown)} input tokens</>}</>}
-    {(usage.cacheWriteReported || (usage.cachedWriteTokens ?? 0) > 0) && <> · {tokens(usage.cachedWriteTokens ?? 0)} cache-write tokens reported</>}
+      ? <>{tokens(cached)} {tr("cached input ·")} {tokens(noncached)} {tr("non-cached input")}{unknown > 0 && <> · {tokens(unknown)} {tr("input with cache status unknown")}</>}</>
+      : <>{tr("Cache read: not reported")}{unknown > 0 && <> for {tokens(unknown)} {tr("input tokens")}</>}</>}
+    {(usage.cacheWriteReported || (usage.cachedWriteTokens ?? 0) > 0) && <> · {tokens(usage.cachedWriteTokens ?? 0)} {tr("cache-write tokens reported")}</>}
   </span>;
 }

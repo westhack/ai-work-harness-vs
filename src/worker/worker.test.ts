@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -23,7 +23,7 @@ afterEach(async () => {
   for (const directory of directories.splice(0)) await fs.rm(directory, { recursive: true, force: true });
 });
 async function fixture(runner: Runner) {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ocursor-worker-")); directories.push(root);
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-worker-")); directories.push(root);
   const repo = path.join(root, "original"); await fs.mkdir(repo);
   await git(repo, ["init"]); await git(repo, ["config", "user.name", "Worker Test"]); await git(repo, ["config", "user.email", "test@example.invalid"]);
   await fs.writeFile(path.join(repo, "value.cjs"), "exports.value=41;\n");
@@ -85,7 +85,7 @@ it("authenticates every endpoint and refuses browser-origin requests", async () 
 it("requires external grader evidence and retains failed/inconclusive cases", async () => {
   const f = await fixture(async options => { await fs.writeFile(path.join(options.workspaceRoot!, "value.cjs"), "exports.value=42;\n"); });
   const grader = path.join(f.root, "grader.cjs");
-  await fs.writeFile(grader, "const path=require('node:path');const value=require(path.join(process.env.OPENCURSOR_EVAL_WORKSPACE,'value.cjs')).value;console.log(JSON.stringify({passed:value===Number(process.argv[2])}));");
+  await fs.writeFile(grader, "const path=require('node:path');const value=require(path.join(process.env.AIWORKHARNESS_EVAL_WORKSPACE,'value.cjs')).value;console.log(JSON.stringify({passed:value===Number(process.argv[2])}));");
   const cases = [42, 43].map(value => ({ ...f.request, name: String(value), split: "held-out" as const, grader: { executable: process.execPath, args: [grader, String(value)] } }));
   cases.push({ ...f.request, name: "missing grader", split: "held-out", grader: { executable: path.join(f.root, "missing.exe"), args: [] } });
   const results = await evaluate(f.manager, cases, path.join(f.root, "report.json"));
@@ -112,7 +112,7 @@ it("runs container graders directly with isolated read-only mounts and no networ
   expect(args[args.indexOf("--network") + 1]).toBe("none");
   expect(args.filter(arg => arg.startsWith("type=bind,"))).toHaveLength(2);
   expect(args.filter(arg => arg.startsWith("type=bind,")).every(arg => arg.endsWith(",readonly"))).toBe(true);
-  expect(args).toContain("OPENCURSOR_EVAL_WORKSPACE=/workspace"); expect(args.slice(-2)).toEqual(["node", "/grader/check.cjs"]);
+  expect(args).toContain("AIWORKHARNESS_EVAL_WORKSPACE=/workspace"); expect(args.slice(-2)).toEqual(["node", "/grader/check.cjs"]);
   expect(args).not.toContain("-lc");
   await expect(containerGraderArguments({ kind: "container" }, f.repo, { directory: f.repo, executable: "node", args: [] }, f.request.revision, "test")).rejects.toThrow("separate");
   await expect(containerGraderArguments({ kind: "container" }, f.repo, { executable: "node", args: [] }, f.request.revision, "test")).rejects.toThrow("trusted directory");

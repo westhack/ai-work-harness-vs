@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -45,13 +45,13 @@ import { mcpManager } from "../integrations/mcpClient";
 let root: string;
 const metrics: Record<string, unknown>[] = [];
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "ocursor-eval-")); fixture.root = root;
+  root = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-eval-")); fixture.root = root;
   fixture.turns = []; fixture.requests = []; fixture.estimates = [];
   await fs.writeFile(path.join(root, "protected.txt"), "must remain unchanged\n");
 });
 afterEach(async () => { setToolTimeoutOverrides(undefined); vi.restoreAllMocks(); pendingChanges.acceptAll(); await fs.rm(root, { recursive: true, force: true }); });
 afterAll(async () => {
-  if (process.env.OPENCURSOR_EVAL_REPORT) await fs.writeFile(process.env.OPENCURSOR_EVAL_REPORT, JSON.stringify({
+  if (process.env.AIWORKHARNESS_EVAL_REPORT) await fs.writeFile(process.env.AIWORKHARNESS_EVAL_REPORT, JSON.stringify({
     measurement: "Deterministic execution fixtures, not a live-model benchmark. Token counts are character estimates; cache and billed cost are unmeasured.", cases: metrics,
   }, null, 2));
 });
@@ -173,7 +173,7 @@ describe("repository outcomes through the production agent", () => {
     await fs.writeFile(path.join(root, "verify.cjs"), "require('node:assert/strict').equal(require('./value.cjs').value,42);\n");
     const missingExit = process.platform === "win32" ? 1 : 127;
     const result = await evaluate("missing-command recovery followed by a verified fix", [
-      tools(call("Shell", { command: "opencursor_eval_command_does_not_exist_9f73", description: "Exercise missing command diagnosis", block_until_ms: TERMINAL_WAIT_MS })),
+      tools(call("Shell", { command: "aiworkharness_eval_command_does_not_exist_9f73", description: "Exercise missing command diagnosis", block_until_ms: TERMINAL_WAIT_MS })),
       (request) => { expect(JSON.stringify(request.messages)).toContain(`exit_code=${missingExit}`); return testShell(); },
       (request) => { expect(JSON.stringify(request.messages)).toContain("exit_code=1"); return tools(call("Read", { path: "value.cjs" })); },
       tools(call("StrReplace", { path: "value.cjs", old_string: "41", new_string: "42" })),

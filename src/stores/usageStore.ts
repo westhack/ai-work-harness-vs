@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -23,7 +23,7 @@ export interface ModelUsage {
 	cacheWriteReported?: boolean;
 }
 
-const KEY = "ocursor.usage";
+const KEY = "aiworkharness.usage";
 let ctx: vscode.ExtensionContext | undefined;
 const listeners = new Set<(usage: Record<string, ModelUsage>) => void>();
 
@@ -91,7 +91,7 @@ export function recordUsage(model: string, promptTokens = 0, completionTokens = 
 
 export function resetUsage(): Promise<void> {
 	const reset = writes.catch(() => {}).then(async () => {
-		if (!ctx) throw new Error("Usage storage is not initialized. Reload OpenCursor and try again.");
+		if (!ctx) throw new Error("Usage storage is not initialized. Reload AiWorkHarness and try again.");
 		await ctx.globalState.update(KEY, undefined);
 		seenRequests.clear();
 		notifyUsageChanged();
@@ -104,5 +104,5 @@ export function resetUsage(): Promise<void> {
 /** Wait for already queued writes before reading the current persisted snapshot. */
 export async function flushUsage(): Promise<void> {
 	await writes.catch(() => {});
-	if (!ctx) throw new Error("Usage storage is not initialized. Reload OpenCursor and try again.");
+	if (!ctx) throw new Error("Usage storage is not initialized. Reload AiWorkHarness and try again.");
 }

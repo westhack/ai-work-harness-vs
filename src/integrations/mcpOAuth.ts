@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -49,12 +49,12 @@ export class McpOAuthProvider implements OAuthClientProvider {
 
   constructor(readonly serverUrl: string, readonly serverName: string, private readonly secrets: McpSecretStorage,
     private readonly openExternal: (url: string) => PromiseLike<unknown>, private readonly options: { clientId?: string; scopes?: string[] } = {}) {
-    this.key = `ocursor.mcp.oauth.${createHash("sha256").update(`${serverName}\0${serverUrl}`).digest("hex")}`;
+    this.key = `aiworkharness.mcp.oauth.${createHash("sha256").update(`${serverName}\0${serverUrl}`).digest("hex")}`;
   }
 
   get redirectUrl(): string { return this.redirect; }
   get clientMetadata(): OAuthClientMetadata {
-    return { client_name: "OpenCursor", redirect_uris: [this.redirect], grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], token_endpoint_auth_method: "none", ...(this.options.scopes?.length ? { scope: this.options.scopes.join(" ") } : {}) };
+    return { client_name: "AiWorkHarness", redirect_uris: [this.redirect], grant_types: ["authorization_code", "refresh_token"], response_types: ["code"], token_endpoint_auth_method: "none", ...(this.options.scopes?.length ? { scope: this.options.scopes.join(" ") } : {}) };
   }
   state(): string { if (!this.interactive) throw new McpAuthRequiredError(); return this.nonce; }
   private async load(): Promise<SavedCredentials> {
@@ -108,10 +108,10 @@ export class McpOAuthProvider implements OAuthClientProvider {
       }
       const code = url.searchParams.get("code");
       if (url.searchParams.has("error") || !code) {
-        response.writeHead(400); response.end("Authorization was not completed. Return to OpenCursor.");
+        response.writeHead(400); response.end("Authorization was not completed. Return to AiWorkHarness.");
         this.rejectCode?.(new Error("MCP authorization was denied or returned no code."));
       } else {
-        response.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" }); response.end("Authorization received. You can return to OpenCursor.");
+        response.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" }); response.end("Authorization received. You can return to AiWorkHarness.");
         this.resolveCode?.(code);
       }
       this.resolveCode = undefined; this.rejectCode = undefined;

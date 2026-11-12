@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -26,17 +26,17 @@ export const DEFAULT_SETTINGS: Settings = {
   enableWorkspaceContext: true,
   enableFileReading: true,
   enableTerminalSuggestions: true,
-  systemPrompt: "You are a professional coding assistant extension named OpenCursor.",
+  systemPrompt: "You are a professional coding assistant extension named AiWorkHarness.",
 };
 
 export class SettingsManager {
-  private static readonly SETTINGS_KEY = "ocursor.settings";
-  private static readonly API_KEY_SECRET_KEY = "ocursor.apiKey";
+  private static readonly SETTINGS_KEY = "aiworkharness.settings";
+  private static readonly API_KEY_SECRET_KEY = "aiworkharness.apiKey";
 
   constructor(private readonly context: vscode.ExtensionContext) {}
 
   public getSettings(): Settings {
-    const config = vscode.workspace.getConfiguration("ocursor");
+    const config = vscode.workspace.getConfiguration("aiworkharness");
     return {
       model: config.get<string>("model", DEFAULT_SETTINGS.model),
       maxResponseLength: config.get<number>("maxResponseLength", DEFAULT_SETTINGS.maxResponseLength),
@@ -53,7 +53,7 @@ export class SettingsManager {
    * workspace-scoped value is never copied into the user's Global settings.
    */
   public async saveSettings(settings: Partial<Settings>): Promise<void> {
-    const config = vscode.workspace.getConfiguration("ocursor");
+    const config = vscode.workspace.getConfiguration("aiworkharness");
     const current = this.getSettings();
     const updates: Thenable<void>[] = [];
     for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[]) {
@@ -77,7 +77,7 @@ export class SettingsManager {
 
   // ---- Per-provider API keys (Providers tab) ----
   private static providerSecretKey(providerId: string): string {
-    return `ocursor.provider.${providerId}.apiKey`;
+    return `aiworkharness.provider.${providerId}.apiKey`;
   }
 
   public async getProviderKey(providerId: string): Promise<string | undefined> {

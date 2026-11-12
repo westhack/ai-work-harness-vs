@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -20,7 +20,7 @@ const scopes = new AsyncLocalStorage<ExecutionScope>();
 const containerJobs = new WeakMap<ChildProcess, string>();
 
 export function configuredExecutionProfile(): ExecutionProfile {
-  const config = vscode.workspace.getConfiguration?.("ocursor");
+  const config = vscode.workspace.getConfiguration?.("aiworkharness");
   return { kind: config?.get<string>("executionMode", "local") === "container" ? "container" : "local", image: config?.get("containerImage", "node:22-bookworm-slim"), network: config?.get("containerNetwork", false), memoryMb: config?.get("containerMemoryMb", 4096), cpus: config?.get("containerCpus", 2) };
 }
 export function validateExecutionProfile(profile: ExecutionProfile): void {
@@ -59,7 +59,7 @@ export function spawnExecutionCommand(command: string, cwd: string, local: () =>
   const scope = scopes.getStore();
   if (!scope || scope.profile.kind === "local") return local();
   assertExecutionPath(cwd);
-  const name = `ocursor-${randomUUID()}`;
+  const name = `aiworkharness-${randomUUID()}`;
   const proc = spawn("docker", containerArguments(scope.profile, scope.root, cwd, command, name), { cwd, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
   containerJobs.set(proc, name);
   return proc;

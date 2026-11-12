@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -62,7 +62,7 @@ describe("native hook decisions", () => {
   });
 
   it.runIf(process.platform === "win32")("confirms Windows hook termination before returning cancellation", async () => {
-    const directory = mkdtempSync(join(tmpdir(), "ocursor-hook-windows-"));
+    const directory = mkdtempSync(join(tmpdir(), "aiworkharness-hook-windows-"));
     const started = join(directory, "started");
     const controller = new AbortController();
     let pid: number | undefined;
@@ -89,7 +89,7 @@ describe("native hook decisions", () => {
   });
 
   it.skipIf(process.platform === "win32")("stops a blocking hook and its child process before they can perform later work", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "ocursor-hook-cancel-"));
+    const dir = mkdtempSync(join(tmpdir(), "aiworkharness-hook-cancel-"));
     const started = join(dir, "started");
     const later = join(dir, "later");
     const code = `const fs=require("fs");fs.writeFileSync(${JSON.stringify(started)},String(process.pid));setTimeout(()=>fs.writeFileSync(${JSON.stringify(later)},"unexpected"),400);setInterval(()=>{},1000)`;
@@ -113,10 +113,10 @@ describe("native hook decisions", () => {
   it("caps env copies of large context values while stdin keeps the full value", async () => {
     const prompt = "p".repeat(200_000);
     const env = envFor({ prompt, command: "short" });
-    expect(env.OPENCURSOR_PROMPT!.length).toBe(HOOK_ENV_VALUE_LIMIT);
-    expect(env.OPENCURSOR_PROMPT).toContain("truncated");
-    expect(env.OPENCURSOR_COMMAND).toBe("short");
-    const code = 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const p=JSON.parse(s);if(p.prompt.length!==200000||process.env.OPENCURSOR_PROMPT.length>8192){process.stderr.write("bad");process.exitCode=2}})';
+    expect(env.AIWORKHARNESS_PROMPT!.length).toBe(HOOK_ENV_VALUE_LIMIT);
+    expect(env.AIWORKHARNESS_PROMPT).toContain("truncated");
+    expect(env.AIWORKHARNESS_COMMAND).toBe("short");
+    const code = 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const p=JSON.parse(s);if(p.prompt.length!==200000||process.env.AIWORKHARNESS_PROMPT.length>8192){process.stderr.write("bad");process.exitCode=2}})';
     expect(await runBlockingHooks([{ id: "fixture", enabled: true, event: "beforeSubmit", command: nodeCommand(code) }], "beforeSubmit", { prompt })).toBeUndefined();
   });
 });

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -23,7 +23,7 @@ import type { ProtocolValue, ProtocolRecord, TranslatorState } from "../../wireT
  *   {"type":"finish",...}
  *
  * Each upstream "event" arrives as one JSON object per line — we receive it as a string chunk
- * already split per line by the upstream SSE/JSON-line reader in OpenCursor.
+ * already split per line by the upstream SSE/JSON-line reader in AiWorkHarness.
  */
 import { register } from "../registry.js";
 import { FORMATS } from "../formats.js";

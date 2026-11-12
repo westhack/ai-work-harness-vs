@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -17,7 +17,7 @@ import { createWorkerServer } from "../worker/server";
 import { RemoteJobClient } from "./remoteClient";
 
 it("drives the actual worker HTTP lifecycle with pinned checkout, auth, binary patch and cancellation", async () => {
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "ocursor-client-worker-"));
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-client-worker-"));
   const repository = path.join(directory, "source"); await fs.mkdir(repository);
   let began!: () => void; const started = new Promise<void>(resolve => { began = resolve; });
   const manager = new JobManager({ directory: path.join(directory, "jobs"), repositories: { fixture: repository }, models: ["fixture-model"], apiBaseUrl: "http://127.0.0.1:1/v1", apiKey: "test", execution: { kind: "local" } }, async options => {

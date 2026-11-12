@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -13,6 +13,7 @@ import { vscode } from "../../shared/vscode";
 import { OllamaLibraryModel, OllamaModel, OllamaStatus } from "../features";
 import { fmtSize } from "./localShared";
 import { HardwareSummary, useLocalHardware } from "./LocalHardware";
+import { t as tr } from "../../shared/i18n";
 
 export function OllamaPanel({
   status,
@@ -79,44 +80,44 @@ export function OllamaPanel({
 
   return (
     <>
-      <h1 className="page-title">Ollama</h1>
+      <h1 className="page-title">{tr("Ollama")}</h1>
 
-      <div className="section-label">Runtime</div>
+      <div className="section-label">{tr("Runtime")}</div>
       <div className="row">
         <div className="row-text">
-          <div className="row-title">Ollama {status.reachable ? "connected" : "unreachable"}{status.version ? ` · ${status.version}` : ""}</div>
+          <div className="row-title">{tr("Ollama")} {status.reachable ? "connected" : "unreachable"}{status.version ? ` · ${status.version}` : ""}</div>
           <div className="row-desc">
-            {status.installed ? "CLI installed." : "CLI not found locally."} The daemon must be running to manage or use models. Chat endpoint: <code>{status.endpoint || "http://localhost:11434"}/v1</code>.
+            {status.installed ? "CLI installed." : "CLI not found locally."} {tr("The daemon must be running to manage or use models. Chat endpoint:")} <code>{status.endpoint || "http://localhost:11434"}/v1</code>.
           </div>
         </div>
         <div className="row-control" style={{ display: "flex", gap: 8 }}>
           {!status.installed && (
             <button className="btn-primary" onClick={() => vscode.postMessage({ type: "ollamaInstall" })}>
-              Install
+              {tr("Install")}
             </button>
           )}
           <button className="btn-ghost" onClick={() => vscode.postMessage({ type: "ollamaGet" })}>
-            <Icon name="reset" size={13} /> Re-check
+            <Icon name="reset" size={13} /> {tr("Re-check")}
           </button>
         </div>
       </div>
 
       <div className="row">
-        <label className="fc-field" style={{ flex: 1 }}><span>Daemon endpoint</span><input value={endpoint} onChange={event => setEndpoint(event.target.value)} placeholder="http://localhost:11434" /></label>
-        <button className="btn-ghost" onClick={() => { setOperationError(""); vscode.postMessage({ type: "ollamaSetEndpoint", endpoint }); }}>Connect</button>
+        <label className="fc-field" style={{ flex: 1 }}><span>{tr("Daemon endpoint")}</span><input value={endpoint} onChange={event => setEndpoint(event.target.value)} placeholder="http://localhost:11434" /></label>
+        <button className="btn-ghost" onClick={() => { setOperationError(""); vscode.postMessage({ type: "ollamaSetEndpoint", endpoint }); }}>{tr("Connect")}</button>
       </div>
-      <p className="panel-hint">Models and loaded memory are reported by this daemon. Host hardware below describes the machine running OpenCursor.</p>
+      <p className="panel-hint">{tr("Models and loaded memory are reported by this daemon. Host hardware below describes the machine running AiWorkHarness.")}</p>
       <HardwareSummary hardware={hardware} />
       {operationError && <div className="fc-error" role="alert">{operationError}</div>}
       <div className="sub-tabs" style={{ marginTop: 20 }}>
-        <button className={"sub-tab" + (tab === "models" ? " active" : "")} onClick={() => setTab("models")}>Models</button>
-        <button className={"sub-tab" + (tab === "search" ? " active" : "")} onClick={() => setTab("search")}>Search &amp; Download</button>
+        <button className={"sub-tab" + (tab === "models" ? " active" : "")} onClick={() => setTab("models")}>{tr("Models")}</button>
+        <button className={"sub-tab" + (tab === "search" ? " active" : "")} onClick={() => setTab("search")}>{tr("Search & Download")}</button>
       </div>
 
       {tab === "models" && (<>
       <div className="panel-actions" style={{ marginBottom: 8 }}>
         <button className="btn-ghost" onClick={() => setTab("search")}>
-          <Icon name="database" size={14} /> Search &amp; download models
+          <Icon name="database" size={14} /> {tr("Search & download models")}
         </button>
       </div>
 
@@ -128,7 +129,7 @@ export function OllamaPanel({
               <span>{name}</span>
               <span className="badge-tag loading">pulling {pct}%</span>
             </div>
-            <button className="btn-ghost sm" onClick={() => vscode.postMessage({ type: "ollamaCancelPull", name })}>Cancel</button>
+            <button className="btn-ghost sm" onClick={() => vscode.postMessage({ type: "ollamaCancelPull", name })}>{tr("Cancel")}</button>
           </div>
           <div className="fc-body">
             <div className="index-bar"><div className="index-bar-fill" style={{ width: `${pct}%` }} /></div>
@@ -137,15 +138,15 @@ export function OllamaPanel({
       ))}
 
       <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
-        <label className="fc-field"><span>Load context (tokens)</span><input type="number" min={512} max={1048576} value={contextLength} onChange={event => setContextLength(Number(event.target.value))} /></label>
-        <label className="fc-field"><span>Keep loaded (minutes)</span><input type="number" min={0} max={1440} value={keepAliveMinutes} onChange={event => setKeepAliveMinutes(Number(event.target.value))} /></label>
+        <label className="fc-field"><span>{tr("Load context (tokens)")}</span><input type="number" min={512} max={1048576} value={contextLength} onChange={event => setContextLength(Number(event.target.value))} /></label>
+        <label className="fc-field"><span>{tr("Keep loaded (minutes)")}</span><input type="number" min={0} max={1440} value={keepAliveMinutes} onChange={event => setKeepAliveMinutes(Number(event.target.value))} /></label>
       </div>
-      <div className="section-label" style={{ marginTop: 16 }}>Your Models</div>
+      <div className="section-label" style={{ marginTop: 16 }}>{tr("Your Models")}</div>
       {Object.entries(status.errors).map(([name, err]) => (
         <div className="fc-error" key={`err-${name}`} style={{ marginBottom: 8 }}>{name}: {err}</div>
       ))}
       {models.length === 0 ? (
-        <div className="empty-card">No Ollama models yet. Pull one above.</div>
+        <div className="empty-card">{tr("No Ollama models yet. Pull one above.")}</div>
       ) : (
         models.map((m) => (
           <div className="feature-card" key={m.name}>
@@ -156,7 +157,7 @@ export function OllamaPanel({
               </div>
               <span className="badge-tag">{status.states?.[m.name] || (status.loaded?.[m.name] ? "ready" : "available")}</span>
               <button className="btn-ghost sm" disabled={!status.reachable || ["loading", "stopping", "downloading"].includes(status.states?.[m.name] || "")} onClick={() => vscode.postMessage({ type: status.loaded?.[m.name] ? "ollamaUnload" : "ollamaLoad", name: m.name, contextLength, keepAliveMinutes })}>{status.loaded?.[m.name] ? "Unload" : "Load"}</button>
-              <button className="icon-btn" title="Remove" disabled={["loading", "stopping", "downloading"].includes(status.states?.[m.name] || "")} onClick={() => vscode.postMessage({ type: "ollamaRemove", name: m.name })}>
+              <button className="icon-btn" title={tr("Remove")} disabled={["loading", "stopping", "downloading"].includes(status.states?.[m.name] || "")} onClick={() => vscode.postMessage({ type: "ollamaRemove", name: m.name })}>
                 <Icon name="trash" size={14} />
               </button>
             </div>
@@ -164,9 +165,9 @@ export function OllamaPanel({
               <div className="row-desc">
                 {[m.parameterSize, m.quantization, m.family, m.sizeBytes ? fmtSize(m.sizeBytes) : ""].filter(Boolean).join(" · ")}
               </div>
-              {status.loaded?.[m.name] && <div className="row-desc">Daemon reports loaded: {fmtSize(status.loaded[m.name].sizeBytes || 0)} · GPU: {fmtSize(status.loaded[m.name].vramBytes || 0)} · context: {status.loaded[m.name].contextLength?.toLocaleString() || "unknown"}</div>}
-              <button className="btn-ghost sm" onClick={() => vscode.postMessage({ type: "ollamaInspect", name: m.name })}>Check capabilities</button>
-              {status.capabilities?.[m.name] && <div className="row-desc">Capabilities: {status.capabilities[m.name].join(", ") || "Not reported by this runtime"}{status.capabilities[m.name].length > 0 && !status.capabilities[m.name].includes("tools") ? ". This model does not report tool calling; use Ask mode or choose a tool-capable model for agent tasks." : ""}</div>}
+              {status.loaded?.[m.name] && <div className="row-desc">{tr("Daemon reports loaded:")} {fmtSize(status.loaded[m.name].sizeBytes || 0)} · GPU: {fmtSize(status.loaded[m.name].vramBytes || 0)} · context: {status.loaded[m.name].contextLength?.toLocaleString() || "unknown"}</div>}
+              <button className="btn-ghost sm" onClick={() => vscode.postMessage({ type: "ollamaInspect", name: m.name })}>{tr("Check capabilities")}</button>
+              {status.capabilities?.[m.name] && <div className="row-desc">{tr("Capabilities:")} {status.capabilities[m.name].join(", ") || "Not reported by this runtime"}{status.capabilities[m.name].length > 0 && !status.capabilities[m.name].includes("tools") ? ". This model does not report tool calling; use Ask mode or choose a tool-capable model for agent tasks." : ""}</div>}
             </div>
           </div>
         ))
@@ -174,15 +175,15 @@ export function OllamaPanel({
       </>)}
 
       {tab === "search" && (<>
-      <div className="section-label" style={{ marginTop: 0 }}>Pull by model name</div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}><input value={pullName} onChange={event => setPullName(event.target.value)} placeholder="e.g. qwen3:8b" style={{ flex: 1 }} /><button className="btn-ghost" disabled={!status.reachable || !pullName.trim()} onClick={() => pull(pullName)}>Pull / resume</button></div>
-      <p className="panel-hint">Ollama verifies downloaded layers and resumes interrupted pulls.</p>
-      <div className="section-label" style={{ marginTop: 0 }}>Search Library</div>
+      <div className="section-label" style={{ marginTop: 0 }}>{tr("Pull by model name")}</div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}><input value={pullName} onChange={event => setPullName(event.target.value)} placeholder={tr("e.g. qwen3:8b")} style={{ flex: 1 }} /><button className="btn-ghost" disabled={!status.reachable || !pullName.trim()} onClick={() => pull(pullName)}>{tr("Pull / resume")}</button></div>
+      <p className="panel-hint">{tr("Ollama verifies downloaded layers and resumes interrupted pulls.")}</p>
+      <div className="section-label" style={{ marginTop: 0 }}>{tr("Search Library")}</div>
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <input
           type="search"
           value={query}
-          placeholder="e.g. qwen, llama, deepseek-r1"
+          placeholder={tr("e.g. qwen, llama, deepseek-r1")}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") search(); }}
           style={{ flex: 1 }}
@@ -209,14 +210,14 @@ export function OllamaPanel({
               <div className="fc-body">
                 {r.description && <div className="row-desc" style={{ marginBottom: 8 }}>{r.description}</div>}
                 {!variants ? (
-                  <div className="row-desc">Loading tags…</div>
+                  <div className="row-desc">{tr("Loading tags…")}</div>
                 ) : variants.length === 0 ? (
                   <div className="model-row">
                     <div className="model-name"><Icon name="model" /><span>{r.name}:latest</span></div>
                     {have(`${r.name}:latest`) ? <span className="badge-tag glob">added</span> : status.pulling[`${r.name}:latest`] != null ? (
                       <span className="row-desc">{status.pulling[`${r.name}:latest`]}%</span>
                     ) : (
-                      <button className="btn-ghost sm" onClick={() => pull(`${r.name}:latest`)}><Icon name="database" size={13} /> Pull</button>
+                      <button className="btn-ghost sm" onClick={() => pull(`${r.name}:latest`)}><Icon name="database" size={13} /> {tr("Pull")}</button>
                     )}
                   </div>
                 ) : (
@@ -228,7 +229,7 @@ export function OllamaPanel({
                       ) : status.pulling[tag] != null ? (
                         <span className="row-desc">{status.pulling[tag]}%</span>
                       ) : (
-                        <button className="btn-ghost sm" onClick={() => pull(tag)}><Icon name="database" size={13} /> Pull</button>
+                        <button className="btn-ghost sm" onClick={() => pull(tag)}><Icon name="database" size={13} /> {tr("Pull")}</button>
                       )}
                     </div>
                   ))

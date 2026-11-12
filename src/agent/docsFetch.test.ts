@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -89,7 +89,7 @@ it("reports header noindex and permits markdown documentation", async () => {
 });
 
 it("merges matching robots groups, uses longest rules and lets Allow win ties", () => {
-  const robots = parseDocRobots("User-agent: *\nDisallow: /\nUser-agent: OpenCursor-Docs\nDisallow: /private\nAllow: /private/public\nUser-agent: OpenCursor-Docs\nDisallow: /equal\nAllow: /equal\nSitemap: https://docs.test/sitemap.xml");
+  const robots = parseDocRobots("User-agent: *\nDisallow: /\nUser-agent: AiWorkHarness-Docs\nDisallow: /private\nAllow: /private/public\nUser-agent: AiWorkHarness-Docs\nDisallow: /equal\nAllow: /equal\nSitemap: https://docs.test/sitemap.xml");
   expect(robots.allows("https://docs.test/guide")).toBe(true);
   expect(robots.allows("https://docs.test/private/secret")).toBe(false);
   expect(robots.allows("https://docs.test/private/public/guide")).toBe(true);
@@ -98,7 +98,7 @@ it("merges matching robots groups, uses longest rules and lets Allow win ties", 
 });
 
 it("does not merge the wildcard group into a specific group with empty directives", () => {
-  const robots = parseDocRobots("User-agent: OpenCursor-Docs\nDisallow:\nUser-agent: *\nDisallow: /");
+  const robots = parseDocRobots("User-agent: AiWorkHarness-Docs\nDisallow:\nUser-agent: *\nDisallow: /");
   expect(robots.allows("https://docs.test/guide")).toBe(true);
 });
 
@@ -128,7 +128,7 @@ it("does not infer retrieval permission from other categories or malformed value
 });
 
 it("separates signal-only agent groups and applies only matching agents", () => {
-  const robots = parseDocRobots("User-agent: OtherBot\nContent-Signal: ai-input=no\nUser-agent: *\nContent-Signal: ai-input=no\nUser-agent: OpenCursor-Docs\nContent-Signal: AI-INPUT = YES");
+  const robots = parseDocRobots("User-agent: OtherBot\nContent-Signal: ai-input=no\nUser-agent: *\nContent-Signal: ai-input=no\nUser-agent: AiWorkHarness-Docs\nContent-Signal: AI-INPUT = YES");
   expect(robots.aiInputAllowed).toBe(true);
   expect(robots.aiInputAllowedFor("https://docs.test/guide")).toBe(true);
   const other = parseDocRobots("User-agent: OtherBot\nContent-Signal: ai-input=yes\nUser-agent: *\nAllow: /");
@@ -140,7 +140,7 @@ it("gives denial precedence for conflicting signals at the same scope", () => {
     const robots = parseDocRobots(`User-agent: *\nContent-Signal: ai-input=${values}\nAllow: /`);
     expect(robots.aiInputAllowed).toBe(false);
   }
-  const robots = parseDocRobots("User-agent: OpenCursor-Docs\nContent-Signal: ai-input=no\nUser-agent: OpenCursor-Docs\nContent-Signal: ai-input=yes");
+  const robots = parseDocRobots("User-agent: AiWorkHarness-Docs\nContent-Signal: ai-input=no\nUser-agent: AiWorkHarness-Docs\nContent-Signal: ai-input=yes");
   expect(robots.aiInputAllowed).toBe(false);
 });
 

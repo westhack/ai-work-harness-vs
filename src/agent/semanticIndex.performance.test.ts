@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -26,7 +26,7 @@ let pipeline: ReturnType<typeof vi.fn>;
 let run: ReturnType<typeof vi.fn>;
 
 beforeEach(async () => {
-  fixture = await fs.mkdtemp(path.join(tmpdir(), "ocursor-index-perf-"));
+  fixture = await fs.mkdtemp(path.join(tmpdir(), "aiworkharness-index-perf-"));
   root = path.join(fixture, "workspace");
   await fs.mkdir(root);
   semantic.setIndexStorageDir(path.join(fixture, "storage"));

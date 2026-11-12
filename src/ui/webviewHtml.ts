@@ -1,14 +1,15 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
 import * as vscode from "vscode";
 import { randomBytes } from "node:crypto";
+import { htmlLang, type UiLanguage } from "../shared/i18n";
 
 function nonce(): string {
   // CSP nonces must be unpredictable; Math.random is not a CSPRNG.
@@ -25,7 +26,8 @@ export function renderWebviewHtml(
   webview: vscode.Webview,
   extensionUri: vscode.Uri,
   entry: "sidebar" | "settings",
-  title: string
+  title: string,
+  language: UiLanguage = "en"
 ): string {
   const scriptUri = webview.asWebviewUri(
     vscode.Uri.joinPath(extensionUri, "dist", "webview", `${entry}.js`)
@@ -37,6 +39,7 @@ export function renderWebviewHtml(
     vscode.Uri.joinPath(extensionUri, "media", "icon.png")
   );
   const n = nonce();
+  const lang = htmlLang(language);
   const csp = [
     `default-src 'none'`,
     `img-src ${webview.cspSource} data:`,
@@ -46,7 +49,7 @@ export function renderWebviewHtml(
   ].join("; ");
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="${csp}">
@@ -55,7 +58,7 @@ export function renderWebviewHtml(
   <title>${title}</title>
 </head>
 <body>
-  <div id="root" data-icon="${iconUri}"></div>
+  <div id="root" data-lang="${lang}" data-icon="${iconUri}"></div>
   <script nonce="${n}" src="${scriptUri}"></script>
 </body>
 </html>`;

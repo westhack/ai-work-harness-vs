@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -1023,7 +1023,7 @@ Updated documentation files and changelog entry, plus a report listing:
 	},
 ].map((s) => ({ ...s, builtin: true }));
 
-/** Default teams shipped with OpenCursor. */
+/** Default teams shipped with AiWorkHarness. */
 export const BUILTIN_TEAMS: TeamDef[] = [
 	{
 		id: "team-full-stack",

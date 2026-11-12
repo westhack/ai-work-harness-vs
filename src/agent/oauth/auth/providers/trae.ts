@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -18,7 +18,7 @@ import { extractJsonPath } from "./_shared.js";
 // Trae (ByteDance marscode) OAuth helpers
 // ───────────────────────────────────────────────────────────────────────────
 
-// Per-login device context. No IDE access in OpenCursor, so use stable defaults.
+// Per-login device context. No IDE access in AiWorkHarness, so use stable defaults.
 function buildTraeDeviceContext() {
   return {
     plugin_version: TRAE_CONFIG.defaultPluginVersion,

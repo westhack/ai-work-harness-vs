@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -115,7 +115,7 @@ describe("Google tool signature persistence", () => {
       { kind: "user", text: "Compare these files." }, { kind: "assistant", text: "", calls },
       ...calls.map((call, index): Step => ({ kind: "tool-result", callId: call.id, name: call.name, output: `Image ${index}`, status: "completed", image: { mime: "image/png", base64: `IMAGE_${index}` } })),
     ];
-    const messages = buildMessages("You are OpenCursor.", steps);
+    const messages = buildMessages("You are AiWorkHarness.", steps);
     const before = structuredClone(messages);
     await collect({ messages });
     const replay = requests[1].messages;

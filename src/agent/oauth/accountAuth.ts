@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -11,7 +11,7 @@ import * as crypto from "crypto";
 import * as http from "http";
 import type { OAuthAccount, OAuthKind, OAuthStatus } from "./types";
 import type { AuthConfig, AuthDeviceCode, AuthPayload, AuthProvider, AuthTokens } from "./auth/types.js";
-// Authentication protocols are compiled as part of OpenCursor.
+// Authentication protocols are compiled as part of AiWorkHarness.
 import { PROVIDERS } from "./auth/providers/index.js";
 import { withAuthSignal, authFetch } from "./auth/network.js";
 import { fetchKiroProfileArn } from "./auth/providerHelpers.js";
@@ -108,8 +108,8 @@ export class AccountLogin {
     this.server = http.createServer((request, response) => {
       const url = new URL(request.url || "/", this.redirect);
       if (request.method !== "GET" || url.pathname !== new URL(this.redirect).pathname || (request.url?.length ?? 0) > 32_768) { response.writeHead(404).end("Not found"); return; }
-      void this.complete(url.href, true).then(() => response.writeHead(200, { "content-type": "text/plain" }).end("Connected. Return to OpenCursor."))
-        .catch(() => response.writeHead(400, { "content-type": "text/plain" }).end("Sign-in could not be completed. Return to OpenCursor."));
+      void this.complete(url.href, true).then(() => response.writeHead(200, { "content-type": "text/plain" }).end("Connected. Return to AiWorkHarness."))
+        .catch(() => response.writeHead(400, { "content-type": "text/plain" }).end("Sign-in could not be completed. Return to AiWorkHarness."));
     });
     const port = this.provider?.fixedPort || this.provider?.config?.defaultNativeAppPort || 0;
     await new Promise<void>((resolve, reject) => {
@@ -127,7 +127,7 @@ export class AccountLogin {
     this.redirect = `http://127.0.0.1:${actualPort}${privatePath}`;
     if (kind === "xiaomi-mimo") {
       this.keyPair = xiaomi.generateKeyPair();
-      this.state.authorizationUrl = xiaomi.buildAuthorizeUrl(this.keyPair!.publicKey, this.redirect, "OpenCursor");
+      this.state.authorizationUrl = xiaomi.buildAuthorizeUrl(this.keyPair!.publicKey, this.redirect, "AiWorkHarness");
     } else {
       const meta = { ...this.options, nativeAppPort: actualPort };
       const prepareConfig = this.provider.prepareConfig;

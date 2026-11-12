@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -540,10 +540,10 @@ async function settingsChecks(page, { theme, width, reduced, motion, osReduced }
 }
 
 async function main() {
-  const origin = process.env.OPENCURSOR_PREVIEW_ORIGIN || 'http://127.0.0.1:4178';
+  const origin = process.env.AIWORKHARNESS_PREVIEW_ORIGIN || 'http://127.0.0.1:4178';
   const output = path.resolve(__dirname, '../dist/visual-qa');
   await fs.mkdir(output, { recursive: true });
-  const browser = await chromium.launch({ executablePath: process.env.OPENCURSOR_BROWSER || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
+  const browser = await chromium.launch({ executablePath: process.env.AIWORKHARNESS_BROWSER || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
   const results = [];
   try {
     const policies = [
@@ -553,7 +553,7 @@ async function main() {
       { motion: 'system', osReduced: true, reduced: true },
       { motion: 'reduced', osReduced: false, reduced: true },
     ];
-    const smoke = process.env.OPENCURSOR_MOTION_SMOKE === '1';
+    const smoke = process.env.AIWORKHARNESS_MOTION_SMOKE === '1';
     for (const theme of ['light', 'dark']) for (const width of smoke ? [375] : [375, 900]) for (const policy of smoke ? policies.filter(policy => policy.motion === 'full' && policy.osReduced || policy.motion === 'reduced') : policies) {
       const options = { theme, width, ...policy };
       const context = await browser.newContext({ viewport: { width, height: 850 }, reducedMotion: policy.osReduced ? 'reduce' : 'no-preference' });
@@ -595,7 +595,7 @@ async function main() {
     }
   } finally {
     await browser.close();
-    await fs.writeFile(path.join(output, process.env.OPENCURSOR_MOTION_SMOKE === '1' ? 'motion-additional-results.json' : 'motion-results.json'), JSON.stringify(results, null, 2));
+    await fs.writeFile(path.join(output, process.env.AIWORKHARNESS_MOTION_SMOKE === '1' ? 'motion-additional-results.json' : 'motion-results.json'), JSON.stringify(results, null, 2));
   }
   console.log(`Motion controls passed ${results.length} theme/width/motion combinations across ${results.length * 2} view states. Results: ${output}`);
 }

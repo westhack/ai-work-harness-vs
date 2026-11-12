@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -17,6 +17,7 @@ import { basename } from "../../shared/markdown";
 import { MarkdownView } from "../../shared/MarkdownView";
 import { vscode } from "../../shared/vscode";
 import type { ToolBlock, OutMessage, AssistantBlock, FileIconInfo } from "../types";
+import { t as tr } from "../../shared/i18n";
 
 function post(msg: OutMessage) {
   vscode.postMessage(msg);
@@ -180,14 +181,14 @@ function TodoList({ block }: { block: ToolBlock }) {
         <span className="ticon">
           <Icon name="todo" />
         </span>
-        <span className="label">Tasks</span>
+        <span className="label">{tr("Tasks")}</span>
         <span className="right">
           {items.length > 0 && <span className="todo-count"><TextSwap text={`${completed}/${items.length} completed`} /></span>}
           <TimeoutBadge block={block} />
           {block.status !== "completed" && <StatusIcon status={block.status} callId={block.callId} />}
         </span>
       </div>
-      <div className="todo-list" role="list" aria-label="Tasks">
+      <div className="todo-list" role="list" aria-label={tr("Tasks")}>
         {items.length === 0 ? (
           <div className="todo-empty">{block.status === "running" ? "Updating…" : "(no todos)"}</div>
         ) : (
@@ -249,7 +250,7 @@ function SubagentCard({ block, onOpen, awaitingApproval }: { block: ToolBlock; o
           : "done";
 
   return (
-    <div className={"subagent-card" + (awaitingApproval ? " needs-approval" : "")} onClick={() => onOpen?.(block.callId)} role="button" tabIndex={0} title="Open subagent"
+    <div className={"subagent-card" + (awaitingApproval ? " needs-approval" : "")} onClick={() => onOpen?.(block.callId)} role="button" tabIndex={0} title={tr("Open subagent")}
       onKeyDown={(event) => {
         if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
           event.preventDefault(); event.currentTarget.click();
@@ -269,7 +270,7 @@ function SubagentCard({ block, onOpen, awaitingApproval }: { block: ToolBlock; o
         {model ? <span className="sub-chip sub-model" title={String(i.model)}>{model}</span> : null}
         <span className="sub-chip sub-steps"><TextSwap text={`${steps} ${steps === 1 ? "step" : "steps"}`} /></span>
         <span className="badge badge-agent">{isReadonlySubagent(i) ? "Explore" : "Agent"}</span>
-        {awaitingApproval ? <span className="badge badge-ask">Approve</span> : null}
+        {awaitingApproval ? <span className="badge badge-ask">{tr("Approve")}</span> : null}
       </div>
       {subtitle && !open ? <div className="subagent-card-subtitle">{subtitle}</div> : null}
       <AnimatedDisclosure open={open}>
@@ -376,7 +377,7 @@ function PlanCard({ block, onImplement }: { block: ToolBlock; onImplement?: (pat
         </span>
         <span className="plan-title">{title}</span>
         <TimeoutBadge block={block} />
-        <span className="badge badge-plan">Plan</span>
+        <span className="badge badge-plan">{tr("Plan")}</span>
         <StatusIcon status={block.status} callId={block.callId} />
       </div>
       {open && (
@@ -396,7 +397,7 @@ function PlanCard({ block, onImplement }: { block: ToolBlock; onImplement?: (pat
             </button>
           )}
           <button className="plan-implement" onClick={() => onImplement && onImplement(planPath || "")}>
-            <Icon name="agent" /> Implement plan
+            <Icon name="agent" /> {tr("Implement plan")}
           </button>
         </div>
       )}
@@ -442,8 +443,8 @@ export function RunningStop({ callId }: { callId?: string }) {
     <button
       type="button"
       className="spinner-stop"
-      aria-label="Stop this task"
-      title="Stop this task"
+      aria-label={tr("Stop this task")}
+      title={tr("Stop this task")}
       onClick={(e) => {
         e.stopPropagation();
         post({ type: "cancelSubagent", callId, reason: "user" });
@@ -516,7 +517,7 @@ export function TimeoutBadge({ block }: { block: ToolBlock }) {
   return (
     <span
       className={"tool-timeout" + (urgent ? " urgent" : "") + (left === 0 ? " zero" : "")}
-      title="Timeout remaining — enforced by the extension host"
+      title={tr("Timeout remaining — enforced by the extension host")}
     >
       {left === 0 ? "timeout" : formatCountdown(left)}
     </span>
@@ -593,7 +594,7 @@ export function ReadLine({ block }: { block: ToolBlock }) {
       <span className="ricon">
         <Icon name="file" />
       </span>
-      <span className="read-verb">Read </span>
+      <span className="read-verb">{tr("Read")} </span>
       <span className="rname">{basename(i.path)}</span>
       <span className="rlines">{rangeTxt ? "L" + rangeTxt : ""}</span>
       <TimeoutBadge block={block} />
@@ -739,13 +740,13 @@ function QuestionCard({ block }: { block: ToolBlock }) {
             onClick={() => (customSelected ? setCustomSelected(false) : pickCustom())}
           >
             <span className="qc-key">{String.fromCharCode(65 + opts.length)}</span>
-            <span>Other…</span>
+            <span>{tr("Other…")}</span>
           </button>
           {customSelected && (
             <input
               className="qc-custom"
               aria-label={`${q.question}: Custom answer`}
-              placeholder="Type a custom answer…"
+              placeholder={tr("Type a custom answer…")}
               autoFocus
               value={customText}
               onChange={(e) => setCustom((c) => ({ ...c, [String(step)]: e.target.value }))}
@@ -789,9 +790,9 @@ function QuestionCard({ block }: { block: ToolBlock }) {
         </div>
       )}
       <div className="qc-foot">
-        {step > 0 && <button className="qc-nav" onClick={() => setStep((s) => s - 1)}>Back</button>}
+        {step > 0 && <button className="qc-nav" onClick={() => setStep((s) => s - 1)}>{tr("Back")}</button>}
         <span className="qc-spacer" />
-        {!q.required && <button className="qc-skip" onClick={skip}>Skip</button>}
+        {!q.required && <button className="qc-skip" onClick={skip}>{tr("Skip")}</button>}
         <button className="qc-next" disabled={!isValid} onClick={() => (last ? submit() : advance())}>
           {last ? "Submit" : "Continue"}
         </button>

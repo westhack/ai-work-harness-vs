@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -43,7 +43,7 @@ const MODEL = ENV.VERBOO_MODEL || "deepseek-v4-flash-0731";
 
 const API_KEY = DIRECT_KEY;
 const BASE_URL = DIRECT_URL;
-const hasConfig = process.env.OPENCURSOR_LIVE_TESTS === "1" && API_KEY && BASE_URL;
+const hasConfig = process.env.AIWORKHARNESS_LIVE_TESTS === "1" && API_KEY && BASE_URL;
 
 // ---- API client ----
 async function sendTodoWritePrompt(prompt: string): Promise<{ modelOutput: string; todoWriteInput: any; error?: string }> {
@@ -130,7 +130,7 @@ const describeIfApi = hasConfig ? describe : describe.skip;
 describeIfApi("REAL API: TodoWrite with deepseek-v4-flash", () => {
   it("Portuguese prompt: create todo list for code analysis", async () => {
     const result = await sendTodoWritePrompt(
-      "Analise as issues do repositório anthropics/claude-code e proponha melhorias para a extensão OpenCursor. Crie uma lista de tarefas.",
+      "Analise as issues do repositório anthropics/claude-code e proponha melhorias para a extensão AiWorkHarness. Crie uma lista de tarefas.",
     );
 
     if (result.error) throw new Error(`Live API evaluation inconclusive: ${result.error}`);

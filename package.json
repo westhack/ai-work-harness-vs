@@ -1,19 +1,19 @@
 {
-	"name": "ocursor",
-	"displayName": "OpenCursor Agent",
-	"description": "AI coding agent chat inside VS Code",
+	"name": "ai-work-harness",
+	"displayName": "AiWorkHarness",
+	"description": "%extension.description%",
 	"version": "0.2.1",
-	"publisher": "pkrd",
+	"publisher": "westhack",
 	"license": "MIT",
 	"icon": "media/icon.png",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/PawanOsman/OpenCursor.git"
+		"url": "https://github.com/westhack/ai-work-harness.git"
 	},
 	"bugs": {
-		"url": "https://github.com/PawanOsman/OpenCursor/issues"
+		"url": "https://github.com/westhack/ai-work-harness/issues"
 	},
-	"homepage": "https://github.com/PawanOsman/OpenCursor#readme",
+	"homepage": "https://github.com/westhack/ai-work-harness#readme",
 	"engines": {
 		"vscode": "^1.96.0"
 	},
@@ -35,44 +35,44 @@
 	"capabilities": {
 		"untrustedWorkspaces": {
 			"supported": "limited",
-			"description": "In untrusted workspaces, project-level hooks from .cursor/hooks.json and .claude/settings.json are disabled. Trust the workspace (and approve its hook file) to run them."
+			"description": "%capabilities.untrustedWorkspaces.description%"
 		},
 		"virtualWorkspaces": false
 	},
 	"contributes": {
 		"commands": [
 			{
-				"command": "ocursor.remoteJobs",
-				"title": "OpenCursor: Remote Jobs"
+				"command": "aiworkharness.remoteJobs",
+				"title": "%command.remoteJobs%"
 			},
 			{
-				"command": "ocursor.managePlugins",
-				"title": "OpenCursor: Manage Plugins"
+				"command": "aiworkharness.managePlugins",
+				"title": "%command.managePlugins%"
 			},
 			{
-				"command": "ocursor.openSettings",
-				"title": "Open OpenCursor Settings"
+				"command": "aiworkharness.openSettings",
+				"title": "%command.openSettings%"
 			},
 			{
-				"command": "ocursor.addToChat",
-				"title": "OpenCursor: Add Selection to Chat"
+				"command": "aiworkharness.addToChat",
+				"title": "%command.addToChat%"
 			},
 			{
-				"command": "ocursor.newChat",
-				"title": "OpenCursor: New Chat"
+				"command": "aiworkharness.newChat",
+				"title": "%command.newChat%"
 			},
 			{
-				"command": "ocursor.reviewChanges",
-				"title": "OpenCursor: Review Changes"
+				"command": "aiworkharness.reviewChanges",
+				"title": "%command.reviewChanges%"
 			},
 			{
-				"command": "ocursor.implementTodo",
-				"title": "OpenCursor: Implement TODO"
+				"command": "aiworkharness.implementTodo",
+				"title": "%command.implementTodo%"
 			}
 		],
 		"keybindings": [
 			{
-				"command": "ocursor.addToChat",
+				"command": "aiworkharness.addToChat",
 				"key": "ctrl+l",
 				"mac": "cmd+l",
 				"when": "editorTextFocus"
@@ -81,7 +81,7 @@
 		"menus": {
 			"commandPalette": [
 				{
-					"command": "ocursor.implementTodo",
+					"command": "aiworkharness.implementTodo",
 					"when": "false"
 				}
 			]
@@ -89,97 +89,97 @@
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "ocursor-sidebar",
-					"title": "OpenCursor",
+					"id": "aiworkharness-sidebar",
+					"title": "AiWorkHarness",
 					"icon": "media/icon.svg"
 				}
 			]
 		},
 		"views": {
-			"ocursor-sidebar": [
+			"aiworkharness-sidebar": [
 				{
 					"type": "webview",
-					"id": "ocursor.chatView",
-					"name": "OpenCursor Agent"
+					"id": "aiworkharness.chatView",
+					"name": "AiWorkHarness"
 				}
 			]
 		},
 		"configuration": [
 			{
-				"title": "OpenCursor Settings",
+				"title": "%config.title%",
 				"properties": {
-					"ocursor.model": {
+					"aiworkharness.model": {
 						"type": "string",
 						"default": "auto",
-						"description": "The AI model to use"
+						"description": "%config.model.description%"
 					},
-					"ocursor.maxResponseLength": {
+					"aiworkharness.maxResponseLength": {
 						"type": "integer",
 						"default": 0,
-						"description": "Maximum response length in tokens (0 = let the model decide)"
+						"description": "%config.maxResponseLength.description%"
 					},
-					"ocursor.enableWorkspaceContext": {
+					"aiworkharness.enableWorkspaceContext": {
 						"type": "boolean",
 						"default": true,
-						"description": "Enable workspace context for the AI agent"
+						"description": "%config.enableWorkspaceContext.description%"
 					},
-					"ocursor.enableFileReading": {
+					"aiworkharness.enableFileReading": {
 						"type": "boolean",
 						"default": true,
-						"description": "Enable file reading/glob/grep tools"
+						"description": "%config.enableFileReading.description%"
 					},
-					"ocursor.enableTerminalSuggestions": {
+					"aiworkharness.enableTerminalSuggestions": {
 						"type": "boolean",
 						"default": true,
-						"description": "Enable run terminal command suggestions tool"
+						"description": "%config.enableTerminalSuggestions.description%"
 					},
-					"ocursor.systemPrompt": {
+					"aiworkharness.systemPrompt": {
 						"type": "string",
-						"default": "You are a professional coding assistant extension named OpenCursor.",
-						"description": "System prompt or custom instruction field"
+						"default": "You are a professional coding assistant extension named AiWorkHarness.",
+						"description": "%config.systemPrompt.description%"
 					},
-					"ocursor.todoCodeLensEnabled": {
+					"aiworkharness.todoCodeLensEnabled": {
 						"type": "boolean",
 						"default": true,
-						"description": "Show Implement with OpenCursor above TODO comments."
+						"description": "%config.todoCodeLensEnabled.description%"
 					},
-					"ocursor.executionMode": {
+					"aiworkharness.executionMode": {
 						"type": "string",
 						"enum": [
 							"local",
 							"container"
 						],
 						"default": "local",
-						"description": "Run commands on the host or inside a restricted Docker container. Container mode requires Docker and a pre-pulled image."
+						"description": "%config.executionMode.description%"
 					},
-					"ocursor.browserExecutablePath": {
+					"aiworkharness.browserExecutablePath": {
 						"type": "string",
 						"default": "",
-						"description": "Optional Chrome or Chromium executable for isolated browser verification. An installed Chrome or Edge is detected automatically."
+						"description": "%config.browserExecutablePath.description%"
 					},
-					"ocursor.containerImage": {
+					"aiworkharness.containerImage": {
 						"type": "string",
 						"default": "node:22-bookworm-slim",
-						"description": "Existing Docker image used for command execution. Images are never pulled automatically."
+						"description": "%config.containerImage.description%"
 					},
-					"ocursor.containerNetwork": {
+					"aiworkharness.containerNetwork": {
 						"type": "boolean",
 						"default": false,
-						"description": "Allow outbound networking for container commands."
+						"description": "%config.containerNetwork.description%"
 					},
-					"ocursor.containerMemoryMb": {
+					"aiworkharness.containerMemoryMb": {
 						"type": "integer",
 						"minimum": 256,
 						"maximum": 262144,
 						"default": 4096,
-						"description": "Container command memory limit in MiB."
+						"description": "%config.containerMemoryMb.description%"
 					},
-					"ocursor.containerCpus": {
+					"aiworkharness.containerCpus": {
 						"type": "number",
 						"minimum": 0.25,
 						"maximum": 128,
 						"default": 2,
-						"description": "Container command CPU limit."
+						"description": "%config.containerCpus.description%"
 					}
 				}
 			}
@@ -205,7 +205,7 @@
 		"test": "vscode-test",
 		"test:unit": "vitest run --exclude src/agent/tools/browser.test.ts",
 		"test:browser": "vitest run src/agent/tools/browser.test.ts --maxWorkers=1 --minWorkers=1",
-		"vsix": "pnpm run package && pnpm dlx @vscode/vsce package --no-dependencies",
+		"vsix": "pnpm run package && pnpm exec vsce package --no-dependencies",
 		"runtime:manifest": "node scripts/generate-runtime-manifest.cjs",
 		"runtime:check": "node scripts/generate-runtime-manifest.cjs --check",
 		"test:runtime": "node scripts/runtime-smoke.cjs",
@@ -219,8 +219,10 @@
 		"@types/react": "^19.2.17",
 		"@types/react-dom": "^19.2.3",
 		"@types/vscode": "~1.96.0",
+		"@types/ws": "^8.18.2",
 		"@vscode/test-cli": "^0.0.15",
 		"@vscode/test-electron": "^3.0.0",
+		"@vscode/vsce": "^4.1.0",
 		"esbuild": "^0.28.1",
 		"eslint": "^10.5.0",
 		"js-yaml": "4.2.0",
@@ -252,6 +254,7 @@
 		"prosemirror-view": "^1.42.5",
 		"react": "^19.2.7",
 		"react-dom": "^19.2.7",
-		"sharp": "^0.35.2"
+		"sharp": "^0.35.2",
+		"ws": "^8.22.2"
 	}
 }

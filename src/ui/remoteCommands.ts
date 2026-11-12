@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -15,8 +15,8 @@ import { promisify } from "node:util";
 import { RemoteJobClient, workerEndpoint } from "../integrations/remoteClient";
 
 const execute = promisify(execFile);
-const endpointKey = "ocursor.workerEndpoint";
-const tokenKey = (endpoint: string) => "ocursor.workerToken." + createHash("sha256").update(endpoint).digest("hex");
+const endpointKey = "aiworkharness.workerEndpoint";
+const tokenKey = (endpoint: string) => "aiworkharness.workerToken." + createHash("sha256").update(endpoint).digest("hex");
 
 export function registerRemoteJobs(context: vscode.ExtensionContext): void {
   const configure = async (): Promise<RemoteJobClient | undefined> => {
@@ -40,19 +40,19 @@ export function registerRemoteJobs(context: vscode.ExtensionContext): void {
     const { stdout } = await execute("git", ["rev-parse", "--verify", "HEAD"], { cwd: folder.uri.fsPath, windowsHide: true, timeout: 10_000, maxBuffer: 4096 });
     const revision = stdout.trim();
     if (!/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(revision)) throw new Error("The workspace does not have a valid committed HEAD.");
-    const repository = await vscode.window.showInputBox({ title: "Worker repository", prompt: "Repository alias from the worker allowlist. The worker must already contain this commit.", value: context.workspaceState.get("ocursor.workerRepository", ""), validateInput: value => value.trim() ? undefined : "Enter a repository alias." });
+    const repository = await vscode.window.showInputBox({ title: "Worker repository", prompt: "Repository alias from the worker allowlist. The worker must already contain this commit.", value: context.workspaceState.get("aiworkharness.workerRepository", ""), validateInput: value => value.trim() ? undefined : "Enter a repository alias." });
     if (!repository) return;
-    const model = await vscode.window.showInputBox({ title: "Worker model", prompt: "Model ID from the worker allowlist", value: context.workspaceState.get("ocursor.workerModel", ""), validateInput: value => value.trim() ? undefined : "Enter a model ID." });
+    const model = await vscode.window.showInputBox({ title: "Worker model", prompt: "Model ID from the worker allowlist", value: context.workspaceState.get("aiworkharness.workerModel", ""), validateInput: value => value.trim() ? undefined : "Enter a model ID." });
     if (!model) return;
     const prompt = await vscode.window.showInputBox({ title: "Submit remote task", prompt: `Starts from ${revision.slice(0, 12)} in ${repository.trim()}. Uncommitted local changes are not included.`, validateInput: value => value.trim() && value.length <= 100_000 ? undefined : "Enter a task (up to 100,000 characters)." });
     if (!prompt?.trim()) return;
     const job = await client.submit({ repository: repository.trim(), revision, model: model.trim(), prompt: prompt.trim() });
-    await context.workspaceState.update("ocursor.workerRepository", repository.trim());
-    await context.workspaceState.update("ocursor.workerModel", model.trim());
+    await context.workspaceState.update("aiworkharness.workerRepository", repository.trim());
+    await context.workspaceState.update("aiworkharness.workerModel", model.trim());
     vscode.window.showInformationMessage(`Remote job ${job.id}: ${job.status}. Use Remote Jobs to check its result.`);
   };
 
-  context.subscriptions.push(vscode.commands.registerCommand("ocursor.remoteJobs", async () => {
+  context.subscriptions.push(vscode.commands.registerCommand("aiworkharness.remoteJobs", async () => {
     try {
       const endpoint = context.globalState.get<string>(endpointKey);
       const token = endpoint ? await context.secrets.get(tokenKey(endpoint)) : undefined;

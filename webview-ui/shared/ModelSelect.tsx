@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -11,6 +11,7 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./icons";
 import { usePresence } from "./usePresence";
+import { t as tr } from "./i18n";
 
 /** Minimal structural shape shared by sidebar ModelDef and settings ModelDef. */
 export interface ModelSelectItem {
@@ -151,21 +152,21 @@ export function ModelSelect({
       {presence.present && createPortal(
         <div className="msel-overlay" data-modal-layer={open ? "" : undefined} data-model-dialog data-state={presence.exiting ? "closing" : "open"}
           inert={presence.exiting || undefined} aria-hidden={presence.exiting || undefined} onMouseDown={(e) => e.target === e.currentTarget && close()}>
-          <div ref={dialogRef} id={dialogId} className="msel-dialog" role="dialog" aria-modal="true" aria-label="Choose model" onKeyDown={navigateResults}>
+          <div ref={dialogRef} id={dialogId} className="msel-dialog" role="dialog" aria-modal="true" aria-label={tr("Choose model")} onKeyDown={navigateResults}>
             <div className="msel-head">
               <input
                 ref={searchRef}
                 className="msel-search"
-                aria-label="Search models"
-                placeholder="Search models…"
+                aria-label={tr("Search models")}
+                placeholder={tr("Search models…")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
-              <button type="button" className="msel-close" onClick={close} aria-label="Close model picker"><Icon name="close" size={16} /></button>
+              <button type="button" className="msel-close" onClick={close} aria-label={tr("Close model picker")}><Icon name="close" size={16} /></button>
             </div>
             <div className="msel-filters">
               <button type="button" className={"msel-chip" + (provider === null ? " active" : "")} aria-pressed={provider === null} onClick={() => setProvider(null)}>
-                All
+                {tr("All")}
               </button>
               {groups.map(([g]) => (
                 <button type="button" key={g} className={"msel-chip" + (provider === g ? " active" : "")} aria-pressed={provider === g} onClick={() => setProvider(provider === g ? null : g)}>
@@ -173,7 +174,7 @@ export function ModelSelect({
                 </button>
               ))}
             </div>
-            <div className="msel-body" role="listbox" aria-label="Models">
+            <div className="msel-body" role="listbox" aria-label={tr("Models")}>
               {visibleCustom.map((c) => (
                 <button type="button" role="option" aria-selected={value === c.value}
                   key={c.value || "__custom__"}
@@ -186,7 +187,7 @@ export function ModelSelect({
                 </button>
               ))}
               {visibleCustom.length > 0 && visibleGroups.length > 0 && <div className="msel-divider" />}
-              {visibleGroups.length === 0 && visibleCustom.length === 0 && <div className="msel-empty">No matches</div>}
+              {visibleGroups.length === 0 && visibleCustom.length === 0 && <div className="msel-empty">{tr("No matches")}</div>}
               {visibleGroups.map(([g, list]) => (
                 <React.Fragment key={g}>
                   <div className="msel-group">{g}</div>

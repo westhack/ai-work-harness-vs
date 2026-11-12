@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
 /*!
- * OpenCursor provider registry.
+ * AiWorkHarness provider registry.
  * MIT License
  * 
  * Copyright (c) 2024-2026 decolua and contributors
@@ -31,7 +31,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-/** OpenCursor's public coding/chat provider metadata; no credentials. */
+/** AiWorkHarness's public coding/chat provider metadata; no credentials. */
 export interface ProviderPreset { label:string; baseUrl:string; needsKey:boolean; noAuth?:boolean; adapterId?:string; protocol?:'openai'|'claude'|'adapter'; needsEndpoint?:boolean; setupHint?:string; authMode?:'apiKey'|'serviceAccount'; }
 const PRESETS = {
   "openai": {

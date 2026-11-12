@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -485,7 +485,7 @@ interface CatalogSource {
     getModalities(provider: string | null, model: string): Record<string, boolean> | null;
     getLimits(provider: string | null, model: string): { contextWindow: number; maxOutput: number } | null;
 }
-// OpenCursor has a single extension-host module graph; no global catalog slot is needed.
+// AiWorkHarness has a single extension-host module graph; no global catalog slot is needed.
 let catalogSource: CatalogSource | null = null;
 /**
  * Install the synced catalog reader (server only).

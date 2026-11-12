@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -35,10 +35,10 @@ export function buildClineHeaders(token: ProtocolValue, extraHeaders: ProtocolVa
     const headers: ProtocolRecord = {
         "HTTP-Referer": "https://cline.bot",
         "X-Title": "Cline",
-        "User-Agent": `OpenCursor/${APP_VERSION}`,
+        "User-Agent": `AiWorkHarness/${APP_VERSION}`,
         "X-PLATFORM": process.platform || "unknown",
         "X-PLATFORM-VERSION": process.version || "unknown",
-        "X-CLIENT-TYPE": "opencursor",
+        "X-CLIENT-TYPE": "aiworkharness",
         "X-CLIENT-VERSION": APP_VERSION,
         "X-CORE-VERSION": APP_VERSION,
         "X-IS-MULTIROOT": "false",

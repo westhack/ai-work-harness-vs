@@ -1,24 +1,45 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DocSource } from "../agent/docsIndex";
 const fixture = vi.hoisted(() => ({
   receive: undefined as ((message: Record<string, unknown>) => Promise<void>) | undefined,
   post: vi.fn(), index: vi.fn(), cancel: vi.fn(), remove: vi.fn(), selector: vi.fn(),
+  engines: vi.fn(), describeBinary: vi.fn(), localRoot: vi.fn(), setOverrides: vi.fn(),
+  openDialog: vi.fn(), showError: vi.fn(),
+}));
+vi.mock("../agent/engines/registry", () => ({
+  listEngines: fixture.engines,
+  describeEngineBinary: fixture.describeBinary,
+  getLocalEnginesRoot: fixture.localRoot,
+  setEngineOverrides: fixture.setOverrides,
+  cachedAvailability: (_id: string, _binary: string | undefined, probe: () => Promise<{ ok: boolean }>) => probe(),
+}));
+vi.mock("../agent/engines/install", () => ({
+  ENGINE_INSTALL_SPECS: { codex: { npm: "@openai/codex" }, gemini: {} },
+  engineInstallCommand: (id: string) => (id === "codex" ? "npm install -g @openai/codex" : undefined),
+  installEngine: vi.fn(),
 }));
 vi.mock("vscode", () => ({
   ViewColumn: { One: 1 }, Uri: { joinPath: () => "icon" },
-  window: { createWebviewPanel: () => ({
-    webview: { html: "", postMessage: fixture.post, onDidReceiveMessage: (callback: typeof fixture.receive) => { fixture.receive = callback; return { dispose() {} }; } },
-    onDidDispose: () => ({ dispose() {} }), dispose() {}, reveal() {},
-  }) },
+  window: {
+    createWebviewPanel: () => ({
+      webview: { html: "", postMessage: fixture.post, onDidReceiveMessage: (callback: typeof fixture.receive) => { fixture.receive = callback; return { dispose() {} }; } },
+      onDidDispose: () => ({ dispose() {} }), dispose() {}, reveal() {},
+    }),
+    showOpenDialog: fixture.openDialog,
+    showErrorMessage: fixture.showError,
+  },
 }));
 vi.mock("../agent/oauth", () => ({ onOAuthStatus: () => ({ dispose() {} }) }));
 vi.mock("../stores/settingsManager", () => ({ DEFAULT_SETTINGS: {} }));
@@ -43,14 +64,26 @@ vi.mock("../stores/modelRegistry", () => ({ onAllModels: () => () => {} }));
 
 import { SettingsPanel } from "./settingsPanel";
 let docs: DocSource[];
+let enginePaths: Record<string, string> | undefined;
 let resolveIndex: (result: { pages: number; chunks: number; scope?: string; stopReason?: string; selected?: number }) => void;
 let rejectIndex: (error: Error) => void;
 const stored: DocSource = { id: "reference", name: "Reference", url: "https://example.test/docs", pages: 8, chunks: 20, indexedAt: 500, maxPages: 200 };
 beforeEach(() => {
-  vi.clearAllMocks(); docs = [{ ...stored }];
+  vi.clearAllMocks(); docs = [{ ...stored }]; enginePaths = undefined;
+  fixture.localRoot.mockReturnValue(undefined);
+  fixture.engines.mockReturnValue([]);
+  fixture.describeBinary.mockResolvedValue(undefined);
+  fixture.openDialog.mockResolvedValue(undefined);
   fixture.index.mockImplementation(() => new Promise((resolve, reject) => { resolveIndex = resolve; rejectIndex = reject; }));
   SettingsPanel.createOrShow({ extensionUri: "extension" } as any, {} as any,
-    { get: () => ({ providers: [], docSources: docs }), set: async (patch: { docSources: DocSource[] }) => { docs = patch.docSources; } } as any);
+    {
+      get: () => ({ providers: [], docSources: docs, enginePaths }),
+      set: async (patch: { docSources?: DocSource[]; enginePaths?: Record<string, string> }) => {
+        if (patch.docSources) docs = patch.docSources;
+        if (patch.enginePaths) enginePaths = patch.enginePaths;
+        return { providers: [], docSources: docs, enginePaths };
+      },
+    } as any);
 });
 afterEach(async () => { rejectIndex?.(Object.assign(new Error("Cancelled"), { name: "AbortError" })); await settle(); SettingsPanel.currentPanel?.dispose(); });
 const receive = (message: Record<string, unknown>) => fixture.receive!(message);
@@ -97,5 +130,74 @@ describe("documentation settings host", () => {
     expect(fixture.remove).not.toHaveBeenCalled();
     await receive({ type: "removeDoc", id: stored.id });
     expect(fixture.remove).toHaveBeenCalledWith(stored.id); expect(docs).toEqual([]);
+  });
+});
+
+describe("engine status host", () => {
+  it("reports every external engine and marks a failed probe unavailable", async () => {
+    fixture.engines.mockReturnValue([
+      { id: "builtin", label: "Built-in (recommended)", available: async () => ({ ok: true }) },
+      { id: "codex", label: "Codex", available: async () => ({ ok: true }) },
+      { id: "gemini", label: "Gemini CLI", available: async () => { throw new Error("probe failed"); } },
+    ]);
+    fixture.localRoot.mockReturnValue("/ext/engines");
+    fixture.describeBinary.mockImplementation(async (id: string) =>
+      (id === "codex" ? { path: "/usr/local/bin/codex", source: "path" } : undefined));
+
+    await receive({ type: "getEngineStatus" });
+
+    expect(fixture.post).toHaveBeenCalledWith({
+      type: "engineStatus",
+      engines: [
+        expect.objectContaining({ id: "codex", label: "Codex", available: true, binaryPath: "/usr/local/bin/codex",
+          source: "path", installScope: "extension", installCommand: "npm install -g @openai/codex", manual: false }),
+        expect.objectContaining({ id: "gemini", label: "Gemini CLI", available: false, installScope: "extension", manual: true }),
+      ],
+    });
+  });
+
+  it("saves a picked executable path and refreshes the status", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "aiworkharness-pick-"));
+    try {
+      const file = join(dir, process.platform === "win32" ? "codex.cmd" : "codex");
+      writeFileSync(file, "");
+      fixture.engines.mockReturnValue([{ id: "codex", label: "Codex", available: async () => ({ ok: true }) }]);
+      fixture.describeBinary.mockResolvedValue({ path: file, source: "override" });
+      fixture.openDialog.mockResolvedValue([{ fsPath: file }]);
+
+      await receive({ type: "pickEnginePath", id: "codex" });
+
+      expect(enginePaths).toEqual({ codex: file });
+      expect(fixture.setOverrides).toHaveBeenCalledWith({ codex: file });
+      expect(fixture.post).toHaveBeenCalledWith({ type: "enginePathPicked", id: "codex", path: file });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("reports a cancelled picker without saving anything", async () => {
+    await receive({ type: "pickEnginePath", id: "codex" });
+    expect(fixture.setOverrides).not.toHaveBeenCalled();
+    expect(fixture.post).toHaveBeenCalledWith({ type: "enginePathPicked", id: "codex", cancelled: true });
+  });
+
+  it("rejects a folder selection and explains why", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "aiworkharness-pick-"));
+    try {
+      fixture.openDialog.mockResolvedValue([{ fsPath: dir }]);
+      await receive({ type: "pickEnginePath", id: "codex" });
+      expect(fixture.showError).toHaveBeenCalled();
+      expect(fixture.setOverrides).not.toHaveBeenCalled();
+      expect(fixture.post).toHaveBeenCalledWith({ type: "enginePathPicked", id: "codex", cancelled: true });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("removes one stored override and keeps the others", async () => {
+    enginePaths = { codex: "/opt/codex", gemini: "/opt/gemini" };
+    await receive({ type: "clearEnginePath", id: "codex" });
+    expect(enginePaths).toEqual({ gemini: "/opt/gemini" });
+    expect(fixture.setOverrides).toHaveBeenCalledWith({ gemini: "/opt/gemini" });
   });
 });

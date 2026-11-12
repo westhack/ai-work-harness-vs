@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -26,12 +26,12 @@ const exchange = (id: string): Step[] => [
 describe("immutable user context", () => {
   it("preserves entire previous message objects across multiple user turns and appended notifications", () => {
     const history: Step[] = [first(), ...exchange("one")];
-    let prior = buildMessages("OpenCursor", history);
+    let prior = buildMessages("AiWorkHarness", history);
     for (let i = 0; i < 3; i++) {
       history.push({ kind: "user", synthetic: true, text: `Editor context changed ${i}` });
       history.push({ kind: "user", text: `Follow-up ${i}`, context: snapshotUserContext({ ...context, openFiles: `src/${i}.ts`, timestamp: String(i) }) });
       history.push(...exchange(`next-${i}`));
-      const next = buildMessages("OpenCursor", history);
+      const next = buildMessages("AiWorkHarness", history);
       expect(next.slice(0, prior.length)).toEqual(prior);
       prior = next;
     }
@@ -42,11 +42,11 @@ describe("immutable user context", () => {
   it("ignores refreshed live context for already captured turns", () => {
     const source = { ...context, taskState: "transient state" };
     const step: Step = { kind: "user", text: "Original request", context: snapshotUserContext(source) };
-    const prior = buildMessages("OpenCursor", [step]);
+    const prior = buildMessages("AiWorkHarness", [step]);
     source.userInfo = "different rules";
     source.openFiles = "different.ts";
     source.timestamp = "later";
-    expect(buildMessages("OpenCursor", [step], { ...source, taskState: undefined })).toEqual(prior);
+    expect(buildMessages("AiWorkHarness", [step], { ...source, taskState: undefined })).toEqual(prior);
     expect(step.context).not.toHaveProperty("taskState");
     expect(Object.isFrozen(step.context)).toBe(true);
   });
@@ -56,7 +56,7 @@ describe("immutable user context", () => {
     const next = snapshotUserContext({ ...context, timestamp: "later" }, previous);
     expect(next).toMatchObject({ userInfo: context.userInfo, openFiles: context.openFiles, omitUserInfo: true, omitOpenFiles: true });
     const saved: Step = JSON.parse(JSON.stringify({ kind: "user", text: "Follow-up", context: next }));
-    const wire = JSON.stringify(buildMessages("OpenCursor", [saved]));
+    const wire = JSON.stringify(buildMessages("AiWorkHarness", [saved]));
     expect(wire).not.toContain(context.userInfo);
     expect(wire).not.toContain(context.openFiles);
     expect(wire).toContain("later");
@@ -69,20 +69,20 @@ describe("immutable user context", () => {
 
   it("does not move cache markers on legacy and synthetic user messages", () => {
     const history: Step[] = [{ kind: "user", text: "Legacy request" }, { kind: "user", synthetic: true, text: "Saved note" }];
-    const before = buildMessages("OpenCursor", history);
+    const before = buildMessages("AiWorkHarness", history);
     history.push(first(), ...exchange("new"));
-    expect(buildMessages("OpenCursor", history).slice(0, before.length)).toEqual(before);
+    expect(buildMessages("AiWorkHarness", history).slice(0, before.length)).toEqual(before);
   });
 
   it("restores saved working context with the same envelopes and attachments", () => {
     const history: Step[] = [first(), ...exchange("saved")];
     const state: ContextState = {};
     saveContext(history, history, state);
-    const before = buildMessages("OpenCursor", history);
+    const before = buildMessages("AiWorkHarness", history);
     const saved = JSON.parse(JSON.stringify({ history, state })) as { history: Step[]; state: ContextState };
     saved.history.push({ kind: "user", text: "Continue", context: snapshotUserContext({ ...context, timestamp: "later" }) });
     const restored = restoreContext(saved.history, saved.state);
-    expect(buildMessages("OpenCursor", restored).slice(0, before.length)).toEqual(before);
+    expect(buildMessages("AiWorkHarness", restored).slice(0, before.length)).toEqual(before);
     expect(saved.state.checkpoint).toBeDefined();
   });
 
@@ -128,10 +128,10 @@ describe("immutable user context", () => {
     const fitted = fitStepsToBudget(history, 0, budget);
     expect(stepsTokens(fitted)).toBeLessThanOrEqual(budget);
     expect(fitted.some((step) => step.kind === "user" && step.text.startsWith("Middle"))).toBe(false);
-    expect(JSON.stringify(buildMessages("OpenCursor", fitted))).toContain("Do not execute tests");
+    expect(JSON.stringify(buildMessages("AiWorkHarness", fitted))).toContain("Do not execute tests");
     expect(history).toEqual(saved);
     const tail = splitForCompaction(history, 100).tail;
-    expect(JSON.stringify(buildMessages("OpenCursor", tail))).toContain("Do not execute tests");
+    expect(JSON.stringify(buildMessages("AiWorkHarness", tail))).toContain("Do not execute tests");
   });
 });
 
@@ -140,7 +140,7 @@ describe("mid-run steering", () => {
 
   it("is sent as an update to the current task, without a new request context", () => {
     const history: Step[] = [first(), ...exchange("one"), { kind: "user", text: "Keep the old shortcuts", steering: true }];
-    const messages = buildMessages("OpenCursor", history, liveContext);
+    const messages = buildMessages("AiWorkHarness", history, liveContext);
     const steer = JSON.stringify(messages.at(-1));
     expect(messages.at(-1)?.role).toBe("user");
     expect(steer).toContain("<user_update>");
@@ -157,9 +157,9 @@ describe("mid-run steering", () => {
 
   it("does not change earlier messages, so the prompt cache prefix survives", () => {
     const history: Step[] = [first(), ...exchange("one")];
-    const before = buildMessages("OpenCursor", history, liveContext);
+    const before = buildMessages("AiWorkHarness", history, liveContext);
     history.push({ kind: "user", text: "Also cover the edge case", steering: true });
-    const after = buildMessages("OpenCursor", history, liveContext);
+    const after = buildMessages("AiWorkHarness", history, liveContext);
     expect(after.slice(0, before.length)).toEqual(before);
   });
 

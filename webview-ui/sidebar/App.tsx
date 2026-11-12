@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -29,6 +29,7 @@ import { setMotionPreference, type MotionPreference } from "../shared/motionPref
 import { WorkflowDialog, GoalBanner, VerificationCard } from "./components/Workflow";
 import type { AgentEvent, ApprovalMode, ApprovalPolicy, ApprovalRequestInfo, AssistantBlock, AssistantTurn, Attachment, ConversationSummary, ErrorBlock, InMessage, MentionItem, Mode, ModelDef, ModelOption, OutMessage, PendingChangeInfo, PersonaInfo, TeamInfo, ThinkingBlock, ToolBlock, Turn, UserTurn } from "./types";
 import { applyEvent, applyToBlocks, closeTrailingThinking, forceSettleOpenWork, parsePartialArgs, renderMentionTokens } from "./types";
+import { t as tr, setLocale } from "../shared/i18n";
 
 function post(msg: OutMessage) {
   vscode.postMessage(msg);
@@ -51,11 +52,11 @@ export class ErrorBoundary extends React.Component<
     if (this.state.error) {
       return (
         <div className="error-boundary">
-          <div className="eb-title"><Icon name="close" size={16} /> Something went wrong</div>
+          <div className="eb-title"><Icon name="close" size={16} /> {tr("Something went wrong")}</div>
           <pre className="eb-msg">{String(this.state.error?.message || this.state.error)}</pre>
           <div className="eb-actions">
-            <button className="eb-btn" onClick={() => this.setState({ error: null })}>Recover</button>
-            <button className="eb-btn ghost" onClick={() => post({ type: "openLog" })}>View log</button>
+            <button className="eb-btn" onClick={() => this.setState({ error: null })}>{tr("Recover")}</button>
+            <button className="eb-btn ghost" onClick={() => post({ type: "openLog" })}>{tr("View log")}</button>
           </div>
         </div>
       );
@@ -348,8 +349,8 @@ function useStableCallback<Args extends unknown[], Result>(callback: (...args: A
  *  not re-rendered on every streaming frame of a long conversation. */
 /** Guidance the user added mid-run, shown inline in the work it changed. */
 function SteeringNote({ text, action }: { text: string; action?: React.ReactNode }) {
-  return <div className="steering-note" role="note" aria-label="Your update to the running task">
-    <div className="steering-note-head"><span className="steering-note-label"><Icon name="steer" size={12} /> You</span>{action}</div>
+  return <div className="steering-note" role="note" aria-label={tr("Your update to the running task")}>
+    <div className="steering-note-head"><span className="steering-note-label"><Icon name="steer" size={12} /> {tr("You")}</span>{action}</div>
     <div className="steering-note-text"><MentionText text={text} /></div>
   </div>;
 }
@@ -415,7 +416,7 @@ const AssistantMessage = React.memo(function AssistantMessage({ turn, index, isR
   return (
     <div className="msg assistant message-shell" data-turn-index={index}>
       <div className="role">
-        <Icon name="bot" /> Agent
+        <Icon name="bot" /> {tr("Agent")}
       </div>
       <div className="bubble">
         <AssistantContent turn={turn} turnIndex={index} running={running} phase={phase}
@@ -446,26 +447,26 @@ function MaxStepsCard({ block, running }: { block: import("./types").AssistantBl
     <div className="approval-card inline">
       <div className="ap-head">
         <Icon name="clock" size={14} />
-        <span className="ap-title">Paused after {block.steps} steps</span>
+        <span className="ap-title">{tr("Paused after")} {block.steps} steps</span>
       </div>
       {!resumed && !running && (
         <div className="ap-actions">
           <div className="ap-approve-group" ref={menuRef}>
-            <button className="ap-btn allow" onClick={() => go()}>Continue</button>
-            <button className="ap-btn allow ap-arrow" title="Continue options" onClick={() => setMenu((v) => !v)}>
+            <button className="ap-btn allow" onClick={() => go()}>{tr("Continue")}</button>
+            <button className="ap-btn allow ap-arrow" title={tr("Continue options")} onClick={() => setMenu((v) => !v)}>
               <Icon name="chevD" size={11} />
             </button>
             {menu && (
               <div className="ap-menu">
                 <button
                   className="ap-menu-item"
-                  title="Continue and always auto continue from now on (updates General settings)"
+                  title={tr("Continue and always auto continue from now on (updates General settings)")}
                   onClick={() => go(true)}
                 >
-                  Always auto continue
+                  {tr("Always auto continue")}
                 </button>
                 <button className="ap-menu-item" onClick={() => post({ type: "openSettings", section: "general" })}>
-                  <Icon name="settings" size={12} /> General settings…
+                  <Icon name="settings" size={12} /> {tr("General settings…")}
                 </button>
               </div>
             )}
@@ -482,18 +483,18 @@ function CompactionCard({ block }: { block: import("./types").AssistantBlock & {
   if (block.status === "running") {
     return (
       <div className="compaction-card running">
-        <span className="spinner" /> Summarizing earlier conversation to free context…
+        <span className="spinner" /> {tr("Summarizing earlier conversation to free context…")}
       </div>
     );
   }
   if (block.status === "failed") {
-    return <div className="compaction-card failed">Context summarization failed — older messages were trimmed instead.</div>;
+    return <div className="compaction-card failed">{tr("Context summarization failed — older messages were trimmed instead.")}</div>;
   }
   return (
     <div className={"compaction-card done" + (open ? " open" : "")}>
       <div className="compaction-head" onClick={() => setOpen((o) => !o)}>
         <Icon name={open ? "chevD" : "chevR"} size={12} />
-        <span>Earlier conversation summarized to free context</span>
+        <span>{tr("Earlier conversation summarized to free context")}</span>
       </div>
       {open && block.summary && <div className="compaction-body"><Markdown text={block.summary} /></div>}
     </div>
@@ -548,14 +549,14 @@ function ErrorCard({ block }: { block: ErrorBlock }) {
     return (
       <div className="error-card retrying">
         <Icon name="brain" size={12} className="error-spark" />
-        <span>Request failed, retrying ({block.retrying.attempt}/{block.retrying.max})… </span>
+        <span>{tr("Request failed, retrying (")}{block.retrying.attempt}/{block.retrying.max})… </span>
         <span className="error-detail">{block.message}</span>
       </div>
     );
   }
   return (
     <div className="error-card">
-      <div className="error-card-head">Request failed</div>
+      <div className="error-card-head">{tr("Request failed")}</div>
       <div className="error-card-body">{block.message}</div>
     </div>
   );
@@ -573,11 +574,11 @@ function PersonaSelect({
   if (!personas.length) return null;
   return (
     <div className="persona-select">
-      <div className="persona-select-label">Persona</div>
-      <Select aria-label="Persona" value={personaId} onChange={event => onSelect(event.target.value)}>
-        {personas.map(persona => <option key={persona.id} value={persona.id} title={persona.description}>{persona.name}</option>)}
+      <div className="persona-select-label">{tr("Persona")}</div>
+      <Select aria-label={tr("Persona")} value={personaId} onChange={event => onSelect(event.target.value)}>
+        {personas.map(persona => <option key={persona.id} value={persona.id} title={tr(persona.description)}>{tr(persona.name)}</option>)}
       </Select>
-      <div className="persona-description">{personas.find(persona => persona.id === personaId)?.description}</div>
+      <div className="persona-description">{tr(personas.find(persona => persona.id === personaId)?.description ?? "")}</div>
     </div>
   );
 }
@@ -635,9 +636,9 @@ export function OutputEditor({ initialText, label, onSave, onCancel }: { initial
         else if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); onSave(text); }
       }} />
     <div className="output-editor-actions">
-      <span className="output-editor-hint">Esc to cancel · Ctrl+Enter to save</span>
-      <button type="button" className="btn-ghost" onClick={onCancel}>Cancel</button>
-      <button type="button" className="btn-primary" disabled={text === initialText} onClick={() => onSave(text)}>Save</button>
+      <span className="output-editor-hint">{tr("Esc to cancel · Ctrl+Enter to save")}</span>
+      <button type="button" className="btn-ghost" onClick={onCancel}>{tr("Cancel")}</button>
+      <button type="button" className="btn-primary" disabled={text === initialText} onClick={() => onSave(text)}>{tr("Save")}</button>
     </div>
   </div>;
 }
@@ -736,7 +737,7 @@ function SubagentChat({
       <TaskActivityContext.Provider value={parentRunning && running}>
       <div className="msg user subagent-task-msg message-shell">
         <div className="role">
-          <Icon name="task" /> Task
+          <Icon name="task" /> {tr("Task")}
           {subName ? <span className="sub-chip sub-type" title={`Subagent: ${subName}`}>{subName}</span> : null}
         </div>
         {taskPrompt ? (
@@ -754,7 +755,7 @@ function SubagentChat({
         <MessageActions variant="user" text={taskPrompt} />
       </div>
       <div className="msg assistant message-shell">
-        <div className="role"><Icon name="bot" /> Subagent</div>
+        <div className="role"><Icon name="bot" /> {tr("Subagent")}</div>
         <div className="bubble">
           {sub.length === 0 ? (
             <div className="sub-empty">{running ? "Starting…" : "No activity"}</div>
@@ -793,7 +794,7 @@ function SubagentChat({
           )}
           {!running && block.result && (
             <div className="sub-summary">
-              <div className="sub-summary-label">Summary</div>
+              <div className="sub-summary-label">{tr("Summary")}</div>
               <Markdown text={block.result} />
             </div>
           )}
@@ -844,14 +845,14 @@ function ApprovalCard({ request, inline }: { request: ApprovalRequestInfo; inlin
     <div className={"approval-card" + (inline ? " inline" : "")} onClick={(e) => e.stopPropagation()}>
       <div className="ap-head">
         <Icon name="tools" size={14} />
-        <span className="ap-title">{ACTION_LABEL[request.actionType]} needs approval</span>
+        <span className="ap-title">{ACTION_LABEL[request.actionType]} {tr("needs approval")}</span>
         <span className="ap-tool">{request.toolName}</span>
       </div>
       {!inline && <div className="ap-detail"><code>{request.detail}</code></div>}
       <div className="ap-actions">
         <div className="ap-approve-group" ref={menuRef}>
-          <button className="ap-btn allow" onClick={() => resolve({ approve: true })}>Approve</button>
-          <button className="ap-btn allow ap-arrow" title="Approve options (these also update Behavior settings)" onClick={() => setMenu((v) => !v)}>
+          <button className="ap-btn allow" onClick={() => resolve({ approve: true })}>{tr("Approve")}</button>
+          <button className="ap-btn allow ap-arrow" title={tr("Approve options (these also update Behavior settings)")} onClick={() => setMenu((v) => !v)}>
             <Icon name="chevD" size={11} />
           </button>
           {menu && (
@@ -862,7 +863,7 @@ function ApprovalCard({ request, inline }: { request: ApprovalRequestInfo; inlin
                   title={`Approve and add "${request.suggestion}" to the ${label} allow list`}
                   onClick={() => resolve({ approve: true, pattern: request.suggestion, addPattern: "allow" })}
                 >
-                  Always allow <code>{request.suggestion}</code>
+                  {tr("Always allow")} <code>{request.suggestion}</code>
                 </button>
               )}
               <button
@@ -870,14 +871,14 @@ function ApprovalCard({ request, inline }: { request: ApprovalRequestInfo; inlin
                 title={`Approve and only ask for risky-looking ${label}s from now on`}
                 onClick={() => resolve({ approve: true, setMode: "review" })}
               >
-                Auto review {label}s
+                {tr("Auto review")} {label}s
               </button>
               <button
                 className="ap-menu-item"
                 title={`Approve and run every ${label} without asking from now on`}
                 onClick={() => resolve({ approve: true, setMode: "allow" })}
               >
-                Run everything ({label}s)
+                {tr("Run everything (")}{label}s)
               </button>
               {request.suggestion && (
                 <button
@@ -885,16 +886,16 @@ function ApprovalCard({ request, inline }: { request: ApprovalRequestInfo; inlin
                   title={`Reject and add "${request.suggestion}" to the deny list`}
                   onClick={() => resolve({ approve: false, pattern: request.suggestion, addPattern: "deny" })}
                 >
-                  Always deny <code>{request.suggestion}</code>
+                  {tr("Always deny")} <code>{request.suggestion}</code>
                 </button>
               )}
               <button className="ap-menu-item" onClick={() => post({ type: "openSettings", section: "behavior" })}>
-                <Icon name="settings" size={12} /> Behavior settings…
+                <Icon name="settings" size={12} /> {tr("Behavior settings…")}
               </button>
             </div>
           )}
         </div>
-        <button className="ap-btn deny" onClick={() => resolve({ approve: false })}>Reject</button>
+        <button className="ap-btn deny" onClick={() => resolve({ approve: false })}>{tr("Reject")}</button>
       </div>
     </div>
   );
@@ -1345,6 +1346,7 @@ export function App() {
       const msg = event.data;
       switch (msg.type) {
         case "initialState":
+          setLocale(msg.language);
           setWorkspaceRoot(msg.workspaceRoot);
           setApprovalPolicy(msg.approvalPolicy);
           setMode(msg.mode);
@@ -1423,6 +1425,7 @@ export function App() {
           setSelectedModel(msg.model || ""); // auto hidden for now
           break;
         case "configState":
+          setLocale(msg.language);
           if (msg.approvalPolicy) setApprovalPolicy(msg.approvalPolicy);
           setPersonas(msg.personas || []);
           setHasProviders(!!msg.hasProviders);
@@ -1872,12 +1875,12 @@ export function App() {
           {/* Fallback New Chat tab when nothing is open and no draft tab exists */}
           {openTabs.length === 0 && !activeId && (
             <div className={"tab" + (!subTab ? " active" : "")}>
-              <span className="tab-title">New Chat</span>
+              <span className="tab-title">{tr("New Chat")}</span>
             </div>
           )}
           {/* Virtual tab for an opened subagent run. */}
           {subBlock && (
-            <div className="tab subagent-tab active" title="Subagent">
+            <div className="tab subagent-tab active" title={tr("Subagent")}>
               <span className="tab-icon"><Icon name="task" size={12} /></span>
               <span className="tab-title">{subBlock.input?.description || "Subagent"}</span>
               <span className="tab-close" onClick={(e) => { e.stopPropagation(); setSubTab(null); }}>
@@ -1887,46 +1890,46 @@ export function App() {
           )}
         </div>
         <div className="actions">
-          <button className="hicon" title="New Chat" onClick={() => post({ type: "newConversation" })}>
+          <button className="hicon" title={tr("New Chat")} onClick={() => post({ type: "newConversation" })}>
             <Icon name="plus" size={14} />
           </button>
-          <button className="hicon" title="History" onClick={() => setHistoryOpen(true)}>
+          <button className="hicon" title={tr("History")} onClick={() => setHistoryOpen(true)}>
             <Icon name="history" size={14} />
           </button>
-          <button className="hicon" title="Settings" onClick={() => post({ type: "openSettings" })}>
+          <button className="hicon" title={tr("Settings")} onClick={() => post({ type: "openSettings" })}>
             <Icon name="settings" size={14} />
           </button>
           <div className="more-menu-wrap" ref={moreRef}>
-            <button className="hicon" title="More" onClick={() => setMoreOpen((v) => !v)}>
+            <button className="hicon" title={tr("More")} onClick={() => setMoreOpen((v) => !v)}>
               <Icon name="more" size={14} />
             </button>
             {moreOpen && (
               <div className="more-menu">
-                <button title="Create an isolated checkout from committed HEAD. Uncommitted changes stay in this checkout." onClick={() => { setMoreOpen(false); post({ type: "createWorktreeConversation" }); }}><Icon name="gitBranch" size={13} /> New worktree chat</button>
-                <button onClick={() => { setMoreOpen(false); setWorkflowDialog("review"); }}><Icon name="code" size={13} /> Review code</button>
-                <button disabled={!!activeId && !!goals[activeId] && goals[activeId].status !== "complete"} onClick={() => { setMoreOpen(false); setWorkflowDialog("goal"); }}><Icon name="list" size={13} /> Start a goal</button>
-                <button disabled={!isRunning || !activeId} onClick={() => { setMoreOpen(false); setWorkflowDialog("steer"); }}><Icon name="edit" size={13} /> Update active task</button>
-                <button disabled={!activeId || isRunning} onClick={() => { setMoreOpen(false); if (activeId) post({ type: "forkConversation", id: activeId }); }}><Icon name="plus" size={13} /> Fork conversation</button>
-                <button disabled={!activeId || isRunning} onClick={() => { setMoreOpen(false); if (activeId) post({ type: "archiveConversation", id: activeId, archived: true }); }}><Icon name="history" size={13} /> Archive conversation</button>
+                <button title={tr("Create an isolated checkout from committed HEAD. Uncommitted changes stay in this checkout.")} onClick={() => { setMoreOpen(false); post({ type: "createWorktreeConversation" }); }}><Icon name="gitBranch" size={13} /> {tr("New worktree chat")}</button>
+                <button onClick={() => { setMoreOpen(false); setWorkflowDialog("review"); }}><Icon name="code" size={13} /> {tr("Review code")}</button>
+                <button disabled={!!activeId && !!goals[activeId] && goals[activeId].status !== "complete"} onClick={() => { setMoreOpen(false); setWorkflowDialog("goal"); }}><Icon name="list" size={13} /> {tr("Start a goal")}</button>
+                <button disabled={!isRunning || !activeId} onClick={() => { setMoreOpen(false); setWorkflowDialog("steer"); }}><Icon name="edit" size={13} /> {tr("Update active task")}</button>
+                <button disabled={!activeId || isRunning} onClick={() => { setMoreOpen(false); if (activeId) post({ type: "forkConversation", id: activeId }); }}><Icon name="plus" size={13} /> {tr("Fork conversation")}</button>
+                <button disabled={!activeId || isRunning} onClick={() => { setMoreOpen(false); if (activeId) post({ type: "archiveConversation", id: activeId, archived: true }); }}><Icon name="history" size={13} /> {tr("Archive conversation")}</button>
                 <button role="menuitemcheckbox" aria-checked={allowOutputEdits} disabled={!activeId}
-                  title="Show an edit button on this conversation's assistant text and thinking. Edits change what the model sees next."
+                  title={tr("Show an edit button on this conversation's assistant text and thinking. Edits change what the model sees next.")}
                   onClick={() => { setMoreOpen(false); setOutputEditing(!allowOutputEdits); }}>
-                  <Icon name={allowOutputEdits ? "check" : "edit"} size={13} /> Allow editing model output
+                  <Icon name={allowOutputEdits ? "check" : "edit"} size={13} /> {tr("Allow editing model output")}
                 </button>
                 <button onClick={() => { setMoreOpen(false); post({ type: "openBrowserTab" }); }}>
-                  <Icon name="globe" size={13} /> Open Browser Tab
+                  <Icon name="globe" size={13} /> {tr("Open Browser Tab")}
                 </button>
                 <button
                   disabled={!activeId}
                   onClick={() => { setMoreOpen(false); post({ type: "exportConversation", convId: activeId }); }}
                 >
-                  <Icon name="download" size={13} /> Export Conversation
+                  <Icon name="download" size={13} /> {tr("Export Conversation")}
                 </button>
                 <button
                   disabled={openTabs.length === 0}
                   onClick={() => { setMoreOpen(false); draftsRef.current.clear(); post({ type: "updateChatWorkspace", state: { drafts: {} } }); setOpenTabs([]); post({ type: "newConversation" }); }}
                 >
-                  <Icon name="close" size={13} /> Close All Tabs
+                  <Icon name="close" size={13} /> {tr("Close All Tabs")}
                 </button>
               </div>
             )}
@@ -1948,34 +1951,34 @@ export function App() {
         />
       )}
       {activeId && goals[activeId] && <GoalBanner goal={goals[activeId]} onStatus={(status) => post({ type: "setGoalStatus", convId: activeId, status })} />}
-      {workspaceRoot && <div className="worktree-banner" title={workspaceRoot}><Icon name="gitBranch" size={12} /><span>Isolated worktree · {workspaceRoot.split(/[\\/]/).pop()}</span><button className="btn-ghost" onClick={() => post({ type: "openMention", kind: "folder", path: workspaceRoot })}>Show folder</button></div>}
+      {workspaceRoot && <div className="worktree-banner" title={workspaceRoot}><Icon name="gitBranch" size={12} /><span>{tr("Isolated worktree ·")} {workspaceRoot.split(/[\\/]/).pop()}</span><button className="btn-ghost" onClick={() => post({ type: "openMention", kind: "folder", path: workspaceRoot })}>{tr("Show folder")}</button></div>}
       {workflowDialog && <WorkflowDialog kind={workflowDialog} onClose={() => setWorkflowDialog(null)}
         onGoal={(objective, tokenBudget) => post({ type: "setGoal", convId: activeId, objective, tokenBudget })}
         onReview={(target) => post({ type: "startReview", target })}
         onSteer={(text) => { if (activeId) post({ type: "steerMessage", convId: activeId, text }); }} />}
 
-      <div className={"chat-messages" + (!subBlock && hasProviders && turns.length === 0 ? " is-empty" : "")} data-running={isRunning} ref={scrollRef} onScroll={onScroll} tabIndex={0} role="region" aria-label="Conversation">
+      <div className={"chat-messages" + (!subBlock && hasProviders && turns.length === 0 ? " is-empty" : "")} data-running={isRunning} ref={scrollRef} onScroll={onScroll} tabIndex={0} role="region" aria-label={tr("Conversation")}>
         <TaskActivityContext.Provider value={isRunning}>
         <ModelOutputEditContext.Provider value={outputEdit}>
         {subBlock ? (
           <SubagentChat block={subBlock} approvals={approvalsByCall} />
         ) : !hasProviders ? (
           <div className="setup-screen">
-            <img className="app-logo" src={document.getElementById("root")?.dataset.icon} alt="OpenCursor" />
+            <img className="app-logo" src={document.getElementById("root")?.dataset.icon} alt={tr("AiWorkHarness")} />
             <StaggerReveal>
-              <h1 className="setup-title t-stagger-line">Build with OpenCursor</h1>
-              <div className="setup-desc t-stagger-line t-stagger-line--2">Connect your account, add an API key, or run a local model to start building.</div>
+              <h1 className="setup-title t-stagger-line">{tr("Build with AiWorkHarness")}</h1>
+              <div className="setup-desc t-stagger-line t-stagger-line--2">{tr("Connect your account, add an API key, or run a local model to start building.")}</div>
             </StaggerReveal>
             <button className="setup-btn" onClick={() => post({ type: "openSettings", section: "providers" })}>
-              Get started <Icon name="chevR" size={14} />
+              {tr("Get started")} <Icon name="chevR" size={14} />
             </button>
           </div>
         ) : turns.length === 0 ? (
           <div className="chat-empty">
-            <img className="app-logo" src={document.getElementById("root")?.dataset.icon} alt="OpenCursor" />
+            <img className="app-logo" src={document.getElementById("root")?.dataset.icon} alt={tr("AiWorkHarness")} />
             <StaggerReveal>
-              <h1 className="empty-title t-stagger-line">Let’s build something</h1>
-              <div className="empty-hint t-stagger-line t-stagger-line--2">Turn an idea into code.</div>
+              <h1 className="empty-title t-stagger-line">{tr("Let’s build something")}</h1>
+              <div className="empty-hint t-stagger-line t-stagger-line--2">{tr("Turn an idea into code.")}</div>
             </StaggerReveal>
             <div className="empty-actions">
               {([
@@ -1983,8 +1986,8 @@ export function App() {
                 { icon: "tools", label: "Find a bug", text: "Look through this codebase for a bug and explain how to fix it." },
                 { icon: "list", label: "Make a plan", text: "Help me plan a change to this project. First, ask me what I want to build." },
               ] as const).map((suggestion) => (
-                <button className="empty-action" key={suggestion.label} onClick={() => setDraft({ text: suggestion.text })}>
-                  <Icon name={suggestion.icon} size={14} /> {suggestion.label}
+                <button className="empty-action" key={suggestion.label} onClick={() => setDraft({ text: tr(suggestion.text) })}>
+                  <Icon name={suggestion.icon} size={14} /> {tr(suggestion.label)}
                 </button>
               ))}
             </div>
@@ -2063,7 +2066,7 @@ export function App() {
 
       <div className="bottom-stack" style={hasProviders && !subBlock ? undefined : { display: "none" }}>
         {!following && turns.length > 0 && (
-          <button className="scroll-bottom-btn" title="Scroll to bottom" onClick={scrollToBottom}>
+          <button className="scroll-bottom-btn" title={tr("Scroll to bottom")} onClick={scrollToBottom}>
             <Icon name="chevD" size={14} />
           </button>
         )}
@@ -2079,7 +2082,7 @@ export function App() {
         {pendingChanges.length > 0 && (
           <div className="review-bar">
             <div className="review-head" onClick={() => setReviewOpen((open) => !open)}>
-              <div className="review-title" role="button" tabIndex={0} aria-label="Changed files"
+              <div className="review-title" role="button" tabIndex={0} aria-label={tr("Changed files")}
                 aria-expanded={reviewOpen} aria-controls={reviewDetailsId} onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
@@ -2093,8 +2096,8 @@ export function App() {
                 </span>
               </div>
               <div className="review-actions">
-                <button className="rv-link" onClick={(event) => { event.stopPropagation(); post({ type: "rejectAllChanges" }); }}>Undo All</button>
-                <button className="rv-link" onClick={(event) => { event.stopPropagation(); post({ type: "acceptAllChanges" }); }}>Keep All</button>
+                <button className="rv-link" onClick={(event) => { event.stopPropagation(); post({ type: "rejectAllChanges" }); }}>{tr("Undo All")}</button>
+                <button className="rv-link" onClick={(event) => { event.stopPropagation(); post({ type: "acceptAllChanges" }); }}>{tr("Keep All")}</button>
               </div>
             </div>
             <AnimatedDisclosure open={reviewOpen}>
@@ -2114,10 +2117,10 @@ export function App() {
                       </span>
                     </button>
                     <span className="rv-item-actions">
-                      <button className="rv-icon reject" title="Undo" onClick={() => post({ type: "rejectChange", path: c.path })}>
+                      <button className="rv-icon reject" title={tr("Undo")} onClick={() => post({ type: "rejectChange", path: c.path })}>
                         <Icon name="close" size={13} />
                       </button>
-                      <button className="rv-icon accept" title="Keep" onClick={() => post({ type: "acceptChange", path: c.path })}>
+                      <button className="rv-icon accept" title={tr("Keep")} onClick={() => post({ type: "acceptChange", path: c.path })}>
                         <Icon name="check" size={13} />
                       </button>
                     </span>
@@ -2174,14 +2177,14 @@ export function App() {
       {revertPrompt && (
         <div className="modal-overlay" onClick={() => setRevertPrompt(null)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-title">Revert file changes?</div>
+            <div className="modal-title">{tr("Revert file changes?")}</div>
             <div className="modal-body">
-              Resending from an earlier message will remove the messages after it. You have {pendingChanges.length} pending file change{pendingChanges.length > 1 ? "s" : ""} — revert them too?
+              {tr("Resending from an earlier message will remove the messages after it. You have")} {pendingChanges.length} {tr("pending file change")}{pendingChanges.length > 1 ? "s" : ""} — {tr("revert them too?")}
             </div>
             <div className="modal-actions">
-              <button className="btn-ghost" onClick={() => setRevertPrompt(null)}>Cancel</button>
-              <button className="btn-ghost" disabled={isRunning} onClick={() => (revertPrompt.restore ? restoreMessage : commitEdit)(revertPrompt.index, revertPrompt.text, revertPrompt.attachments, false)}>Don't revert</button>
-              <button className="btn-primary" disabled={isRunning} onClick={() => (revertPrompt.restore ? restoreMessage : commitEdit)(revertPrompt.index, revertPrompt.text, revertPrompt.attachments, true)}>Revert</button>
+              <button className="btn-ghost" onClick={() => setRevertPrompt(null)}>{tr("Cancel")}</button>
+              <button className="btn-ghost" disabled={isRunning} onClick={() => (revertPrompt.restore ? restoreMessage : commitEdit)(revertPrompt.index, revertPrompt.text, revertPrompt.attachments, false)}>{tr("Don't revert")}</button>
+              <button className="btn-primary" disabled={isRunning} onClick={() => (revertPrompt.restore ? restoreMessage : commitEdit)(revertPrompt.index, revertPrompt.text, revertPrompt.attachments, true)}>{tr("Revert")}</button>
             </div>
           </div>
         </div>

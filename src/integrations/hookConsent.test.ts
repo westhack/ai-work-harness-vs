@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -12,7 +12,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-const workspace = mkdtempSync(join(tmpdir(), "ocursor-hook-consent-"));
+const workspace = mkdtempSync(join(tmpdir(), "aiworkharness-hook-consent-"));
 const vscodeState = vi.hoisted(() => ({ trusted: true, choice: undefined as string | undefined }));
 const showWarningMessage = vi.hoisted(() => vi.fn(async () => vscodeState.choice));
 

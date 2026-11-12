@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -25,7 +25,7 @@ let directory: string;
 const range = { start: { line: 0, character: 7 }, end: { line: 0, character: 13 } };
 const uri = (relative: string) => ({ scheme: "file", fsPath: path.join(host.root, relative) });
 beforeEach(async () => {
-  directory = await fs.mkdtemp(path.join(tmpdir(), "ocursor-language-")); host.root = path.join(directory, "workspace"); await fs.mkdir(host.root);
+  directory = await fs.mkdtemp(path.join(tmpdir(), "aiworkharness-language-")); host.root = path.join(directory, "workspace"); await fs.mkdir(host.root);
   await fs.writeFile(path.join(host.root, "app.ts"), "export function sample() {}\n");
   await fs.writeFile(path.join(host.root, "usage.ts"), "sample();\n");
   host.execute.mockReset(); host.applyEdit.mockReset(); host.open.mockReset();

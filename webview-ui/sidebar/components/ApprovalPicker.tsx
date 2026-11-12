@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -13,6 +13,7 @@ import { Icon, type IconName } from "../../shared/icons";
 import { vscode } from "../../shared/vscode";
 import { usePresence } from "../../shared/usePresence";
 import type { ApprovalPolicy } from "../types";
+import { t as tr } from "../../shared/i18n";
 
 type Preset = "ask" | "review" | "allow" | "custom";
 const ACTIONS = ["shell", "edits", "delete", "mcp", "web", "outside"] as const;
@@ -111,26 +112,26 @@ export function ApprovalPicker({ policy, disabled = false }: { policy?: Approval
 
   return <>
     <button ref={triggerRef} type="button" className={`composer-approval-trigger${preset === "allow" ? " is-full-access" : ""}`}
-      aria-label={`Change approvals: ${selected?.label ?? "Loading permissions"}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined}
-      title={selected?.description ?? "Loading permissions"} disabled={unavailable} onClick={() => setOpen(!open)}
+      aria-label={`${tr("Change approvals")}: ${tr(selected?.label ?? "Loading permissions")}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined}
+      title={tr(selected?.description ?? "Loading permissions")} disabled={unavailable} onClick={() => setOpen(!open)}
       onKeyDown={(event) => {
         if (event.key === "ArrowUp" || event.key === "ArrowDown") { event.preventDefault(); if (!unavailable) setOpen(true); }
         if (event.key === "Escape" && open) { event.preventDefault(); close(true); }
       }}>
-      <Icon name={selected?.icon ?? "settings"} size={14} /><span>{selected?.label ?? "Permissions"}</span>
+      <Icon name={selected?.icon ?? "settings"} size={14} /><span>{tr(selected?.label ?? "Permissions")}</span>
     </button>
     {present && createPortal(<div ref={menuRef} id={menuId} className="approval-menu"
       data-state={exiting ? "closing" : "open"} data-side={position.bottom !== undefined && position.bottom !== "auto" ? "top" : "bottom"}
       inert={exiting || undefined} aria-hidden={exiting || undefined}
       style={{ ...position, pointerEvents: exiting ? "none" : undefined }} onKeyDown={onMenuKey}>
-      <div className="approval-menu-heading"><span>How should OpenCursor actions be approved?</span><button type="button" className="approval-menu-learn" onClick={openSettings}>Learn more</button></div>
-      <div role="menu" aria-label="Approval permissions">
+      <div className="approval-menu-heading"><span>{tr("How should AiWorkHarness actions be approved?")}</span><button type="button" className="approval-menu-learn" onClick={openSettings}>{tr("Learn more")}</button></div>
+      <div role="menu" aria-label={tr("Approval permissions")}>
         {OPTIONS.map((option, index) => <button key={option.id} ref={(node) => { itemRefs.current[index] = node; }} type="button"
           role="menuitemradio" aria-checked={preset === option.id} tabIndex={preset === option.id ? 0 : -1}
           className={`approval-menu-option${preset === option.id ? " is-selected" : ""}${option.id === "allow" ? " is-full-access" : ""}`}
           onClick={() => choose(option.id)}>
           <Icon name={option.icon} size={18} />
-          <span className="approval-menu-copy"><span className="approval-menu-label">{option.label}</span><span className="approval-menu-description">{option.description}</span></span>
+          <span className="approval-menu-copy"><span className="approval-menu-label">{tr(option.label)}</span><span className="approval-menu-description">{tr(option.description)}</span></span>
           {preset === option.id && <Icon name="check" size={16} className="approval-menu-check" />}
         </button>)}
       </div>

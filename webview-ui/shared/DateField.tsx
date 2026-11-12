@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "./icons";
 import { usePresence } from "./usePresence";
 import "./date-field.css";
+import { t as tr } from "./i18n";
 
 interface Day { year: number; month: number; day: number }
 const daysInMonth = (year: number, month: number) => [31, year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
@@ -172,7 +173,7 @@ export function DateField({ value, onChange, label, placeholder = "YYYY-MM-DD", 
       required={required} disabled={disabled} aria-invalid={value !== "" && !isValidDate(value) ? true : undefined}
       onKeyDown={event => { onKeyDown?.(event); if (!event.defaultPrevented && event.altKey && event.key === "ArrowDown") { event.preventDefault(); show(); } }} />
     <button ref={trigger} type="button" className="oc-date-trigger" disabled={disabled}
-      aria-label={`${label}: Choose date`} title="Choose date" aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? calendarId : undefined}
+      aria-label={`${label}: Choose date`} title={tr("Choose date")} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? calendarId : undefined}
       onClick={() => open ? close("trigger") : show()}>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2.5" y="3.5" width="11" height="10" rx="2" /><path d="M5 2v3m6-3v3M3 7h10M5 9h1m2 0h1m2 0h1M5 11h1m2 0h1" /></svg>
     </button>
@@ -180,9 +181,9 @@ export function DateField({ value, onChange, label, placeholder = "YYYY-MM-DD", 
       data-state={exiting ? "closing" : "open"} data-side={side} inert={exiting || undefined} aria-hidden={exiting || undefined}
       role="dialog" aria-label={`${label} calendar`} onKeyDown={open ? onCalendarKey : undefined}>
       <div className="oc-date-heading">
-        <button type="button" className="oc-date-nav" aria-label="Previous month" disabled={month.year === 1 && month.month === 1} onClick={open ? () => moveMonth(-1) : undefined}><Icon name="chevL" /></button>
+        <button type="button" className="oc-date-nav" aria-label={tr("Previous month")} disabled={month.year === 1 && month.month === 1} onClick={open ? () => moveMonth(-1) : undefined}><Icon name="chevL" /></button>
         <span id={`${calendarId}-month`} aria-live="polite">{monthLabel}</span>
-        <button type="button" className="oc-date-nav" aria-label="Next month" disabled={month.year === 9999 && month.month === 12} onClick={open ? () => moveMonth(1) : undefined}><Icon name="chevR" /></button>
+        <button type="button" className="oc-date-nav" aria-label={tr("Next month")} disabled={month.year === 9999 && month.month === 12} onClick={open ? () => moveMonth(1) : undefined}><Icon name="chevR" /></button>
       </div>
       <div role="grid" aria-labelledby={`${calendarId}-month`}>
         <div role="row" className="oc-date-weekdays">{["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((day, index) => <span role="columnheader" key={day} aria-label={["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"][index]}>{day}</span>)}</div>
@@ -196,7 +197,7 @@ export function DateField({ value, onChange, label, placeholder = "YYYY-MM-DD", 
           })}
         </div>)}
       </div>
-      <div className="oc-date-footer"><button type="button" onClick={open ? () => choose(today()) : undefined}>Today</button><span>YYYY-MM-DD</span></div>
+      <div className="oc-date-footer"><button type="button" onClick={open ? () => choose(today()) : undefined}>{tr("Today")}</button><span>{tr("YYYY-MM-DD")}</span></div>
     </div>, document.body)}
   </div>;
 }

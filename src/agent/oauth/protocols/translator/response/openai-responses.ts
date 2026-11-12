@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -26,7 +26,7 @@ import { ROLE, OPENAI_BLOCK, RESPONSES_ITEM, OPENAI_FINISH, MODEL_FALLBACK } fro
 // Upstream Chat Completions usage -> Responses API usage shape.
 // Without this, /v1/responses never reports usage: Responses clients (Codex CLI)
 // keep their "context used" gauge pinned at 0 and never auto-compact, so a long
-// session grows until the upstream context limit rejects it (OpenCursor issue #3432).
+// session grows until the upstream context limit rejects it (AiWorkHarness issue #3432).
 //
 // Note this is stored under state.responsesUsage, NOT state.usage: state.usage is
 // owned by the stream layer, which fills it with normalizeUsage()-shaped counts

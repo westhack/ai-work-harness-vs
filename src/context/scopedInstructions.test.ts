@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -19,7 +19,7 @@ import { listSkills } from "./workspaceContext";
 import { getWorkspaceRoot, withWorkspaceRoot } from "./workspaceUtils";
 
 let directory: string;
-beforeEach(async () => { directory = await fs.mkdtemp(path.join(tmpdir(), "ocursor-scopes-")); fixture.root = path.join(directory, "project"); await fs.mkdir(fixture.root); });
+beforeEach(async () => { directory = await fs.mkdtemp(path.join(tmpdir(), "aiworkharness-scopes-")); fixture.root = path.join(directory, "project"); await fs.mkdir(fixture.root); });
 afterEach(async () => { await fs.rm(directory, { recursive: true, force: true }); });
 async function write(relative: string, body: string) { const file = path.join(fixture.root, relative); await fs.mkdir(path.dirname(file), { recursive: true }); await fs.writeFile(file, body); return file; }
 

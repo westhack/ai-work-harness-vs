@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -38,13 +38,13 @@ function entryOf(pkg: any): string {
 /** This extension's own directory (never a parent folder such as ~/). */
 function extensionRoot(): string | undefined {
   try {
-    const fromHost = vscode.extensions?.getExtension?.("pkrd.ocursor")?.extensionPath;
+    const fromHost = vscode.extensions?.getExtension?.("westhack.ai-work-harness")?.extensionPath;
     if (fromHost) return fromHost;
   } catch { /* outside the extension host */ }
   // Bundled as dist/extension.js; sources live under src/.
   for (let dir = __dirname, i = 0; i < 4; i++, dir = path.dirname(dir)) {
     try {
-      if (JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8")).name === "ocursor") return dir;
+      if (JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8")).name === "aiworkharness") return dir;
     } catch { /* keep looking */ }
   }
   return undefined;
@@ -97,7 +97,7 @@ export function resolveRuntimeDepEntry(name: string): Promise<string> {
       if (local) return await packageEntryUrl(local);
       if (!rootDir) throw new Error(`Runtime dependency ${name} is not installed`);
       const directory = await vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: "OpenCursor: installing feature runtime" },
+        { location: vscode.ProgressLocation.Notification, title: "AiWorkHarness: installing feature runtime" },
         progress => installRuntime(name, rootDir!, { report: message => progress.report({ message }) }),
       );
       return await packageEntryUrl(directory);
@@ -121,7 +121,7 @@ export function importRuntimeDep<T = any>(name: string): Promise<T> {
         }
       } else if (!rootDir) throw new Error(`Runtime dependency ${name} is not installed`);
       const directory = await vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: "OpenCursor: installing feature runtime" },
+        { location: vscode.ProgressLocation.Notification, title: "AiWorkHarness: installing feature runtime" },
         progress => installRuntime(name, rootDir!, { report: message => progress.report({ message }) }),
       );
       return await importPackageDir(directory);
@@ -136,7 +136,7 @@ export function importRuntimeDep<T = any>(name: string): Promise<T> {
 export async function ensureRuntimeDeps(): Promise<boolean> {
   try { await importRuntimeDep("@huggingface/transformers"); return true; }
   catch (error: any) {
-    vscode.window.showErrorMessage(`OpenCursor: failed to initialize local runtime: ${error?.message ?? error}`);
+    vscode.window.showErrorMessage(`AiWorkHarness: failed to initialize local runtime: ${error?.message ?? error}`);
     return false;
   }
 }

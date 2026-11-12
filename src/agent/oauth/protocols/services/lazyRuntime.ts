@@ -1,15 +1,15 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
 // Lazy loader for heavy optional native runtime deps (wreq-js). They are not
 // bundled, so the extension stays small and platform-neutral; on first use the
-// package is installed into ~/.opencursor/runtime and imported from there.
+// package is installed into ~/.aiworkharness/runtime and imported from there.
 // Resolution order: extension node_modules → runtime dir → npm install.
 
 import { spawn } from "node:child_process";
@@ -24,7 +24,7 @@ const LAZY_DEP_VERSIONS: Record<string, string> = {
 };
 
 function getRuntimeDir(): string {
-  return path.join(os.homedir(), ".opencursor", "runtime");
+  return path.join(os.homedir(), ".aiworkharness", "runtime");
 }
 
 function isModuleMissing(error: unknown): boolean {

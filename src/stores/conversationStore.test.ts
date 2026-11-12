@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -36,14 +36,14 @@ it("persists original request envelopes and working checkpoints through actual c
   ];
   const state: ContextState = {};
   saveContext(steps, steps, state);
-  const before = buildMessages("OpenCursor", steps);
+  const before = buildMessages("AiWorkHarness", steps);
   await store.update(conversation.id, { steps, contextState: state });
   steps[0] = { kind: "user", text: "Later mutable local value" };
   const reopenedStore = new ConversationStore(context);
   const reopened = reopenedStore.get(conversation.id)!;
   reopened.steps.push({ kind: "user", text: "Continue", context: snapshotUserContext({ ...snapshot, timestamp: "later" }, snapshot) });
   const restored = restoreContext(reopened.steps, reopened.contextState);
-  expect(buildMessages("OpenCursor", restored).slice(0, before.length)).toEqual(before);
+  expect(buildMessages("AiWorkHarness", restored).slice(0, before.length)).toEqual(before);
   expect(reopened.contextState?.checkpoint).toBeDefined();
   await reopenedStore.update(conversation.id, { steps: reopened.steps });
   expect(store.get(conversation.id)?.steps).toEqual(reopened.steps);
@@ -151,7 +151,7 @@ it("recovers accepted steering exactly once with attachments and existing queue 
   expect(recovered.queue?.[3].text).toBe("Legacy correction");
   expect(recovered).toMatchObject({ steeringQueue: [], steering: [] });
   expect(write).toHaveBeenCalledTimes(1);
-  expect(write).toHaveBeenCalledWith("ocursor.conversations", [expect.objectContaining({
+  expect(write).toHaveBeenCalledWith("aiworkharness.conversations", [expect.objectContaining({
     queue: recovered.queue, steeringQueue: [], steering: [],
   })]);
 
@@ -226,8 +226,8 @@ it("coalesces slow storage snapshots while awaiting durability and keeping earli
   expect(store.getMetadata(conversation.id)?.usedTokens).toBe(101);
   release(); await complete;
   expect(write).toHaveBeenCalledTimes(3);
-  expect(state.get<any[]>("ocursor.conversations")?.[0].usedTokens).toBe(101);
-  expect(state.get<any>("ocursor.chatWorkspace.v1").drafts[conversation.id].text).toBe("Latest draft");
+  expect(state.get<any[]>("aiworkharness.conversations")?.[0].usedTokens).toBe(101);
+  expect(state.get<any>("aiworkharness.chatWorkspace.v1").drafts[conversation.id].text).toBe("Latest draft");
 });
 
 it("keeps caller mutations isolated and can persist again after a failed write", async () => {
@@ -246,7 +246,7 @@ it("keeps caller mutations isolated and can persist again after a failed write",
   vi.spyOn(state, "update").mockRejectedValueOnce(new Error("Disk unavailable"));
   await expect(store.update(created.id, { usedTokens: 1 })).rejects.toThrow("Disk unavailable");
   await store.update(created.id, { usedTokens: 2 });
-  expect(state.get<any[]>("ocursor.conversations")?.[0].usedTokens).toBe(2);
+  expect(state.get<any[]>("aiworkharness.conversations")?.[0].usedTokens).toBe(2);
 });
 
 it("resolves each durable write without waiting for later streaming snapshots", async () => {
@@ -278,7 +278,7 @@ it("does not drop other pending keys when one storage write fails", async () => 
   const draft = store.setWorkspaceState({ drafts: { [conversation.id]: { text: "Keep this draft", attachments: [] } } });
   await Promise.all([failed, draft]);
   await expect(store.flush()).rejects.toThrow("Conversation write failed");
-  expect(state.get<any>("ocursor.chatWorkspace.v1").drafts[conversation.id].text).toBe("Keep this draft");
+  expect(state.get<any>("aiworkharness.chatWorkspace.v1").drafts[conversation.id].text).toBe("Keep this draft");
   await store.update(conversation.id, { usedTokens: 2 });
   await store.flush();
 });

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -12,7 +12,7 @@ import { computeHunks, pendingChanges, type ChangeScope, type PendingChange } fr
 import { safePath } from "../context/workspaceUtils";
 import { createHash } from "node:crypto";
 
-const SCHEME = "ocursor-inline-original";
+const SCHEME = "aiworkharness-inline-original";
 const ORIGINALS = new Map<string, string>();
 const originalsChanged = new vscode.EventEmitter<vscode.Uri>();
 
@@ -217,7 +217,7 @@ export function registerInlineReview(context: vscode.ExtensionContext) {
       onDidChange: originalsChanged.event,
       provideTextDocumentContent: (uri) => ORIGINALS.get(uri.toString()) ?? "",
     }),
-    vscode.commands.registerCommand("ocursor.viewDiff", async (path: string, scope?: ChangeScope) => {
+    vscode.commands.registerCommand("aiworkharness.viewDiff", async (path: string, scope?: ChangeScope) => {
       await showInlineDiff(path, false, scope);
     }),
     addedDecoration,

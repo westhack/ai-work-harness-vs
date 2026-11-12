@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -17,8 +17,8 @@ vi.mock("vscode", () => ({ EventEmitter: class { event = () => ({ dispose() {} }
 function storeWith(modelOptions: FeatureConfig["modelOptions"] = {}) {
   let saved: Partial<FeatureConfig> = { modelOptions };
   const context = { globalState: {
-    get: (key: string) => key === "ocursor.features" ? saved : undefined,
-    update: async (key: string, value: Partial<FeatureConfig>) => { if (key === "ocursor.features") saved = value; },
+    get: (key: string) => key === "aiworkharness.features" ? saved : undefined,
+    update: async (key: string, value: Partial<FeatureConfig>) => { if (key === "aiworkharness.features") saved = value; },
   } } as unknown as ConstructorParameters<typeof FeatureStore>[0];
   return new FeatureStore(context);
 }

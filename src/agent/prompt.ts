@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -16,7 +16,7 @@
 
 import type { Mode } from "./types";
 
-const BASE = `You are OpenCursor, an AI coding agent inside Visual Studio Code. Help the USER with software engineering tasks using the currently available tools.
+const BASE = `You are AiWorkHarness, an AI coding agent inside Visual Studio Code. Help the USER with software engineering tasks using the currently available tools.
 
 Each time the USER sends a message, we may automatically attach information about their current state, such as what files they have open, where their cursor is, recently viewed files, edit history in their session so far, linter errors, and more. This information is provided in case it is helpful to the task.
 

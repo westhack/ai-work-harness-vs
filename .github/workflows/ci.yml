@@ -1,7 +1,7 @@
-# Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+# Copyright (c) 2026 Yao
 #
-# This file is part of OpenCursor — AI coding agent chat inside VS Code.
-# https://github.com/PawanOsman/OpenCursor
+# This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+# https://github.com/westhack/ai-work-harness
 #
 # Licensed under the MIT License. See LICENSE file in the project root.
 
@@ -57,7 +57,7 @@ jobs:
       - name: Browser integration tests
         run: pnpm run test:browser
         env:
-          OPENCURSOR_TEST_BROWSER: managed
+          AIWORKHARNESS_TEST_BROWSER: managed
           DEBUG: pw:browser
 
       - name: Build production
@@ -69,7 +69,7 @@ jobs:
       - name: Production feature smoke
         run: pnpm run test:runtime
         env:
-          OPENCURSOR_SMOKE_NATIVE: ${{ matrix.node-version == 22 && '1' || '0' }}
+          AIWORKHARNESS_SMOKE_NATIVE: ${{ matrix.node-version == 22 && '1' || '0' }}
 
       - name: Compile extension host tests
         if: matrix.node-version == 22
@@ -77,15 +77,15 @@ jobs:
 
       - name: Package extension
         if: matrix.node-version == 22
-        run: npx @vscode/vsce package --no-dependencies --out "$RUNNER_TEMP/ocursor.vsix"
+        run: npx @vscode/vsce package --no-dependencies --out "$RUNNER_TEMP/aiworkharness.vsix"
 
       - name: Test packaged extension in minimum supported host
         if: matrix.node-version == 22
         run: |
-          unzip -q "$RUNNER_TEMP/ocursor.vsix" -d "$RUNNER_TEMP/opencursor-vsix"
+          unzip -q "$RUNNER_TEMP/aiworkharness.vsix" -d "$RUNNER_TEMP/aiworkharness-vsix"
           node scripts/extension-host-test.cjs
         env:
-          OPENCURSOR_TEST_EXTENSION_PATH: ${{ runner.temp }}/opencursor-vsix/extension
+          AIWORKHARNESS_TEST_EXTENSION_PATH: ${{ runner.temp }}/aiworkharness-vsix/extension
 
   platform-runtime:
     strategy:

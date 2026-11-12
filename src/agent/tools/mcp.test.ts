@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -18,7 +18,7 @@ import { mcpManager } from "../../integrations/mcpClient";
 import { pendingChanges } from "../../stores/pendingChanges";
 import { firstMcpImage, MAX_MCP_IMAGE_BYTES } from "../../integrations/mcpContent";
 
-beforeEach(async () => { state.root = await fs.mkdtemp(path.join(tmpdir(), "ocursor-resource-")); });
+beforeEach(async () => { state.root = await fs.mkdtemp(path.join(tmpdir(), "aiworkharness-resource-")); });
 afterEach(async () => { vi.restoreAllMocks(); pendingChanges.acceptAll(); await fs.rm(state.root, { recursive: true, force: true }); });
 
 it("returns resource templates alongside concrete resources, with server filtering", async () => {

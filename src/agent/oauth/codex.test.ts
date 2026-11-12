@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -36,7 +36,7 @@ function stream(events: unknown[], close = true) {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("OpenCursor Codex request contract", () => {
+describe("AiWorkHarness Codex request contract", () => {
   it.each([
     ["fast", "priority"], ["standard", "default"], [undefined, undefined],
   ] as const)("maps explicit speed %s to service tier %s independently of reasoning", (speed, tier) => {
@@ -185,7 +185,7 @@ describe("OpenCursor Codex request contract", () => {
 
   it("provides nonempty input without adopting the reference's unrelated CLI harness instructions", () => {
     const body = JSON.parse(String(createCodexRequest({ model: "gpt-5.6-sol", messages: [] }, credentials).init.body));
-    expect(body.instructions).toContain("OpenCursor");
+    expect(body.instructions).toContain("AiWorkHarness");
     expect(body.input).toHaveLength(1);
   });
 

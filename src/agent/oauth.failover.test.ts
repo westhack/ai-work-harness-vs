@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -30,9 +30,9 @@ async function seed(kind: OAuthKind, options: { strategy?: OAuthBalanceStrategy;
     id: `pool-${kind}-${i}`, kind, accessToken: `token-${i}`, refreshToken: "", expiresAt: Date.now() + 3_600_000,
     accountId: `workspace-${i}`, projectId: `project-${i}`, ...extra,
   }));
-  for (const account of entries) secrets.set(`ocursor.oauth.acct.${account.id}`, JSON.stringify(account));
-  state.set("ocursor.oauth.accountIds", entries.map(account => account.id));
-  state.set("ocursor.oauth.balanceStrategy", options.strategy ?? "first");
+  for (const account of entries) secrets.set(`aiworkharness.oauth.acct.${account.id}`, JSON.stringify(account));
+  state.set("aiworkharness.oauth.accountIds", entries.map(account => account.id));
+  state.set("aiworkharness.oauth.balanceStrategy", options.strategy ?? "first");
   initOAuth({ globalState: { get: (key: string, fallback: unknown) => state.get(key) ?? fallback, update: async (key: string, value: unknown) => { state.set(key, value); } },
     secrets: { get: async (key: string) => secrets.get(key), store: async (key: string, value: string) => { secrets.set(key, value); }, delete: async (key: string) => { secrets.delete(key); } },
   } as unknown as Parameters<typeof initOAuth>[0]);
@@ -63,7 +63,7 @@ describe("OAuth account failover", () => {
     expect(getBalanceStrategy("codex")).toBe("round-robin");
     expect(getBalanceStrategy("claude-code")).toBe("first");
     expect(getStatus().balanceStrategies).toMatchObject({ codex: "round-robin", "claude-code": "first" });
-    expect(state.get("ocursor.oauth.balanceStrategy.byKind")).toEqual({ codex: "round-robin", "claude-code": "first" });
+    expect(state.get("aiworkharness.oauth.balanceStrategy.byKind")).toEqual({ codex: "round-robin", "claude-code": "first" });
     const fetch = vi.fn(async () => success("codex")); vi.stubGlobal("fetch", fetch);
     await chat("codex"); await chat("codex");
     expect(fetch.mock.calls.map((call: unknown[]) => token(call[1] as RequestInit))).toEqual(["token-0", "token-1"]);
@@ -74,7 +74,7 @@ describe("OAuth account failover", () => {
     await seed("codex", { strategy: "highest-limit" });
     expect(getBalanceStrategy("codex")).toBe("highest-limit");
     expect(getBalanceStrategy("github")).toBe("first");
-    state.set("ocursor.oauth.balanceStrategy.byKind", { github: "nearest-reset" });
+    state.set("aiworkharness.oauth.balanceStrategy.byKind", { github: "nearest-reset" });
     expect(getStatus().balanceStrategies?.github).toBe("first");
     await expect(setBalanceStrategy("highest-limit", "github")).rejects.toThrow("does not report account quota");
     await setBalanceStrategy("round-robin", "github");

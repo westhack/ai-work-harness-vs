@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { usePresence } from "../../shared/usePresence";
 import { CODE_LANGUAGES, normalizeCodeLanguage } from "../../shared/codeLanguages";
 import "./code-language-picker.css";
+import { t as tr } from "../../shared/i18n";
 
 interface CodeLanguagePickerProps {
   value?: string;
@@ -137,19 +138,19 @@ export function CodeLanguagePicker({ value = "auto", detectedLabel, onChange, di
       data-state={exiting ? "closing" : "open"} data-side={side} inert={exiting || undefined} aria-hidden={exiting || undefined}
       onKeyDown={onKeyDown} onClick={event => event.stopPropagation()}>
       <div className="code-language-search-wrap">
-        <input ref={search} type="text" className="code-language-search" placeholder="Search languages" aria-label="Search languages"
+        <input ref={search} type="text" className="code-language-search" placeholder={tr("Search languages")} aria-label={tr("Search languages")}
           role="combobox" aria-autocomplete="list" aria-expanded={open} aria-controls={listId}
           aria-activedescendant={activeId ? `${listId}-${activeId}` : undefined} value={query} spellCheck={false}
           onChange={event => { setQuery(event.target.value); setActive(""); }} />
       </div>
-      <div ref={list} id={listId} role="listbox" aria-label="Code languages" className="code-language-list">
+      <div ref={list} id={listId} role="listbox" aria-label={tr("Code languages")} className="code-language-list">
         {filtered.map(choice => <div key={choice.id} id={`${listId}-${choice.id}`} role="option" aria-selected={current === choice.id}
           className="code-language-option" data-active={activeId === choice.id || undefined}
           onPointerMove={() => { if (open) setActive(choice.id); }} onMouseDown={event => event.preventDefault()}
           onClick={() => choose(choice.id)}>
           <span>{choice.label}</span>{current === choice.id && <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 8 3 3 6-6" /></svg>}
         </div>)}
-        {!filtered.length && <div className="code-language-empty" role="status">No languages found</div>}
+        {!filtered.length && <div className="code-language-empty" role="status">{tr("No languages found")}</div>}
       </div>
     </div>, document.body)}
   </span>;

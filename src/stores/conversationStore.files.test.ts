@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -33,7 +33,7 @@ function memento() {
   };
 }
 function fixture(workspaceState = memento()) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ocursor-store-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "aiworkharness-store-"));
   roots.push(root);
   const context = { workspaceState, globalState: memento(), storageUri: { fsPath: root } };
   return { context, root, workspaceState, dir: path.join(root, "conversations") };
@@ -54,7 +54,7 @@ it("keeps transcripts out of the Memento and restores them lazily after restart"
   const a = await store.create();
   await store.update(a.id, { title: "Large chat", turns: transcript("alpha"), steps: [{ kind: "user", text: "alpha request" }], contextState: {} });
   await store.flush();
-  const saved = workspaceState.get<any[]>("ocursor.conversations")!;
+  const saved = workspaceState.get<any[]>("aiworkharness.conversations")!;
   expect(JSON.stringify(saved).length).toBeLessThan(2_000);
   expect(saved[0]).toMatchObject({ id: a.id, title: "Large chat", turns: [], steps: [], bodyInFile: true });
   expect(fs.readdirSync(dir)).toHaveLength(1);
@@ -109,13 +109,13 @@ it("coalesces draft keystrokes into one storage write", async () => {
 it("migrates inline transcripts from older versions into files", async () => {
   const { context, workspaceState, dir } = fixture();
   const legacy = { id: "c_legacy", title: "Old chat", createdAt: 1, updatedAt: 2, turns: transcript("legacy"), steps: [{ kind: "user", text: "legacy request" }] };
-  await workspaceState.update("ocursor.conversations", [legacy]);
+  await workspaceState.update("aiworkharness.conversations", [legacy]);
   const store = new ConversationStore(context as any);
   expect(store.get(legacy.id)?.turns).toEqual(legacy.turns);
   await store.flush();
   await store.flush();
   expect(fs.readdirSync(dir)).toHaveLength(1);
-  expect(workspaceState.get<any[]>("ocursor.conversations")![0]).toMatchObject({ id: legacy.id, turns: [], steps: [], bodyInFile: true });
+  expect(workspaceState.get<any[]>("aiworkharness.conversations")![0]).toMatchObject({ id: legacy.id, turns: [], steps: [], bodyInFile: true });
   const reopened = restart(context);
   expect(reopened.get(legacy.id)).toMatchObject({ title: "Old chat", turns: legacy.turns, steps: legacy.steps });
 });
@@ -129,7 +129,7 @@ it("keeps a transcript inline when its file cannot be written", async () => {
   await expect(store.update(conversation.id, { turns: transcript("kept") })).rejects.toThrow();
   await store.flush().catch(() => {});
   await store.flush().catch(() => {});
-  expect(workspaceState.get<any[]>("ocursor.conversations")![0].turns).toEqual(transcript("kept"));
+  expect(workspaceState.get<any[]>("aiworkharness.conversations")![0].turns).toEqual(transcript("kept"));
   expect(restart(context).get(conversation.id)?.turns).toEqual(transcript("kept"));
 });
 

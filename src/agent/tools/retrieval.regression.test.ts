@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -37,7 +37,7 @@ import { grepTool } from "./search";
 import { invalidateScanCache } from "./fileScan";
 import { READ_PAGE_CHARS, readTextPage } from "./textRead";
 
-beforeEach(async () => { fixture.root = await fs.mkdtemp(path.join(os.tmpdir(), "opencursor-retrieval-")); fixture.rg = null; fixture.delayFirst = false; });
+beforeEach(async () => { fixture.root = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-retrieval-")); fixture.rg = null; fixture.delayFirst = false; });
 afterEach(async () => { vi.restoreAllMocks(); invalidateScanCache(); await fs.rm(fixture.root, { recursive: true, force: true }); });
 async function file(name: string, text: string | Buffer) {
   const target = path.join(fixture.root, name);

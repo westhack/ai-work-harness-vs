@@ -1,35 +1,37 @@
 <!--
-Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+Copyright (c) 2026 Yao
 
-This file is part of OpenCursor, AI coding agent chat inside VS Code.
-https://github.com/PawanOsman/OpenCursor
+This file is part of AiWorkHarness, AI coding agent chat inside VS Code.
+https://github.com/westhack/ai-work-harness
 
 Licensed under the MIT License. See LICENSE file in the project root.
 -->
 
-# OpenCursor
+# AiWorkHarness
 
 **An open-source AI coding agent for VS Code. Bring your models, work in your workspace, and stay in control of the changes.**
 
+[English](README.md) · [简体中文](README.zh-CN.md)
+
 <p align="center">
-  <img src="media/readme/hero.png" alt="OpenCursor interface preview with a sample coding conversation, highlighted code, a queued follow-up, and controls to keep or undo changes." width="1440" />
+  <img src="media/readme/hero.png" alt="AiWorkHarness interface preview with a sample coding conversation, highlighted code, a queued follow-up, and controls to keep or undo changes." width="1440" />
 </p>
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=pkrd.ocursor">Install for VS Code</a> ·
-  <a href="https://github.com/PawanOsman/OpenCursor/releases">Releases</a> ·
+  <a href="https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness">Install for VS Code</a> ·
+  <a href="https://github.com/westhack/ai-work-harness/releases">Releases</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#development">Build from source</a> ·
   <a href="#credits">Credits</a>
 </p>
 
-OpenCursor brings conversation, code exploration, file edits, terminal commands, and change review into your editor. Connect a supported account, use your own API keys, or run a local model with Ollama or llama.cpp. Choose the model and permissions that fit the task, then follow the work as it happens.
+AiWorkHarness brings conversation, code exploration, file edits, terminal commands, and change review into your editor. Connect a supported account, use your own API keys, or run a local model with Ollama or llama.cpp. Choose the model and permissions that fit the task, then follow the work as it happens.
 
 ## Quick start
 
-1. **Install OpenCursor Agent** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=pkrd.ocursor). You can also download a `.vsix` from [Releases](https://github.com/PawanOsman/OpenCursor/releases) and run **Extensions: Install from VSIX**. Requires VS Code 1.96 or newer.
-2. **Connect a model.** Open the OpenCursor sidebar, then Settings. Add an account or API provider under **Providers**, or configure **Ollama** or **llama.cpp** for local inference.
-3. **Choose a model and start a conversation.** Enable the models you want in **Models**, select one in the composer, and describe your task. Use `Ctrl+L` on Windows/Linux or `Cmd+L` on macOS to add an editor selection (or the whole file, when nothing is selected) to chat. This replaces VS Code's default *Expand Line Selection* shortcut while an editor is focused; rebind `ocursor.addToChat` in Keyboard Shortcuts if you prefer the original.
+1. **Install AiWorkHarness** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness). You can also download a `.vsix` from [Releases](https://github.com/westhack/ai-work-harness/releases) and run **Extensions: Install from VSIX**. Requires VS Code 1.96 or newer.
+2. **Connect a model.** Open the AiWorkHarness sidebar, then Settings. Add an account or API provider under **Providers**, or configure **Ollama** or **llama.cpp** for local inference.
+3. **Choose a model and start a conversation.** Enable the models you want in **Models**, select one in the composer, and describe your task. Use `Ctrl+L` on Windows/Linux or `Cmd+L` on macOS to add an editor selection (or the whole file, when nothing is selected) to chat. This replaces VS Code's default *Expand Line Selection* shortcut while an editor is focused; rebind `aiworkharness.addToChat` in Keyboard Shortcuts if you prefer the original.
 4. **Review the result.** Inspect tool activity and file changes, then keep or undo the edits. Adjust the permission controls to decide which actions need your approval.
 
 Some features download native runtimes or model files when first used. Prepare those downloads before working offline.
@@ -77,7 +79,7 @@ Search for GGUF models, choose a quantization, download the files, and manage th
 
 ### Ollama
 
-Connect to an Ollama endpoint, browse installed models, pull new ones, and load or unload them. OpenCursor shows server health and the model capabilities reported by the runtime.
+Connect to an Ollama endpoint, browse installed models, pull new ones, and load or unload them. AiWorkHarness shows server health and the model capabilities reported by the runtime.
 
 ### Local inference and retrieval
 
@@ -114,8 +116,8 @@ Model inference runs at the endpoint you choose. Hosted models and embeddings re
 Use Node.js 22, pnpm, Git, and VS Code to build the extension.
 
 ```bash
-git clone https://github.com/PawanOsman/OpenCursor.git
-cd OpenCursor
+git clone https://github.com/westhack/ai-work-harness.git
+cd ai-work-harness
 pnpm install --frozen-lockfile
 pnpm run compile
 ```
@@ -149,17 +151,20 @@ README artwork lives in [`media/readme`](media/readme). The SVG sources are edit
 
 ## Contributing
 
-Bug reports, documentation improvements, provider fixes, and pull requests are welcome. [Open an issue](https://github.com/PawanOsman/OpenCursor/issues) with steps to reproduce the problem, your VS Code version, and the relevant provider or runtime. Remove credentials and private workspace content from any logs or screenshots you share.
+Bug reports, documentation improvements, provider fixes, and pull requests are welcome. [Open an issue](https://github.com/westhack/ai-work-harness/issues) with steps to reproduce the problem, your VS Code version, and the relevant provider or runtime. Remove credentials and private workspace content from any logs or screenshots you share.
 
 For code changes, include focused verification and screenshots when the interface changes. Keep pull requests scoped so the behavior and its validation are easy to review.
 
 ## License
 
-OpenCursor is available under the [MIT License](LICENSE).
+AiWorkHarness is available under the [MIT License](LICENSE).
+
+This project is derived from OpenCursor by Pawan Osman and is distributed under the MIT License. The original copyright notice is retained in [LICENSE](LICENSE).
 
 ## Credits
 
-- **[Codex](https://github.com/openai/codex)** by OpenAI inspired OpenCursor's interface design, styling, and interaction patterns.
-- **[9router](https://github.com/decolua/9router)** provided the foundation for the provider integrations and account authentication support adapted into OpenCursor.
+- **[OpenCursor](https://github.com/PawanOsman/OpenCursor)** by Pawan Osman is the upstream project AiWorkHarness is derived from.
+- **[Codex](https://github.com/openai/codex)** by OpenAI inspired AiWorkHarness's interface design, styling, and interaction patterns.
+- **[9router](https://github.com/decolua/9router)** provided the foundation for the provider integrations and account authentication support adapted into AiWorkHarness.
 
 Thank you to these projects and their contributors.

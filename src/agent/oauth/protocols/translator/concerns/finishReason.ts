@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -21,7 +21,7 @@ export function toOpenAIFinish(reason: ProtocolValue, format: string) {
                 case CLAUDE_STOP.TOOL_USE: return OPENAI_FINISH.TOOL_CALLS;
                 case CLAUDE_STOP.STOP_SEQUENCE: return OPENAI_FINISH.STOP;
                 // A refusal is a blocked turn, not a clean stop: with the default mapping an
-                // OpenAI client saw finish_reason "stop" and an empty message (OpenCursor logged
+                // OpenAI client saw finish_reason "stop" and an empty message (AiWorkHarness logged
                 // "succeeded", OUT 0) and could not tell it from a real answer.
                 case CLAUDE_STOP.REFUSAL: return OPENAI_FINISH.CONTENT_FILTER;
                 default: return OPENAI_FINISH.STOP;

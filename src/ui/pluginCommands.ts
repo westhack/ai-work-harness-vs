@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -18,7 +18,7 @@ import { logError } from "../logging";
  * arbitrary package install scripts or downloads dependencies. */
 export async function registerPluginManagement(context: vscode.ExtensionContext, features: FeatureStore): Promise<void> {
   const manager = new LocalPluginManager();
-  const key = "ocursor.pluginMcpNames.v1";
+  const key = "aiworkharness.pluginMcpNames.v1";
   const reconcile = async () => {
     const previous = new Set(context.globalState.get<string[]>(key, []));
     const configured = features.get().mcpServers;
@@ -51,13 +51,13 @@ export async function registerPluginManagement(context: vscode.ExtensionContext,
     return plugin;
   };
 
-  context.subscriptions.push(vscode.commands.registerCommand("ocursor.managePlugins", async () => {
+  context.subscriptions.push(vscode.commands.registerCommand("aiworkharness.managePlugins", async () => {
     try {
       const installed = await manager.list();
       const chosen = await vscode.window.showQuickPick([
         { label: "$(add) Install a local plugin…", description: "Skill and MCP packages", id: "" },
         ...installed.map((plugin) => ({ label: `${plugin.enabled ? "$(extensions)" : "$(circle-slash)"} ${plugin.manifest.name}`, description: `${plugin.manifest.version}${plugin.enabled ? "" : " · disabled"}`, detail: plugin.manifest.description, id: plugin.id })),
-      ], { placeHolder: "Manage OpenCursor plugins" });
+      ], { placeHolder: "Manage AiWorkHarness plugins" });
       if (!chosen) return;
       if (!chosen.id) {
         const directories = await vscode.window.showOpenDialog({ title: "Select a plugin source folder", canSelectFiles: false, canSelectFolders: true, canSelectMany: false });
@@ -91,7 +91,7 @@ export async function registerPluginManagement(context: vscode.ExtensionContext,
       features.notifyChanged({ modelSources: false });
     } catch (error) {
       logError("plugins.manage", error);
-      vscode.window.showErrorMessage(`OpenCursor plugins: ${error instanceof Error ? error.message : String(error)}`);
+      vscode.window.showErrorMessage(`AiWorkHarness plugins: ${error instanceof Error ? error.message : String(error)}`);
     }
   }));
   await reconcile();

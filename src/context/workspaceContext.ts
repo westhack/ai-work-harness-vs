@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -182,9 +182,9 @@ export async function listSkills(options: { root?: string; userHome?: string; co
   const names = new Set<string>();
   const seenPaths = new Set<string>();
   const bases = [
-    path.join(root, ".opencursor", "skills"), path.join(root, ".agents", "skills"),
+    path.join(root, ".aiworkharness", "skills"), path.join(root, ".agents", "skills"),
     path.join(root, ".codex", "skills"), path.join(root, ".cursor", "skills"), path.join(root, ".cursor", "skills-cursor"),
-    path.join(home, ".opencursor", "skills"), path.join(home, ".agents", "skills"),
+    path.join(home, ".aiworkharness", "skills"), path.join(home, ".agents", "skills"),
     path.join(codexHome, "skills"), path.join(home, ".cursor", "skills"),
   ];
   const visit = async (directory: string, depth = 0): Promise<void> => {
@@ -212,7 +212,7 @@ export async function listSkills(options: { root?: string; userHome?: string; co
     }
   };
   for (const base of bases) await visit(base);
-  const pluginSkills = await installedPluginSkills(path.join(home, ".opencursor", "plugins")).catch(() => []);
+  const pluginSkills = await installedPluginSkills(path.join(home, ".aiworkharness", "plugins")).catch(() => []);
   for (const skill of pluginSkills) {
     const name = skill.name.toLowerCase();
     if (!names.has(name)) { names.add(name); out.push(skill); }

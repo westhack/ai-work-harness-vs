@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -14,7 +14,7 @@ const path = require('node:path');
 const http = require('node:http');
 const execute = require('node:util').promisify(require('node:child_process').execFile);
 (async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'ocursor-headless-smoke-'));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'aiworkharness-headless-smoke-'));
   let requests = 0;
   const server = http.createServer(async (req, res) => {
     const buffers = []; for await (const chunk of req) buffers.push(chunk);
@@ -31,16 +31,16 @@ const execute = require('node:util').promisify(require('node:child_process').exe
   try {
     const repo = path.join(root, 'repo'); await fs.mkdir(repo);
     const git = args => execute('git', args, { cwd: repo, windowsHide: true });
-    await git(['init']); await git(['config', 'user.name', 'OpenCursor Fixture']); await git(['config', 'user.email', 'fixture@example.invalid']);
+    await git(['init']); await git(['config', 'user.name', 'AiWorkHarness Fixture']); await git(['config', 'user.email', 'fixture@example.invalid']);
     await fs.writeFile(path.join(repo, 'value.cjs'), 'exports.value=41;\n');
     await git(['add', 'value.cjs']); await git(['commit', '-m', 'fixture']);
     const revision = (await git(['rev-parse', 'HEAD'])).stdout.trim();
     const grader = path.join(root, 'grade.cjs');
-    await fs.writeFile(grader, "const path=require('node:path');console.log(JSON.stringify({passed:require(path.join(process.env.OPENCURSOR_EVAL_WORKSPACE,'value.cjs')).value===42}));");
+    await fs.writeFile(grader, "const path=require('node:path');console.log(JSON.stringify({passed:require(path.join(process.env.AIWORKHARNESS_EVAL_WORKSPACE,'value.cjs')).value===42}));");
     const config = path.join(root, 'worker.json'), tasks = path.join(root, 'tasks.json'), report = path.join(root, 'report.json');
     await fs.writeFile(config, JSON.stringify({ directory: path.join(root, 'jobs'), repositories: { fixture: repo }, models: ['fixture-model'], apiBaseUrl: `http://127.0.0.1:${server.address().port}/v1`, execution: { kind: 'local' }, contextTokens: 128000, maxSteps: 5, tokenBudget: 100000 }));
     await fs.writeFile(tasks, JSON.stringify([{ name: 'headless wiring', split: 'development', repository: 'fixture', revision, model: 'fixture-model', prompt: 'Change value.cjs to export value 42. Only edit that file. Do not run tests or create a plan; report tests not run.', grader: { executable: process.execPath, args: [grader] } }]));
-    const result = await execute(process.execPath, [path.resolve('dist/worker.cjs'), 'evaluate', config, tasks, report], { windowsHide: true, timeout: 60_000, env: { ...process.env, OPENCURSOR_TRUSTED_LOCAL_WORKER: '1', OPENCURSOR_API_KEY: 'fixture-key' } });
+    const result = await execute(process.execPath, [path.resolve('dist/worker.cjs'), 'evaluate', config, tasks, report], { windowsHide: true, timeout: 60_000, env: { ...process.env, AIWORKHARNESS_TRUSTED_LOCAL_WORKER: '1', AIWORKHARNESS_API_KEY: 'fixture-key' } });
     const data = JSON.parse(await fs.readFile(report, 'utf8'));
     if (data.results[0]?.outcome !== 'passed') throw new Error('Independent grader did not pass: ' + result.stdout);
     if ((await fs.readFile(path.join(repo, 'value.cjs'), 'utf8')) !== 'exports.value=41;\n') throw new Error('Original repository was modified');
@@ -48,7 +48,7 @@ const execute = require('node:util').promisify(require('node:child_process').exe
   } finally {
     await new Promise(resolve => server.close(resolve));
     const resolved = path.resolve(root), temporary = path.resolve(os.tmpdir()) + path.sep;
-    if (!resolved.startsWith(temporary) || !path.basename(resolved).startsWith('ocursor-headless-smoke-')) throw new Error('Unexpected temporary path');
+    if (!resolved.startsWith(temporary) || !path.basename(resolved).startsWith('aiworkharness-headless-smoke-')) throw new Error('Unexpected temporary path');
     await fs.rm(resolved, { recursive: true, force: true });
   }
 })().catch(error => { console.error(error); process.exitCode = 1; });

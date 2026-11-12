@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -10,6 +10,7 @@
 import * as React from "react";
 import { Icon } from "../../shared/icons";
 import "./message-actions.css";
+import { t as tr } from "../../shared/i18n";
 
 export interface MessageActionsProps {
   variant: "user" | "assistant";
@@ -83,12 +84,12 @@ export function MessageActions({ variant, text, onEdit, onRetry, onRevert, disab
   const retryLabel = variant === "user" ? "Resend message" : "Retry response";
 
   return <div className={`message-actions message-actions-${variant}`} role="group" aria-label={variant === "user" ? "User message actions" : "Assistant message actions"}>
-    <button type="button" className="message-action" aria-label="Copy message" title={copyTitle} aria-busy={copyState === "pending"} aria-disabled={copyState === "pending" || undefined} disabled={!text} onClick={() => { void copy(); }}>
+    <button type="button" className="message-action" aria-label={tr("Copy message")} title={copyTitle} aria-busy={copyState === "pending"} aria-disabled={copyState === "pending" || undefined} disabled={!text} onClick={() => { void copy(); }}>
       <Icon name={copyState === "copied" ? "check" : "copy"} size={16} />
     </button>
-    {onEdit && <button type="button" className="message-action" aria-label="Edit message" title="Edit message" disabled={disabled} onClick={onEdit}><Icon name="edit" size={16} /></button>}
+    {onEdit && <button type="button" className="message-action" aria-label={tr("Edit message")} title={tr("Edit message")} disabled={disabled} onClick={onEdit}><Icon name="edit" size={16} /></button>}
     {onRetry && <button type="button" className="message-action" aria-label={retryLabel} title={retryLabel} disabled={disabled} onClick={onRetry}><Icon name="reset" size={16} /></button>}
-    {onRevert && <button type="button" className="message-action" aria-label="Revert to this message" title="Revert to this message" disabled={disabled} onClick={onRevert}><Icon name="history" size={16} /></button>}
+    {onRevert && <button type="button" className="message-action" aria-label={tr("Revert to this message")} title={tr("Revert to this message")} disabled={disabled} onClick={onRevert}><Icon name="history" size={16} /></button>}
     <span className="message-actions-status" role="status" aria-live="polite" aria-atomic="true">{copyState === "copied" ? "Message copied" : copyState === "failed" ? "Could not copy the message. Try again." : ""}</span>
   </div>;
 }

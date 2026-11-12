@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -18,7 +18,7 @@ import { disconnect, initOAuth, listAccounts, setAccountEnabled, streamOAuthChat
 const saved = new Map<string, string>();
 let persistedIds: string[] = [];
 let listeners: ((event: { key: string }) => void)[] = [];
-const secretKey = (id: string) => `ocursor.oauth.acct.${id}`;
+const secretKey = (id: string) => `aiworkharness.oauth.acct.${id}`;
 
 function fixture(id: string, overrides: Partial<OAuthAccount> = {}): OAuthAccount {
   return { id, kind: "codex", accountId: id, accessToken: "old-access", refreshToken: "old-refresh", expiresAt: Date.now() + 3_600_000, ...overrides };
@@ -37,8 +37,8 @@ async function seed(accounts: OAuthAccount[]) {
   initOAuth({
     subscriptions: [],
     globalState: {
-      get: (key: string, fallback: unknown) => key === "ocursor.oauth.accountIds" ? [...persistedIds] : fallback,
-      update: async (key: string, value: unknown) => { if (key === "ocursor.oauth.accountIds") persistedIds = [...value as string[]]; },
+      get: (key: string, fallback: unknown) => key === "aiworkharness.oauth.accountIds" ? [...persistedIds] : fallback,
+      update: async (key: string, value: unknown) => { if (key === "aiworkharness.oauth.accountIds") persistedIds = [...value as string[]]; },
     },
     secrets: {
       get: async (key: string) => saved.get(key),

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -18,10 +18,10 @@ const execute = promisify(execFile);
 let fixture: string, repository: string, storage: string;
 async function git(...args: string[]) { return (await execute("git", ["-C", repository, ...args], { windowsHide: true })).stdout.trim(); }
 beforeEach(async () => {
-  fixture = await fs.mkdtemp(path.join(tmpdir(), "ocursor-worktree-")); repository = path.join(fixture, "source repository"); storage = path.join(fixture, "managed worktrees");
+  fixture = await fs.mkdtemp(path.join(tmpdir(), "aiworkharness-worktree-")); repository = path.join(fixture, "source repository"); storage = path.join(fixture, "managed worktrees");
   await fs.mkdir(repository); await git("init"); await git("config", "core.autocrlf", "false");
   await fs.writeFile(path.join(repository, "app.txt"), "committed source\n"); await git("add", "app.txt");
-  await git("-c", "user.name=OpenCursor Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "fixture");
+  await git("-c", "user.name=AiWorkHarness Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "fixture");
 });
 afterEach(async () => { await fs.rm(fixture, { recursive: true, force: true }); });
 
@@ -29,7 +29,7 @@ it("creates a separate registered branch and leaves source uncommitted edits int
   const sourceBranch = await git("branch", "--show-current");
   await fs.writeFile(path.join(repository, "app.txt"), "manual source changes\n");
   const worktree = await createConversationWorktree(repository, storage, "Fix login bug");
-  expect(worktree.branch).toMatch(/^opencursor\/fix-login-bug-/);
+  expect(worktree.branch).toMatch(/^aiworkharness\/fix-login-bug-/);
   expect(await fs.readFile(path.join(worktree.path, "app.txt"), "utf8")).toBe("committed source\n");
   await fs.writeFile(path.join(worktree.path, "app.txt"), "isolated changes\n");
   expect(await fs.readFile(path.join(repository, "app.txt"), "utf8")).toBe("manual source changes\n");

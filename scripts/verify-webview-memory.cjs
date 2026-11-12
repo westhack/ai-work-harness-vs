@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -13,7 +13,7 @@ const esbuild = require("esbuild");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "opencursor-webview-memory-"));
+const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "aiworkharness-webview-memory-"));
 try {
   assert.equal(typeof global.gc, "function", "Run Node with --expose-gc");
   const file = path.join(temporary, "markdown.cjs");

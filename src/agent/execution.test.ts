@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -30,7 +30,7 @@ describe("container execution boundaries", () => {
     ]);
   });
   it("rejects invalid profiles and working directories escaping through directory links", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "ocursor-execution-"));
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-execution-"));
     try {
       const workspace = path.join(root, "workspace"), outside = path.join(root, "outside");
       await fs.mkdir(workspace); await fs.mkdir(outside); await fs.symlink(outside, path.join(workspace, "link"), "junction");

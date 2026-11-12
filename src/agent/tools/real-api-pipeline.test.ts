@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -40,7 +40,7 @@ function loadEnv() {
 const ENV = loadEnv();
 const API_KEY = ENV.VERBOO_API_KEY || "";
 const BASE_URL = ENV.VERBOO_BASE_URL || "";
-const hasAPI = process.env.OPENCURSOR_LIVE_TESTS === "1" && API_KEY && BASE_URL && API_KEY.startsWith("vbk_");
+const hasAPI = process.env.AIWORKHARNESS_LIVE_TESTS === "1" && API_KEY && BASE_URL && API_KEY.startsWith("vbk_");
 
 // ---- Real API call ----
 async function callRealAPI(prompt: string, model = "glm-4.7-flash"): Promise<{
@@ -136,7 +136,7 @@ const describeIfApi = hasAPI ? describe : describe.skip;
 describeIfApi("REAL API PIPELINE: model → handler → UI", () => {
   it("Portuguese prompt: create 5+ todos for code analysis", async () => {
     const result = await callRealAPI(
-      "Crie uma lista de tarefas detalhada com pelo menos 5 itens para analisar as issues do repositório anthropics/claude-code e propor melhorias para a extensão OpenCursor. Cada tarefa deve ser específica e acionável.",
+      "Crie uma lista de tarefas detalhada com pelo menos 5 itens para analisar as issues do repositório anthropics/claude-code e propor melhorias para a extensão AiWorkHarness. Cada tarefa deve ser específica e acionável.",
     );
 
     if (result.error) throw new Error(`Live API evaluation inconclusive: ${result.error}`);

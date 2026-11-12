@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -20,7 +20,7 @@ import { canonicalFilePath, canonicalFilePathSync, mutateFile } from "./fileMuta
 import { writeTool, strReplaceTool, deleteFileTool, editNotebookTool } from "../agent/tools/files";
 
 let root: string;
-beforeEach(async () => { root = await fs.mkdtemp(path.join(os.tmpdir(), "ocursor-mutation-test-")); editor.root = root; editor.documents = []; });
+beforeEach(async () => { root = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-mutation-test-")); editor.root = root; editor.documents = []; });
 afterEach(async () => { pendingChanges.acceptAll(); await fs.rm(root, { recursive: true, force: true }); });
 const context = (conversationId: string, turnIndex = 0) => ({ todos: [], changeOwner: { conversationId, runId: `run-${conversationId}`, turnIndex } });
 
@@ -29,8 +29,8 @@ describe("production file transactions and undo", () => {
     const directory = process.env.ProgramFiles;
     if (!directory) ctx.skip();
     const { stdout } = await promisify(execFile)("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command",
-      "(New-Object -ComObject Scripting.FileSystemObject).GetFolder($env:OPENCURSOR_PATH_FIXTURE).ShortPath"],
-    { windowsHide: true, timeout: 10_000, env: { ...process.env, OPENCURSOR_PATH_FIXTURE: directory } });
+      "(New-Object -ComObject Scripting.FileSystemObject).GetFolder($env:AIWORKHARNESS_PATH_FIXTURE).ShortPath"],
+    { windowsHide: true, timeout: 10_000, env: { ...process.env, AIWORKHARNESS_PATH_FIXTURE: directory } });
     const shortDirectory = stdout.trim();
     if (!shortDirectory || shortDirectory.toLowerCase() === (await fs.realpath(directory!)).toLowerCase()) ctx.skip();
     // Read-only checks also run when new short-name creation is disabled in TEMP.

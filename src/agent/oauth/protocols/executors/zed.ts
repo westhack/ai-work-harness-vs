@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -277,7 +277,7 @@ const error = caught as ProtocolError;
         headers: {
           "Content-Type": "application/json",
           Accept: "application/x-ndjson, text/event-stream, */*",
-          "User-Agent": "OpenCursor/zed",
+          "User-Agent": "AiWorkHarness/zed",
           "x-zed-version": this.config?.appVersion?.toString() || "0.200.0",
           [ZED_HEADERS.clientSupportsStatus]: "true",
           [ZED_HEADERS.clientSupportsStreamEnded]: "true",

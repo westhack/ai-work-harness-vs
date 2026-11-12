@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -90,7 +90,7 @@ function runHook(command: string, root: string | undefined, env: NodeJS.ProcessE
 		// PowerShell -Command maps native failure to 1, which loses the hook
 		// protocol's exit-2 denial. Preserve it only when the final command failed;
 		// a later successful PowerShell command keeps its ordinary success result.
-		const script = `$global:LASTEXITCODE = 0\n${command}\n$ocursorHookSucceeded = $?\nif ($ocursorHookSucceeded) { exit 0 }\nif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }\nexit 1`;
+		const script = `$global:LASTEXITCODE = 0\n${command}\n$aiworkharnessHookSucceeded = $?\nif ($aiworkharnessHookSucceeded) { exit 0 }\nif ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }\nexit 1`;
 		const args = windows ? ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script] : ["--noprofile", "--norc", "-c", command];
 		try {
 			// File-based hooks must obey the same execution boundary as tools.
@@ -229,7 +229,7 @@ const TRUNCATION_MARKER = "…[truncated; full value is in the stdin JSON]";
 
 export function envFor(context: Record<string, string>): NodeJS.ProcessEnv {
 	const clip = (v: string) => v.length > HOOK_ENV_VALUE_LIMIT ? v.slice(0, HOOK_ENV_VALUE_LIMIT - TRUNCATION_MARKER.length) + TRUNCATION_MARKER : v;
-	return { ...process.env, ...Object.fromEntries(Object.entries(context).map(([k, v]) => [`OPENCURSOR_${k.toUpperCase()}`, clip(String(v))])) };
+	return { ...process.env, ...Object.fromEntries(Object.entries(context).map(([k, v]) => [`AIWORKHARNESS_${k.toUpperCase()}`, clip(String(v))])) };
 }
 
 /**

@@ -1,13 +1,13 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-// OpenCursor adapter: per-login cancellation without modifying global fetch.
+// AiWorkHarness adapter: per-login cancellation without modifying global fetch.
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { AuthPayload } from "./types.js";
 /** Provider-defined JSON is normalized and validated by each authentication adapter. */

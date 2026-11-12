@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "../../shared/icons";
 import { useReducedMotion } from "../../shared/motionPreference";
 import { usePresence } from "../../shared/usePresence";
+import { t as tr } from "../../shared/i18n";
 
 export function AttachmentMenu({ onFiles }: { onFiles: (imagesOnly: boolean) => void }) {
   const id = React.useId();
@@ -117,7 +118,7 @@ export function AttachmentMenu({ onFiles }: { onFiles: (imagesOnly: boolean) => 
   };
 
   return <>
-    <button ref={trigger} type="button" className="attach-btn" aria-label="Attach images or files" title="Attach images or files"
+    <button ref={trigger} type="button" className="attach-btn" aria-label={tr("Attach images or files")} title={tr("Attach images or files")}
       aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined}
       onClick={() => { if (open) close(true); else show(); }}
       onKeyDown={event => {
@@ -132,14 +133,14 @@ export function AttachmentMenu({ onFiles }: { onFiles: (imagesOnly: boolean) => 
       inert={exiting || undefined} aria-hidden={exiting || undefined}
       style={{ ...position, pointerEvents: exiting ? "none" : undefined }} onKeyDown={onKeyDown}>
       <span className="t-morph-plus" aria-hidden="true"><Icon name="plus" size={18} /></span>
-      <div id={id} className="t-morph-menu" role="menu" aria-label="Attachment options">
+      <div id={id} className="t-morph-menu" role="menu" aria-label={tr("Attachment options")}>
         <button ref={element => { items.current[0] = element; }} className="attachment-menu-item" type="button" role="menuitem"
           tabIndex={open && shown && active === 0 ? 0 : -1} onFocus={() => setActive(0)} onClick={() => choose(false)}>
-          <Icon name="file" size={16} /><span>Attach files</span>
+          <Icon name="file" size={16} /><span>{tr("Attach files")}</span>
         </button>
         <button ref={element => { items.current[1] = element; }} className="attachment-menu-item" type="button" role="menuitem"
           tabIndex={open && shown && active === 1 ? 0 : -1} onFocus={() => setActive(1)} onClick={() => choose(true)}>
-          <Icon name="image" size={16} /><span>Attach images</span>
+          <Icon name="image" size={16} /><span>{tr("Attach images")}</span>
         </button>
       </div>
     </div>, document.body)}

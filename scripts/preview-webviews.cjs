@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -13,7 +13,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
-const port = Number(process.env.OPENCURSOR_PREVIEW_PORT || 4173);
+const port = Number(process.env.AIWORKHARNESS_PREVIEW_PORT || 4173);
 
 function mockHost() {
   const params = new URLSearchParams(location.search);
@@ -115,12 +115,12 @@ http.createServer((req, res) => {
     const view = url.searchParams.get('view') === 'settings' ? 'settings' : 'sidebar';
     const width = Math.max(240, Math.min(1400, Number(url.searchParams.get('width')) || (view === 'settings' ? 1000 : 380)));
     const frame = new URLSearchParams(url.searchParams);
-    res.end(`<!doctype html><html><head><title>OpenCursor design preview</title><style>body{margin:0;background:#303030;color:#ddd;font:12px system-ui}nav{padding:14px 20px;display:flex;gap:18px;align-items:center}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}iframe{display:block;width:min(${width}px,100%);height:calc(100vh - 48px);border:0;margin:auto;box-shadow:0 0 0 1px #ffffff15}</style></head><body><nav><strong>OpenCursor · UI preview</strong><a href="/?state=welcome">Welcome</a><a href="/?state=conversation">Conversation</a><a href="/?state=setup">Setup</a><a href="/?view=settings">Settings</a><a href="/?${new URLSearchParams({ ...Object.fromEntries(url.searchParams), theme: url.searchParams.get('theme') === 'light' ? 'dark' : 'light' })}">Toggle theme</a></nav><iframe title="OpenCursor webview" src="/${view}?${frame}"></iframe></body></html>`);
+    res.end(`<!doctype html><html><head><title>AiWorkHarness design preview</title><style>body{margin:0;background:#303030;color:#ddd;font:12px system-ui}nav{padding:14px 20px;display:flex;gap:18px;align-items:center}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}iframe{display:block;width:min(${width}px,100%);height:calc(100vh - 48px);border:0;margin:auto;box-shadow:0 0 0 1px #ffffff15}</style></head><body><nav><strong>AiWorkHarness · UI preview</strong><a href="/?state=welcome">Welcome</a><a href="/?state=conversation">Conversation</a><a href="/?state=setup">Setup</a><a href="/?view=settings">Settings</a><a href="/?${new URLSearchParams({ ...Object.fromEntries(url.searchParams), theme: url.searchParams.get('theme') === 'light' ? 'dark' : 'light' })}">Toggle theme</a></nav><iframe title="AiWorkHarness webview" src="/${view}?${frame}"></iframe></body></html>`);
     return;
   }
   if (!['/sidebar', '/settings'].includes(url.pathname)) { res.statusCode = 404; res.end(); return; }
   const theme = url.searchParams.get('theme') === 'light' ? 'light' : 'dark';
   const entry = url.pathname.slice(1);
   const variables = Object.entries(themes[theme]).map(([k, v]) => `--vscode-${k}:${v}`).join(';');
-  res.end(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OpenCursor ${entry}</title><style>:root{${variables};--vscode-font-family:system-ui;--vscode-editor-font-family:Consolas,monospace}</style><link rel="stylesheet" href="/${entry}.css"></head><body class="vscode-${theme}"><div id="root" data-icon="/icon.png"></div><script>(${mockHost.toString()})();</script><script src="/${entry}.js"></script></body></html>`);
+  res.end(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AiWorkHarness ${entry}</title><style>:root{${variables};--vscode-font-family:system-ui;--vscode-editor-font-family:Consolas,monospace}</style><link rel="stylesheet" href="/${entry}.css"></head><body class="vscode-${theme}"><div id="root" data-icon="/icon.png"></div><script>(${mockHost.toString()})();</script><script src="/${entry}.js"></script></body></html>`);
 }).listen(port, '127.0.0.1', () => console.log(`Webview preview: http://127.0.0.1:${port}`));

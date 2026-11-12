@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -13,6 +13,7 @@ import { Icon } from "../../shared/icons";
 import { ModelSelect } from "../../shared/ModelSelect";
 import { FeatureConfig, ModelDef, SubagentDef, TeamDef, uid } from "../features";
 import { BUILTIN_TEAM_SUBAGENTS, isBuiltinTeamSubagent } from "../../../src/agent/teams";
+import { t as _tr } from "../../shared/i18n";
 
 export function SubagentsPanel({
   features,
@@ -92,20 +93,20 @@ export function SubagentsPanel({
 
   return (
     <>
-      <h1 className="page-title" style={{ marginBottom: 4 }}>Subagents &amp; Teams</h1>
-      <p className="panel-hint" style={{ marginBottom: 24 }}>Define specialist agents and group them into teams the agent can delegate to</p>
+      <h1 className="page-title" style={{ marginBottom: 4 }}>{_tr("Subagents & Teams")}</h1>
+      <p className="panel-hint" style={{ marginBottom: 24 }}>{_tr("Define specialist agents and group them into teams the agent can delegate to")}</p>
 
       <div className="rss-section-head">
-        <span className="rss-title">Subagents <span className="rss-help" title="The agent can launch subagents for focused subtasks via the Task tool. Use a fast/cheap model for subagents.">?</span></span>
+        <span className="rss-title">{_tr("Subagents")} <span className="rss-help" title={_tr("The agent can launch subagents for focused subtasks via the Task tool. Use a fast/cheap model for subagents.")}>?</span></span>
         <button className="btn-ghost sm" onClick={() => setSubDraft({ value: { id: uid("sub"), name: "", description: "", prompt: "", readonly: true }, isNew: true })}>
-          <Icon name="plus" size={12} /> New
+          <Icon name="plus" size={12} /> {_tr("New")}
         </button>
       </div>
-      <p className="panel-hint">Create specialized agents for complex tasks. Subagents can be invoked by the agent to handle focused work in parallel.</p>
+      <p className="panel-hint">{_tr("Create specialized agents for complex tasks. Subagents can be invoked by the agent to handle focused work in parallel.")}</p>
       <div className="row stacked" style={{ borderBottom: "none", paddingTop: 4 }}>
         <div className="row-text">
-          <div className="row-title">Subagent Model</div>
-          <div className="row-desc">Default model for all subagents. A per-subagent override takes precedence; empty = inherit the chat model.</div>
+          <div className="row-title">{_tr("Subagent Model")}</div>
+          <div className="row-desc">{_tr("Default model for all subagents. A per-subagent override takes precedence; empty = inherit the chat model.")}</div>
         </div>
         <ModelSelect
           models={selectModels}
@@ -116,19 +117,19 @@ export function SubagentsPanel({
       </div>
       {subagents.length === 0 ? (
         <div className="rss-empty">
-          <div className="rss-empty-title">No Subagents Yet</div>
-          <div className="rss-empty-sub">Create specialized agents to handle focused tasks</div>
-          <button className="btn-secondary" onClick={() => setSubDraft({ value: { id: uid("sub"), name: "", description: "", prompt: "", readonly: true }, isNew: true })}>New Subagent</button>
+          <div className="rss-empty-title">{_tr("No Subagents Yet")}</div>
+          <div className="rss-empty-sub">{_tr("Create specialized agents to handle focused tasks")}</div>
+          <button className="btn-secondary" onClick={() => setSubDraft({ value: { id: uid("sub"), name: "", description: "", prompt: "", readonly: true }, isNew: true })}>{_tr("New Subagent")}</button>
         </div>
       ) : (
-        <div className="cfg-table-scroll" role="region" aria-label="Subagents" tabIndex={0}>
+        <div className="cfg-table-scroll" role="region" aria-label={_tr("Subagents")} tabIndex={0}>
         <table className="cfg-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Description</th>
-              <th className="c-mode">Mode</th>
-              <th className="c-model">Model</th>
+              <th>{_tr("Name")}</th>
+              <th>{_tr("Description")}</th>
+              <th className="c-mode">{_tr("Mode")}</th>
+              <th className="c-model">{_tr("Model")}</th>
               <th className="c-actions" />
             </tr>
           </thead>
@@ -145,14 +146,14 @@ export function SubagentsPanel({
                 </td>
                 <td className="c-model" title={sub.model || "Inherits the subagent / chat model"}>{sub.model || "inherit"}</td>
                 <td className="c-actions">
-                  <button className="btn-ghost sm" onClick={() => setSubDraft({ value: sub, isNew: false })} title="Edit subagent">
-                    Edit
+                  <button className="btn-ghost sm" onClick={() => setSubDraft({ value: sub, isNew: false })} title={_tr("Edit subagent")}>
+                    {_tr("Edit")}
                   </button>
-                  {sub.builtin && <button className="icon-btn" title="Reset subagent to defaults" aria-label={`Reset ${sub.name} to defaults`} onClick={() => resetSub(sub.id)}>
+                  {sub.builtin && <button className="icon-btn" title={_tr("Reset subagent to defaults")} aria-label={`Reset ${sub.name} to defaults`} onClick={() => resetSub(sub.id)}>
                     <Icon name="reset" size={13} />
                   </button>}
                   {!sub.builtin && (
-                    <button className="icon-btn" title="Delete subagent" onClick={() => setConfirm({ kind: "subagent", id: sub.id, name: sub.name })}>
+                    <button className="icon-btn" title={_tr("Delete subagent")} onClick={() => setConfirm({ kind: "subagent", id: sub.id, name: sub.name })}>
                       <Icon name="trash" size={13} />
                     </button>
                   )}
@@ -165,27 +166,27 @@ export function SubagentsPanel({
       )}
 
       <div className="rss-section-head" style={{ marginTop: 28 }}>
-        <span className="rss-title">Teams <span className="rss-help" title="A team is a group of subagents. In Project mode you assign one or more teams and the agent becomes their project lead.">?</span></span>
+        <span className="rss-title">{_tr("Teams")} <span className="rss-help" title={_tr("A team is a group of subagents. In Project mode you assign one or more teams and the agent becomes their project lead.")}>?</span></span>
         <button className="btn-ghost sm" onClick={() => setTeamDraft({ value: { id: uid("team"), name: "", description: "", subagentIds: [] }, isNew: true })}>
-          <Icon name="plus" size={12} /> New
+          <Icon name="plus" size={12} /> {_tr("New")}
         </button>
       </div>
-      <p className="panel-hint">Group subagents into teams, then assign the team(s) that should work on a task in Project mode. Built-in teams cover a full development squad.</p>
+      <p className="panel-hint">{_tr("Group subagents into teams, then assign the team(s) that should work on a task in Project mode. Built-in teams cover a full development squad.")}</p>
       {teams.length === 0 ? (
         <div className="rss-empty">
-          <div className="rss-empty-title">No Teams Yet</div>
-          <div className="rss-empty-sub">Group subagents into a squad you can assign in Project mode</div>
-          <button className="btn-secondary" onClick={() => setTeamDraft({ value: { id: uid("team"), name: "", description: "", subagentIds: [] }, isNew: true })}>New Team</button>
+          <div className="rss-empty-title">{_tr("No Teams Yet")}</div>
+          <div className="rss-empty-sub">{_tr("Group subagents into a squad you can assign in Project mode")}</div>
+          <button className="btn-secondary" onClick={() => setTeamDraft({ value: { id: uid("team"), name: "", description: "", subagentIds: [] }, isNew: true })}>{_tr("New Team")}</button>
         </div>
       ) : (
-        <div className="cfg-table-scroll" role="region" aria-label="Teams" tabIndex={0}>
+        <div className="cfg-table-scroll" role="region" aria-label={_tr("Teams")} tabIndex={0}>
         <table className="cfg-table">
           <thead>
             <tr>
-              <th className="c-check" title="Assigned to Project mode runs">Use</th>
-              <th>Team</th>
-              <th>Members</th>
-              <th className="c-count">Size</th>
+              <th className="c-check" title={_tr("Assigned to Project mode runs")}>{_tr("Use")}</th>
+              <th>{_tr("Team")}</th>
+              <th>{_tr("Members")}</th>
+              <th className="c-count">{_tr("Size")}</th>
               <th className="c-actions" />
             </tr>
           </thead>
@@ -197,27 +198,27 @@ export function SubagentsPanel({
                   <td className="c-check">
                     <input
                       type="checkbox"
-                      title="Assign this team to Project mode runs"
+                      title={_tr("Assign this team to Project mode runs")}
                       checked={activeTeamIds.includes(team.id)}
                       onChange={(e) => setTeamAssigned(team.id, e.target.checked)}
                     />
                   </td>
                   <td className="c-name">
-                    {team.name || "(unnamed)"}
+                    {_tr(team.name) || "(unnamed)"}
                     {team.builtin && <span className="badge-tag always" style={{ marginLeft: 6 }}>built-in</span>}
-                    {team.description && <div className="cfg-sub" title={team.description}>{team.description}</div>}
+                    {team.description && <div className="cfg-sub" title={_tr(team.description)}>{_tr(team.description)}</div>}
                   </td>
-                  <td className="c-desc" title={names.join(", ")}>{names.join(", ") || "no members"}</td>
+                  <td className="c-desc" title={names.map((n) => _tr(n)).join(", ")}>{names.map((n) => _tr(n)).join(", ") || _tr("no members")}</td>
                   <td className="c-count">{team.subagentIds.length}</td>
                   <td className="c-actions">
                     <button className="btn-ghost sm" onClick={() => setTeamDraft({ value: team, isNew: false })}>
                       {team.builtin ? "View" : "Edit"}
                     </button>
-                    <button className="icon-btn" title="Duplicate team" onClick={() => cloneTeam(team)}>
+                    <button className="icon-btn" title={_tr("Duplicate team")} onClick={() => cloneTeam(team)}>
                       <Icon name="copy" size={13} />
                     </button>
                     {!team.builtin && (
-                      <button className="icon-btn" title="Delete team" onClick={() => setConfirm({ kind: "team", id: team.id, name: team.name })}>
+                      <button className="icon-btn" title={_tr("Delete team")} onClick={() => setConfirm({ kind: "team", id: team.id, name: team.name })}>
                         <Icon name="trash" size={13} />
                       </button>
                     )}
@@ -310,24 +311,24 @@ function SubagentModal({
     <SettingsDialog title={isNew ? "New Subagent" : subagent.builtin ? "Built-in Subagent" : "Edit Subagent"} onClose={onClose} className="modal-lg">
         <div className="modal-body">
           <label className="fc-field">
-            <span>Name</span>
-            <input value={draft.name} onChange={(e) => set({ name: e.target.value })} placeholder="Backend Developer" data-dialog-autofocus />
-            <span className="fc-help">Display name used as <code>subagent_type</code> when the agent delegates (e.g. Backend Developer).</span>
+            <span>{_tr("Name")}</span>
+            <input value={draft.name} onChange={(e) => set({ name: e.target.value })} placeholder={_tr("Backend Developer")} data-dialog-autofocus />
+            <span className="fc-help">{_tr("Display name used as")} <code>subagent_type</code> {_tr("when the agent delegates (e.g. Backend Developer).")}</span>
           </label>
           <label className="fc-field">
-            <span>Description</span>
-            <input value={draft.description} onChange={(e) => set({ description: e.target.value })} placeholder="Implements server-side logic, APIs and persistence" />
-            <span className="fc-help">Shown to the agent so it knows when to use this subagent.</span>
+            <span>{_tr("Description")}</span>
+            <input value={draft.description} onChange={(e) => set({ description: e.target.value })} placeholder={_tr("Implements server-side logic, APIs and persistence")} />
+            <span className="fc-help">{_tr("Shown to the agent so it knows when to use this subagent.")}</span>
           </label>
           <div className="fc-field">
-            <span>Capability</span>
+            <span>{_tr("Capability")}</span>
             <label className="fc-inline">
               <input type="checkbox" checked={draft.readonly} onChange={(e) => set({ readonly: e.target.checked })} />
-              Read-only — can explore and report, but cannot edit files or run commands
+              {_tr("Read-only — can explore and report, but cannot edit files or run commands")}
             </label>
           </div>
           <label className="fc-field">
-            <span>Model</span>
+            <span>{_tr("Model")}</span>
             <ModelSelect
               models={selectModels as ModelDef[]}
               value={draft.model ?? ""}
@@ -336,7 +337,7 @@ function SubagentModal({
             />
           </label>
           <label className="fc-field">
-            <span>System Prompt</span>
+            <span>{_tr("System Prompt")}</span>
             <textarea
               rows={12}
               className="fc-mono"
@@ -344,15 +345,15 @@ function SubagentModal({
               onChange={(e) => set({ prompt: e.target.value })}
               placeholder={"You are the ...\n\nMission, expertise, workflow, deliverable and constraints for this specialist."}
             />
-            <span className="fc-help">Replaces the persona for this subagent's run. Leave empty to inherit the chat's system prompt.</span>
+            <span className="fc-help">{_tr("Replaces the persona for this subagent's run. Leave empty to inherit the chat's system prompt.")}</span>
           </label>
           {subagent.builtin && (
-            <div className="row-desc">Changes apply to this built-in subagent and its teams. You can reset it to the shipped defaults; it cannot be deleted.</div>
+            <div className="row-desc">{_tr("Changes apply to this built-in subagent and its teams. You can reset it to the shipped defaults; it cannot be deleted.")}</div>
           )}
           {error && <div className="fc-error">{error}</div>}
         </div>
         <div className="modal-foot">
-          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn-ghost" onClick={onClose}>{_tr("Cancel")}</button>
           <button className="btn-primary" disabled={!!error} onClick={() => onSave({ ...draft, name, description: draft.description.trim() })}>
             {isNew ? "Create Subagent" : "Save Changes"}
           </button>
@@ -386,23 +387,23 @@ function TeamModal({
     <SettingsDialog title={isNew ? "New Team" : team.builtin ? "Built-in Team" : "Edit Team"} onClose={onClose} className="modal-lg">
         <div className="modal-body">
           <label className="fc-field">
-            <span>Name</span>
-            <input value={draft.name} onChange={(e) => set({ name: e.target.value })} placeholder="Feature Squad" data-dialog-autofocus />
+            <span>{_tr("Name")}</span>
+            <input value={draft.name} onChange={(e) => set({ name: e.target.value })} placeholder={_tr("Feature Squad")} data-dialog-autofocus />
           </label>
           <label className="fc-field">
-            <span>Description</span>
-            <input value={draft.description} onChange={(e) => set({ description: e.target.value })} placeholder="What this team is for and when to assign it" />
+            <span>{_tr("Description")}</span>
+            <input value={draft.description} onChange={(e) => set({ description: e.target.value })} placeholder={_tr("What this team is for and when to assign it")} />
           </label>
           <div className="fc-field">
             <div className="fc-field-head">
-              <span>Members ({draft.subagentIds.length} of {subagents.length})</span>
+              <span>{_tr("Members (")}{draft.subagentIds.length} of {subagents.length})</span>
               <div className="fc-field-actions">
-                <button className="btn-ghost sm" onClick={() => set({ subagentIds: subagents.map((s) => s.id) })}>Select all</button>
-                <button className="btn-ghost sm" onClick={() => set({ subagentIds: [] })}>Clear</button>
+                <button className="btn-ghost sm" onClick={() => set({ subagentIds: subagents.map((s) => s.id) })}>{_tr("Select all")}</button>
+                <button className="btn-ghost sm" onClick={() => set({ subagentIds: [] })}>{_tr("Clear")}</button>
               </div>
             </div>
             {subagents.length === 0 ? (
-              <div className="row-desc">Create subagents first — a team is a group of them.</div>
+              <div className="row-desc">{_tr("Create subagents first — a team is a group of them.")}</div>
             ) : (
               <div className="member-picker">
                 {subagents.map((sub) => (
@@ -423,7 +424,7 @@ function TeamModal({
           {error && <div className="fc-error">{error}</div>}
         </div>
         <div className="modal-foot">
-          <button className="btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn-ghost" onClick={onClose}>{_tr("Cancel")}</button>
           <button className="btn-primary" disabled={!!error} onClick={() => onSave({ ...draft, name, description: draft.description.trim() })}>
             {isNew ? "Create Team" : team.builtin ? "Clone as Custom" : "Save Changes"}
           </button>
@@ -450,13 +451,13 @@ function ConfirmDeleteModal({
     <SettingsDialog title={`Delete ${kind}`} onClose={onClose} className="modal-sm">
         <div className="modal-body">
           <p className="confirm-text">
-            Delete the {kind} <b>{name || "(unnamed)"}</b>? This cannot be undone.
+            {_tr("Delete the")} {kind} <b>{name || "(unnamed)"}</b>? {_tr("This cannot be undone.")}
           </p>
           {detail && <p className="confirm-detail">{detail}</p>}
         </div>
         <div className="modal-foot">
-          <button className="btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn-danger" onClick={onConfirm}>Delete</button>
+          <button className="btn-ghost" onClick={onClose}>{_tr("Cancel")}</button>
+          <button className="btn-danger" onClick={onConfirm}>{_tr("Delete")}</button>
         </div>
     </SettingsDialog>
   );

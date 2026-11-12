@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -14,6 +14,7 @@ import { Icon, type IconName } from "../../shared/icons";
 import { usePresence } from "../../shared/usePresence";
 import { TextSwap } from "../../shared/TextTransitions";
 import { renderMentionTokens } from "../types";
+import { t as tr } from "../../shared/i18n";
 
 export interface QueuedMessageRowProps {
   item: QueuedMessage;
@@ -148,10 +149,10 @@ export function QueuedMessageRow({ item, running, steering = false, canMoveUp, o
         title={queued ? "Send queued request now" : "Resume and reconcile completed work"} aria-label={runLabel} onClick={onRun}>
         <Icon name="play" size={12} /><span>{queued ? "Send" : "Resume"}</span>
       </button>}
-      <button type="button" className="q-btn" title="Remove queued message" aria-label="Remove queued message" disabled={steering} onClick={onRemove}>
+      <button type="button" className="q-btn" title={tr("Remove queued message")} aria-label={tr("Remove queued message")} disabled={steering} onClick={onRemove}>
         <Icon name="trash" size={12} />
       </button>
-      <button ref={trigger} type="button" className="q-btn" title="More queued message actions" aria-label="More queued message actions"
+      <button ref={trigger} type="button" className="q-btn" title={tr("More queued message actions")} aria-label={tr("More queued message actions")}
         disabled={steering}
         aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined}
         onClick={() => { if (open) close(true); else show(); }}
@@ -163,13 +164,13 @@ export function QueuedMessageRow({ item, running, steering = false, canMoveUp, o
         <Icon name="more" size={12} />
       </button>
     </span>
-    {present && createPortal(<div ref={menu} id={menuId} role="menu" aria-label="Queued message actions" className="queue-menu"
+    {present && createPortal(<div ref={menu} id={menuId} role="menu" aria-label={tr("Queued message actions")} className="queue-menu"
       data-state={exiting ? "closing" : "open"} data-side={side} inert={exiting || undefined} aria-hidden={exiting || undefined}
       style={{ ...position, pointerEvents: exiting ? "none" : undefined }} onKeyDown={onKeyDown}>
       {actions.map((action, index) => <button key={action.label} ref={element => { buttons.current[index] = element; }}
         className="queue-menu-item" type="button" role="menuitem" aria-label={action.ariaLabel} title={action.title}
         tabIndex={open && active === index ? 0 : -1} onFocus={() => setActive(index)} onClick={() => choose(index)}>
-        <Icon name={action.icon} size={14} /><span>{action.label}</span>
+        <Icon name={action.icon} size={14} /><span>{tr(action.label)}</span>
       </button>)}
     </div>, document.body)}
   </div>;

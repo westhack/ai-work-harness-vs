@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -78,7 +78,7 @@ describe("Antigravity OAuth protocol identity", () => {
 describe("Antigravity request conversion", () => {
   it("preserves context, exact tool signatures, parallel calls, images, cache session and input objects", () => {
     const messages: WireMessage[] = [
-      { role: "system", content: "You are OpenCursor. Keep the user's instructions." },
+      { role: "system", content: "You are AiWorkHarness. Keep the user's instructions." },
       { role: "user", content: [{ type: "text", text: "Compare these." }, { type: "image_url", image_url: { url: "data:image/png;base64,AQID" } }] },
       { role: "assistant", content: "Reading both files.", tool_calls: [
         { id: "upstream-a", type: "function", function: { name: "Read", arguments: '{"path":"a.ts"}' }, thoughtSignature: "opaque-response-signature" },

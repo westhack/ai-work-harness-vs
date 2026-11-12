@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -19,7 +19,7 @@ vi.mock("vscode", () => ({ workspace: { get workspaceFolders() { return [{ uri: 
 vi.mock("../semanticIndex", () => ({ search: host.semantic, isIndexing: () => false, isIndexingEnabled: () => false }));
 import { semanticSearchTool } from "./search";
 
-beforeEach(async () => { host.root = await fs.mkdtemp(path.join(tmpdir(), "ocursor-hybrid-")); host.documents = []; host.semantic.mockReset(); host.semantic.mockResolvedValue([]); });
+beforeEach(async () => { host.root = await fs.mkdtemp(path.join(tmpdir(), "aiworkharness-hybrid-")); host.documents = []; host.semantic.mockReset(); host.semantic.mockResolvedValue([]); });
 afterEach(async () => { invalidateScanCache(); await fs.rm(host.root, { recursive: true, force: true }); });
 async function file(relative: string, text: string) { const target = path.join(host.root, relative); await fs.mkdir(path.dirname(target), { recursive: true }); await fs.writeFile(target, text); return target; }
 

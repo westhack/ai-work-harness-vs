@@ -1,14 +1,15 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
 import * as React from "react";
 import { Icon } from "../../shared/icons";
+import { t as tr } from "../../shared/i18n";
 
 /** Shared keyboard behavior for settings dialogs and their nested menus. */
 export function SettingsDialog({ title, onClose, children, className = "" }: {
@@ -57,7 +58,7 @@ export function SettingsDialog({ title, onClose, children, className = "" }: {
     <div ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className={`modal ${className}`}>
       <div className="modal-head">
         <h2 id={titleId}>{title}</h2>
-        <button type="button" className="icon-btn close" onClick={onClose} aria-label="Close dialog" title="Close"><Icon name="close" size={16} /></button>
+        <button type="button" className="icon-btn close" onClick={onClose} aria-label={tr("Close dialog")} title={tr("Close")}><Icon name="close" size={16} /></button>
       </div>
       {children}
     </div>

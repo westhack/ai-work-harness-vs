@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -19,9 +19,9 @@ const saved = new Map<string, string>();
 async function seed(kind: OAuthKind = "codex", extra: Partial<OAuthAccount> = {}): Promise<OAuthAccount> {
   const account: OAuthAccount = { id: `quota-${kind}`, kind, accessToken: "fixture-access", refreshToken: "fixture-refresh",
     accountId: "fixture-workspace", projectId: "fixture-project", expiresAt: Date.now() + 3_600_000, ...extra };
-  saved.set(`ocursor.oauth.acct.${account.id}`, JSON.stringify(account));
+  saved.set(`aiworkharness.oauth.acct.${account.id}`, JSON.stringify(account));
   initOAuth({
-    globalState: { get: (key: string, fallback: unknown) => key === "ocursor.oauth.accountIds" ? [account.id] : fallback, update: async () => {} },
+    globalState: { get: (key: string, fallback: unknown) => key === "aiworkharness.oauth.accountIds" ? [account.id] : fallback, update: async () => {} },
     secrets: { get: async (key: string) => saved.get(key), store: async (key: string, value: string) => { saved.set(key, value); }, delete: async (key: string) => { saved.delete(key); } },
   } as unknown as Parameters<typeof initOAuth>[0]);
   await vi.waitFor(() => expect(listAccounts().some(item => item.id === account.id)).toBe(true));
@@ -91,7 +91,7 @@ describe("bounded OAuth quota operations", () => {
     controller.abort();
     await rejected;
     release(Response.json({ access_token: "rotated-fixture", expires_in: 3600 }));
-    await vi.waitFor(() => expect(JSON.parse(saved.get(`ocursor.oauth.acct.${account.id}`)!).accessToken).toBe("rotated-fixture"));
+    await vi.waitFor(() => expect(JSON.parse(saved.get(`aiworkharness.oauth.acct.${account.id}`)!).accessToken).toBe("rotated-fixture"));
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
@@ -105,7 +105,7 @@ describe("bounded OAuth quota operations", () => {
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
     controller.abort(); await rejected;
     release(Response.json({ cloudaicompanionProject: "resolved-fixture-project" }));
-    await vi.waitFor(() => expect(JSON.parse(saved.get(`ocursor.oauth.acct.${account.id}`)!).projectId).toBe("resolved-fixture-project"));
+    await vi.waitFor(() => expect(JSON.parse(saved.get(`aiworkharness.oauth.acct.${account.id}`)!).projectId).toBe("resolved-fixture-project"));
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 

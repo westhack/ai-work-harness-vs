@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -23,7 +23,7 @@ function setup(kind: OAuthKind, options = {}) {
 }
 afterEach(() => { for (const session of sessions.splice(0)) session.cancel(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-describe("OpenCursor OAuth login adapters", () => {
+describe("AiWorkHarness OAuth login adapters", () => {
   it("bounds authentication without imposing its 30-second lifetime on caller-owned generation streams", async () => {
     const timeout = vi.spyOn(AbortSignal, "timeout");
     const fetch = vi.fn().mockResolvedValue(json({})); vi.stubGlobal("fetch", fetch);

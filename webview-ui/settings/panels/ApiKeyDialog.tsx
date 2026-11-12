@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -15,6 +15,7 @@ import { uid, PROVIDER_PRESETS, type ProviderConfig, type ProviderApiKey } from 
 import { providerLabel } from "./ProviderPickerDialog";
 import { SettingsDialog } from "./SettingsDialog";
 import { useApiKeyAction } from "./apiKeyActions";
+import { t as tr } from "../../shared/i18n";
 
 export function ApiKeyDialog({ provider, credential, onClose, onBack }: {
   provider: ProviderConfig; credential?: ProviderApiKey; onClose: () => void; onBack: () => void;
@@ -94,15 +95,15 @@ export function ApiKeyDialog({ provider, credential, onClose, onBack }: {
         <div className="provider-connection-heading"><span className="provider-logo"><ProviderIcon provider={provider.kind} size={26} /></span>
           <div><strong>{name}</strong><p className="panel-hint">{credential ? "Update this key without changing other keys." : "Add a key for automatic failover and load balancing."}</p></div>
         </div>
-        <label className="fc-field"><span>Key name (optional)</span><input aria-label="Key name" value={label} disabled={pending} placeholder="For example, Work account" onChange={event => setLabel(event.target.value)} /></label>
-        <label className="fc-field"><span>Base URL</span><input aria-label="Base URL" type="url" readOnly={!editableEndpoint} value={baseUrl} disabled={pending}
+        <label className="fc-field"><span>{tr("Key name (optional)")}</span><input aria-label={tr("Key name")} value={label} disabled={pending} placeholder={tr("For example, Work account")} onChange={event => setLabel(event.target.value)} /></label>
+        <label className="fc-field"><span>{tr("Base URL")}</span><input aria-label={tr("Base URL")} type="url" readOnly={!editableEndpoint} value={baseUrl} disabled={pending}
           onChange={event => { setBaseUrl(event.target.value); resetTest(); setValidationError(""); }} /></label>
         {preset.setupHint && <p className="panel-hint">{preset.setupHint}</p>}
         <label className="fc-field"><span>{credentialLabel}{credential?.hasKey !== false && credential ? " (saved)" : ""}</span>
           <input aria-label={credentialLabel} data-dialog-autofocus type="password" autoComplete="off" spellCheck={false} value={key} disabled={pending}
             placeholder={credential ? "Leave blank to keep the saved key" : "Enter API key"} onChange={event => { setKey(event.target.value); resetTest(); }} />
         </label>
-        <p className="panel-hint">Keys stay in VS Code's secure storage. Only their names appear here.</p>
+        <p className="panel-hint">{tr("Keys stay in VS Code's secure storage. Only their names appear here.")}</p>
         {(error || validationError) && <div className="fc-error" role="alert">{validationError || error}</div>}
         <div className="test-row">
           <button type="button" className="btn-ghost" onClick={runTest}
@@ -113,8 +114,8 @@ export function ApiKeyDialog({ provider, credential, onClose, onBack }: {
         </div>
       </div>
       <div className="modal-foot provider-connection-actions">
-        {!credential && <button type="button" className="btn-ghost provider-back" disabled={pending} onClick={onBack}><Icon name="chevL" size={14} /> Back to providers</button>}
-        <button type="button" className="btn-ghost" disabled={pending} onClick={onClose}>Cancel</button>
+        {!credential && <button type="button" className="btn-ghost provider-back" disabled={pending} onClick={onBack}><Icon name="chevL" size={14} /> {tr("Back to providers")}</button>}
+        <button type="button" className="btn-ghost" disabled={pending} onClick={onClose}>{tr("Cancel")}</button>
         <button type="submit" className="btn-primary" disabled={pending || (!credential && !key.trim())}>{pending ? "Saving…" : credential ? "Save" : "Add key"}</button>
       </div>
     </form>

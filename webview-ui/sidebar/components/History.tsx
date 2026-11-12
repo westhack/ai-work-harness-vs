@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -10,6 +10,7 @@
 import * as React from "react";
 import { Icon } from "../../shared/icons";
 import type { ConversationSummary } from "../types";
+import { t as tr } from "../../shared/i18n";
 
 function timeAgo(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000);
@@ -78,7 +79,7 @@ export function History({
 
   return (
     <div className="history-overlay" onClick={onClose}>
-      <div className="history-popup" role="dialog" aria-modal="true" aria-label="Threads" onClick={(e) => e.stopPropagation()}
+      <div className="history-popup" role="dialog" aria-modal="true" aria-label={tr("Threads")} onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           if (e.key === "Escape") { e.stopPropagation(); onClose(); }
           if (e.key !== "Tab") return;
@@ -88,9 +89,9 @@ export function History({
           if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
         }}>
         <div className="history-heading">
-          <span>Threads</span>
+          <span>{tr("Threads")}</span>
           <button className="btn-ghost" aria-pressed={archived} onClick={() => setArchived((value) => !value)}>{archived ? "Show active" : "Archived"}</button>
-          <button className="history-close" aria-label="Close threads" onClick={onClose}><Icon name="close" size={16} /></button>
+          <button className="history-close" aria-label={tr("Close threads")} onClick={onClose}><Icon name="close" size={16} /></button>
         </div>
         {/* Search */}
         <div className="history-search">
@@ -98,8 +99,8 @@ export function History({
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search titles and messages"
-            aria-label="Search threads"
+            placeholder={tr("Search titles and messages")}
+            aria-label={tr("Search threads")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             spellCheck={false}
@@ -114,7 +115,7 @@ export function History({
           ) : (
             groups.filter((group) => group.items.length > 0).map((group) => (
               <React.Fragment key={group.label}>
-                <div className="history-group-label">{group.label}</div>
+                <div className="history-group-label">{tr(group.label)}</div>
                 {group.items.map((c) => (
                   <div key={c.id} className={"history-item" + (c.id === activeId ? " active" : "")}>
                     <button className="hi-text" aria-current={c.id === activeId ? "true" : undefined} onClick={() => { onSelect(c.id); onClose(); }}>
@@ -122,12 +123,12 @@ export function History({
                       <span className="hi-time">{timeAgo(c.updatedAt)}</span>
                       {c.excerpt && <span className="hi-excerpt">{c.excerpt}</span>}
                     </button>
-                    {onFork && <button className="hi-del" title="Fork conversation" aria-label="Fork conversation" onClick={() => onFork(c.id)}><Icon name="fork" size={14} /></button>}
+                    {onFork && <button className="hi-del" title={tr("Fork conversation")} aria-label={tr("Fork conversation")} onClick={() => onFork(c.id)}><Icon name="fork" size={14} /></button>}
                     {onArchive && <button className="hi-del" title={archived ? "Restore conversation" : "Archive conversation"} aria-label={archived ? "Restore conversation" : "Archive conversation"} onClick={() => onArchive(c.id, !archived)}>{archived ? <Icon name="reset" size={14} /> : <Icon name="archive" size={14} />}</button>}
                     <button
                       className="hi-del"
-                      title="Delete conversation"
-                      aria-label="Delete conversation"
+                      title={tr("Delete conversation")}
+                      aria-label={tr("Delete conversation")}
                       onClick={(e) => {
                         e.stopPropagation();
                         onDelete(c.id);

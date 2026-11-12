@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -14,7 +14,7 @@ import type { ProviderEvent, ToolCall, ToolSchema, WireContentPart, WireMessage 
 import { sseData } from "../provider/sse";
 import { UsageTracker } from "../provider/usage";
 
-// OpenCursor's installed-app protocol for Google Antigravity.
+// AiWorkHarness's installed-app protocol for Google Antigravity.
 // Gemini CLI is a separate OAuth client, scope set and transport. Existing
 // Antigravity accounts must continue to use their original installed-app client.
 const MODEL_ALIASES: Record<string, string> = {

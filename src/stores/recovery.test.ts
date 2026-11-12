@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -17,7 +17,7 @@ vi.mock("vscode", () => ({ workspace: { textDocuments: [], workspaceFolders: [] 
 import { RunJournal } from "./runJournal";
 import { PendingChangesStore } from "./pendingChanges";
 const directories: string[] = [];
-async function fixture() { const root = await fs.mkdtemp(path.join(os.tmpdir(), "ocursor-recovery-")); directories.push(root); return root; }
+async function fixture() { const root = await fs.mkdtemp(path.join(os.tmpdir(), "aiworkharness-recovery-")); directories.push(root); return root; }
 afterEach(async () => { for (const directory of directories.splice(0)) await fs.rm(directory, { recursive: true, force: true }); });
 it("restores undo ownership after restarting and refuses newer user changes", async () => {
   const root = await fixture(), file = path.join(root, "code.txt");
@@ -54,8 +54,8 @@ it.skipIf(process.platform !== "win32")("uses the same identity for Windows shor
   const root = await fixture(), file = path.join(root, "code.txt");
   await fs.writeFile(file, "after");
   const { stdout } = await promisify(execFile)("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command",
-    "(New-Object -ComObject Scripting.FileSystemObject).GetFolder($env:OPENCURSOR_PATH_FIXTURE).ShortPath"],
-  { windowsHide: true, timeout: 10_000, env: { ...process.env, OPENCURSOR_PATH_FIXTURE: root } });
+    "(New-Object -ComObject Scripting.FileSystemObject).GetFolder($env:AIWORKHARNESS_PATH_FIXTURE).ShortPath"],
+  { windowsHide: true, timeout: 10_000, env: { ...process.env, AIWORKHARNESS_PATH_FIXTURE: root } });
   const shortRoot = stdout.trim();
   if (!shortRoot || shortRoot.toLowerCase() === (await fs.realpath(root)).toLowerCase()) ctx.skip(); // Short-name creation can be disabled on the volume.
   const shortFile = path.join(shortRoot, "code.txt");

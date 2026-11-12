@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -28,6 +28,7 @@ import { initModelRegistry, applyEmbedModel } from './stores/modelRegistry';
 import { initRuntimeDeps } from './runtimeDeps';
 import { initLog, logError } from './logging';
 import { setOllamaHost } from './agent/ollama';
+import { currentLanguage, hostText, setVscodeLanguage } from './shared/i18n';
 import { pendingChanges } from './stores/pendingChanges';
 import { configureFileMutationStorage } from './stores/fileMutations';
 import { workspaceStorageDirectory } from './ui/sidebar/storage';
@@ -35,6 +36,9 @@ import * as path from 'node:path';
 import { registerPluginManagement } from './ui/pluginCommands';
 import { registerRemoteJobs } from './ui/remoteCommands';
 import { initHookConsent } from './integrations/hookConsent';
+import { setLocalEnginesRoot, setEngineOverrides } from './agent/engines/registry';
+import { setBridgeEnvFeatureSource } from './agent/engines/bridgeEnv';
+import { stopBridge } from './agent/bridge';
 
 let activeSidebar: SidebarProvider | undefined;
 
@@ -65,10 +69,12 @@ export function todoCommentLines(text: string, maxLines: number, cancelled: () =
 }
 
 export async function activate(context: vscode.ExtensionContext) {
+  // Best-effort: headless hosts and unit-test mocks may not expose vscode.env.
+  try { setVscodeLanguage(vscode.env?.language); } catch { /* keep the English default */ }
   registerRemoteJobs(context);
   initHookConsent(context);
   const log = initLog(context);
-  log.appendLine(`[${new Date().toISOString()}] OpenCursor activated`);
+  log.appendLine(`[${new Date().toISOString()}] AiWorkHarness activated`);
 
   // Heavy native deps (onnxruntime, sharp, transformers) are not shipped in the
   // VSIX; they are downloaded to globalStorage on first use.
@@ -82,22 +88,33 @@ export async function activate(context: vscode.ExtensionContext) {
     if (recovery.error) {
       logError('startup.pending-edits', new Error(recovery.error), { quarantined: recovery.quarantined });
       void vscode.window.showWarningMessage(recovery.quarantined
-        ? `OpenCursor: the pending-edit review journal was unreadable and has been moved to ${recovery.quarantined}. Earlier agent edits can no longer be undone from the review bar; your files were not changed.`
-        : `OpenCursor: the pending-edit review journal could not be loaded (${recovery.error}).`);
+        ? `AiWorkHarness: the pending-edit review journal was unreadable and has been moved to ${recovery.quarantined}. Earlier agent edits can no longer be undone from the review bar; your files were not changed.`
+        : `AiWorkHarness: the pending-edit review journal could not be loaded (${recovery.error}).`);
     }
   } catch (error) {
     logError('startup.storage', error);
-    void vscode.window.showWarningMessage(`OpenCursor: edit review storage is unavailable (${error instanceof Error ? error.message : String(error)}). Agent edits will not be tracked for undo in this session.`);
+    void vscode.window.showWarningMessage(`AiWorkHarness: edit review storage is unavailable (${error instanceof Error ? error.message : String(error)}). Agent edits will not be tracked for undo in this session.`);
   }
 
   const settingsManager = new SettingsManager(context);
   const featureStore = new FeatureStore(context);
+  // External engine adapters read the bridge switch through this source.
+  setBridgeEnvFeatureSource(() => featureStore.get());
+  // External CLIs install into globalStorage instead of the global npm prefix,
+  // and a path the user picked for an engine wins over both.
+  try {
+    setLocalEnginesRoot(path.join(context.globalStorageUri.fsPath, 'engines'));
+    setEngineOverrides(featureStore.get().enginePaths);
+  } catch (error) {
+    logError('startup.engines', error);
+  }
+  const hostLanguage = () => currentLanguage(featureStore.get().language);
   const syncToolTimeouts = () => setToolTimeoutOverrides(featureStore.get().toolTimeoutsSec);
   syncToolTimeouts();
   context.subscriptions.push(featureStore.onDidChange(syncToolTimeouts));
   initOAuth(context);
   initUsage(context);
-  setOllamaHost(context.globalState.get<string>('ocursor.ollamaEndpoint', 'http://localhost:11434'));
+  setOllamaHost(context.globalState.get<string>('aiworkharness.ollamaEndpoint', 'http://localhost:11434'));
   // Prefetch the provider-grouped model list so every UI (settings, pickers)
   // renders instantly from the backend cache.
   initModelRegistry(featureStore, settingsManager);
@@ -170,28 +187,30 @@ export async function activate(context: vscode.ExtensionContext) {
   registerGitSync(context);
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('ocursor.openSettings', (section?: string) => {
+    vscode.commands.registerCommand('aiworkharness.openSettings', (section?: string) => {
       SettingsPanel.createOrShow(context, settingsManager, featureStore, section);
     })
   );
 
   // Ctrl+L: add the current selection (or file) to chat as a mention.
   const todoLensesChanged = new vscode.EventEmitter<void>();
+  // Refresh CodeLens captions when the UI language changes.
+  context.subscriptions.push(featureStore.onDidChange(() => todoLensesChanged.fire()));
   context.subscriptions.push(
-    vscode.commands.registerCommand('ocursor.addToChat', () => sidebarProvider.addSelectionToChat()),
-    vscode.commands.registerCommand('ocursor.newChat', () => sidebarProvider.newChat()),
-    vscode.commands.registerCommand('ocursor.reviewChanges', () => sidebarProvider.startReview()),
-    vscode.commands.registerCommand('ocursor.implementTodo', (uri?: vscode.Uri, line?: number) => sidebarProvider.implementTodo(uri, line)),
+    vscode.commands.registerCommand('aiworkharness.addToChat', () => sidebarProvider.addSelectionToChat()),
+    vscode.commands.registerCommand('aiworkharness.newChat', () => sidebarProvider.newChat()),
+    vscode.commands.registerCommand('aiworkharness.reviewChanges', () => sidebarProvider.startReview()),
+    vscode.commands.registerCommand('aiworkharness.implementTodo', (uri?: vscode.Uri, line?: number) => sidebarProvider.implementTodo(uri, line)),
     todoLensesChanged,
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration('ocursor.todoCodeLensEnabled')) todoLensesChanged.fire();
+      if (event.affectsConfiguration('aiworkharness.todoCodeLensEnabled')) todoLensesChanged.fire();
     }),
     vscode.languages.registerCodeLensProvider({ scheme: 'file' }, {
       onDidChangeCodeLenses: todoLensesChanged.event,
       provideCodeLenses(document, token) {
-        if (!vscode.workspace.getConfiguration('ocursor').get<boolean>('todoCodeLensEnabled', true)) return [];
+        if (!vscode.workspace.getConfiguration('aiworkharness').get<boolean>('todoCodeLensEnabled', true)) return [];
         return todoCommentLines(document.getText(), 20_000, () => token.isCancellationRequested).map((line) =>
-          new vscode.CodeLens(new vscode.Range(line, 0, line, 0), { title: 'Implement with OpenCursor', command: 'ocursor.implementTodo', arguments: [document.uri, line] }));
+          new vscode.CodeLens(new vscode.Range(line, 0, line, 0), { title: hostText('Implement with AiWorkHarness', hostLanguage()), command: 'aiworkharness.implementTodo', arguments: [document.uri, line] }));
       },
     })
   );
@@ -203,6 +222,7 @@ export async function activate(context: vscode.ExtensionContext) {
 export async function deactivate() {
   await activeSidebar?.dispose();
   activeSidebar = undefined;
+  await stopBridge();
   mcpManager.disposeAll();
   await disposeLlamacpp();
   await pendingChanges.flush();

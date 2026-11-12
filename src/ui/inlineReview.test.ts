@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -44,12 +44,12 @@ it("isolates A/B/A snapshots and closes only the accepted conversation's native 
   expect(snapshots.map(row => [row.before, row.after])).toEqual([["start", "A1"], ["A1\nB1", "A2\nB1"]]);
   snapshots[0].owner!.conversationId = "tampered";
   expect(pendingChanges.snapshots(file, a)).toHaveLength(2);
-  await host.commands.get("ocursor.viewDiff")!(file, a);
-  await host.commands.get("ocursor.viewDiff")!(file, b);
+  await host.commands.get("aiworkharness.viewDiff")!(file, a);
+  await host.commands.get("aiworkharness.viewDiff")!(file, b);
   const calls = host.execute.mock.calls;
   const aBefore = calls[0][1], aAfter = calls[0][2], bBefore = calls[1][1], bAfter = calls[1][2];
   expect(aBefore.toString()).not.toBe(bBefore.toString());
-  expect(aAfter.scheme).toBe("ocursor-inline-original");
+  expect(aAfter.scheme).toBe("aiworkharness-inline-original");
   expect(calls[0][3]).toContain("chat chat-a · edit 2 · turn 3");
   expect(host.provider.provideTextDocumentContent(aBefore)).toBe("A1\nB1");
   expect(host.provider.provideTextDocumentContent(aAfter)).toBe("A2\nB1");
@@ -68,7 +68,7 @@ it("labels standalone file reviews as an aggregate and retains the live file doc
   vi.useFakeTimers(); registerInlineReview({ subscriptions } as any);
   const file = "C:/fixture/overview.txt";
   pendingChanges.record(file, "before", "after", true, { conversationId: "chat" });
-  await host.commands.get("ocursor.viewDiff")!(file);
+  await host.commands.get("aiworkharness.viewDiff")!(file);
   const call = host.execute.mock.calls[0];
   expect(call[2].scheme).toBe("file");
   expect(call[3]).toContain("all pending changes");
@@ -79,7 +79,7 @@ it("refreshes only the typed editor's highlights and never re-publishes diff ori
   vi.useFakeTimers(); registerInlineReview({ subscriptions } as any);
   const file = "C:/fixture/typing.txt";
   pendingChanges.record(file, "one", "one\ntwo", true, { conversationId: "chat" });
-  await host.commands.get("ocursor.viewDiff")!(file);
+  await host.commands.get("aiworkharness.viewDiff")!(file);
   await vi.advanceTimersByTimeAsync(100);
   const fire = vi.spyOn(vscode.EventEmitter.prototype, "fire");
   let text = "one\ntwo";

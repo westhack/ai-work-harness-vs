@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -42,7 +42,7 @@ export const XAI_PKCE_VERIFIER_BYTES = 96;
 export const XAI_REFRESH_LEAD_SECONDS = 5 * 60;
 
 // User-Agent — mirror Go grok-cli UA. Version is best-effort; xAI does not pin a specific version.
-export const XAI_USER_AGENT = "grok-cli/opencursor";
+export const XAI_USER_AGENT = "grok-cli/aiworkharness";
 
 /**
  * Aggregated config object — mirrors the shape of CLAUDE_CONFIG/CODEX_CONFIG in oauth.js.

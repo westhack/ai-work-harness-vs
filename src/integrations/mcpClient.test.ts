@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -152,7 +152,7 @@ describe("Windows stdio launch", () => {
     const { join } = await import("path");
     const { tmpdir } = await import("os");
     const real = await vi.importActual<typeof import("child_process")>("child_process");
-    const dir = mkdtempSync(join(tmpdir(), "ocursor-mcp-shim-"));
+    const dir = mkdtempSync(join(tmpdir(), "aiworkharness-mcp-shim-"));
     try {
       writeFileSync(join(dir, "fixture.cmd"), `@"${process.execPath}" -e "process.stdout.write(JSON.stringify(process.argv.slice(1)))" %*\r\n`);
       const env = { ...process.env, PATH: `${dir};${process.env.PATH}` };

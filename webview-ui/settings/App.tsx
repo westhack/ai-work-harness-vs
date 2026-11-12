@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -18,6 +18,8 @@ import { CacheUsage } from "./CacheUsage";
 import { DocsSection, type DocSourceInfo, type DocsStatus } from "./DocsSection";
 import { ControlLabelContext, Toggle } from "./panels/Toggle";
 import { setMotionPreference, type MotionPreference } from "../shared/motionPreference";
+import { t as tr, setLocale } from "../shared/i18n";
+import { LANGUAGE_OPTIONS, type LanguagePreference } from "../../src/shared/i18n";
 
 interface Settings {
   model: string;
@@ -65,6 +67,31 @@ interface IndexStatus {
 interface EmbedModel {
   id: string;
   name: string;
+}
+
+interface EngineStatusInfo {
+  id: string;
+  label: string;
+  available: boolean;
+  binaryPath?: string;
+  source?: "override" | "extension" | "path" | "vscode-extension";
+  installScope: "extension" | "global";
+  installCommand?: string;
+  docsUrl?: string;
+  manual: boolean;
+}
+
+/** Where a resolved engine binary came from, labelled in the engine list. */
+const ENGINE_SOURCE_LABELS: Record<string, string> = {
+  override: "Custom path",
+  extension: "Extension folder",
+  path: "PATH",
+  "vscode-extension": "VS Code extension",
+};
+
+interface EngineInstallResult {
+  ok: boolean;
+  detail?: string;
 }
 
 // Group connection, agent, and workspace settings in the navigation rail.
@@ -129,7 +156,7 @@ const SECTION_KEYWORDS: Partial<Record<Section, string>> = {
   hooks: "hooks events commands",
   indexing: "codebase index embedding docs semantic sync",
   advanced: "system prompt custom instructions",
-  about: "about version license author github repository open source mit pawan osman",
+  about: "about version license author github repository open source mit Yao",
 };
 
 /** A group of related settings separated by subtle rules. */
@@ -226,7 +253,7 @@ function PatternList({ label, values, hint, onChange }: { label: string; values:
           {values.map((v) => (
             <span key={v} className="pattern-chip">
               <code>{v}</code>
-              <button className="icon-btn" title="Remove" onClick={() => onChange(values.filter((x) => x !== v))}>
+              <button className="icon-btn" title={tr("Remove")} onClick={() => onChange(values.filter((x) => x !== v))}>
                 <Icon name="close" size={11} />
               </button>
             </span>
@@ -241,7 +268,7 @@ function PatternList({ label, values, hint, onChange }: { label: string; values:
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
         />
-        <button className="btn-ghost sm" disabled={!draft.trim()} onClick={add}>Add</button>
+        <button className="btn-ghost sm" disabled={!draft.trim()} onClick={add}>{tr("Add")}</button>
       </div>
     </div>
   );
@@ -265,31 +292,30 @@ function ApprovalCard({
       <div className="fc-head" style={{ cursor: "pointer" }} onClick={() => setOpen((v) => !v)}>
         <div className="fc-title-input" style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Icon name={open ? "chevD" : "chevR"} size={14} />
-          <span>{action.label}</span>
+          <span>{tr(action.label)}</span>
           {hasLists && <span className="badge-tag glob">{(r.allowlist?.length ?? 0) + (r.denylist?.length ?? 0)} rules</span>}
         </div>
         <Select
-          aria-label={`${action.label} approval`}
+          aria-label={tr(action.label)}
           value={r.mode}
           onClick={(e) => e.stopPropagation()}
           onChange={(e) => patch({ mode: e.target.value as ApprovalMode })}
           className={"approval-mode " + r.mode}
         >
           {APPROVAL_MODES.map((m) => (
-            <option key={m.id} value={m.id}>{m.label}</option>
+            <option key={m.id} value={m.id}>{tr(m.label)}</option>
           ))}
         </Select>
       </div>
       {open && (
         <div className="fc-body">
           <p className="panel-hint" style={{ margin: 0 }}>
-            {action.desc} Currently: <strong>{APPROVAL_MODES.find((m) => m.id === r.mode)?.desc}</strong>.
-            Deny list always blocks; allow list always runs — both override the mode.
+            {tr(action.desc)} {tr("Currently:")} <strong>{tr(APPROVAL_MODES.find((m) => m.id === r.mode)?.desc ?? "")}</strong>. {tr("Deny list always blocks; allow list always runs — both override the mode.")}
           </p>
           {action.listsSupported && (
             <>
-              <PatternList label="Allow list (always run)" values={r.allowlist ?? []} hint={action.listHint} onChange={(v) => patch({ allowlist: v })} />
-              <PatternList label="Deny list (always block)" values={r.denylist ?? []} hint={action.listHint} onChange={(v) => patch({ denylist: v })} />
+              <PatternList label={tr("Allow list (always run)")} values={r.allowlist ?? []} hint={action.listHint} onChange={(v) => patch({ allowlist: v })} />
+              <PatternList label={tr("Deny list (always block)")} values={r.denylist ?? []} hint={action.listHint} onChange={(v) => patch({ denylist: v })} />
             </>
           )}
         </div>
@@ -363,16 +389,16 @@ function UsagePanel({
   const max = Math.max(1, ...rows.map(([, u]) => u.promptTokens + u.completionTokens));
   return (
     <>
-      <h1 className="page-title">Usage &amp; Quota</h1>
+      <h1 className="page-title">{tr("Usage & Quota")}</h1>
 
-      <div className="section-label">Token Usage</div>
+      <div className="section-label">{tr("Token Usage")}</div>
       <div className="index-card">
-        <div className="index-card-title">Total</div>
+        <div className="index-card-title">{tr("Total")}</div>
         <p className="row-desc">
-          {fmtTokens(totals.p)} input · {fmtTokens(totals.c)} output tokens across {totals.r} request attempt{totals.r === 1 ? "" : "s"} with reported usage. Includes billed retries. Tracked locally on this machine.
+          {fmtTokens(totals.p)} {tr("input ·")} {fmtTokens(totals.c)} {tr("output tokens across")} {totals.r} {tr("request attempt")}{totals.r === 1 ? "" : "s"} {tr("with reported usage. Includes billed retries. Tracked locally on this machine.")}
         </p>
         {rows.length === 0 ? (
-          <div className="empty-card" style={{ marginTop: 12 }}>No usage recorded yet. Start chatting to see per-model token usage.</div>
+          <div className="empty-card" style={{ marginTop: 12 }}>{tr("No usage recorded yet. Start chatting to see per-model token usage.")}</div>
         ) : (
           <div style={{ marginTop: 14 }}>
             {rows.map(([model, u]) => {
@@ -382,7 +408,7 @@ function UsagePanel({
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4, gap: 12 }}>
                     <span style={{ fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{model}</span>
                     <span className="row-desc" style={{ flex: "0 0 auto" }}>
-                      {fmtTokens(u.promptTokens)} in · {fmtTokens(u.completionTokens)} out · {u.requests} req
+                      {fmtTokens(u.promptTokens)} {tr("in ·")} {fmtTokens(u.completionTokens)} {tr("out ·")} {u.requests} req
                     </span>
                   </div>
                   <div className="row-desc" style={{ marginBottom: 4 }}><CacheUsage usage={u} /></div>
@@ -408,16 +434,16 @@ function UsagePanel({
       </div>
 
       <Group>
-        <Row title="Track Usage" desc="Record per-model token usage locally. No data ever leaves your machine.">
+        <Row title={tr("Track Usage")} desc={tr("Record per-model token usage locally. No data ever leaves your machine.")}>
           <Toggle checked={features.trackUsage !== false} onChange={(v) => setFeatures({ trackUsage: v })} />
         </Row>
       </Group>
 
-      <div className="section-label">Account Quota</div>
-      <p className="panel-hint">Rate-limit windows for your connected OAuth accounts ({oauthStatus.accounts.map((a) => OAUTH_LABEL[a.kind]).join(", ") || "none connected"}).</p>
+      <div className="section-label">{tr("Account Quota")}</div>
+      <p className="panel-hint">{tr("Rate-limit windows for your connected OAuth accounts (")}{oauthStatus.accounts.map((a) => OAUTH_LABEL[a.kind]).join(", ") || "none connected"}).</p>
       {oauthStatus.accounts.length === 0 ? (
         <div className="empty-card">
-          No OAuth accounts connected. Add one in the <strong>Providers → OAuth Accounts</strong> tab to see its quota here.
+          {tr("No OAuth accounts connected. Add one in the")} <strong>{tr("Providers → OAuth Accounts")}</strong> {tr("tab to see its quota here.")}
         </div>
       ) : (
         oauthStatus.accounts.map((a) => <OAuthAccountCard key={a.id} account={a} defaultOpen refreshToken={quotaRefresh} />)
@@ -463,7 +489,7 @@ function EmbedDeviceRow({ status, features }: { status: IndexStatus; features: F
   const remote = status.backend === "remote";
   return (
     <Row
-      title="Run Embeddings On"
+      title={tr("Run Embeddings On")}
       desc={remote
         ? "The selected embedding model runs on its provider; this applies to local models."
         : status.acceleratorError
@@ -472,7 +498,7 @@ function EmbedDeviceRow({ status, features }: { status: IndexStatus; features: F
     >
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
         <Select
-          aria-label="Embedding device"
+          aria-label={tr("Embedding device")}
           value={selected}
           disabled={remote || status.indexing || accelerators === null}
           onChange={(event) => vscode.postMessage({ type: "setEmbedAccelerator", id: event.target.value })}
@@ -482,8 +508,8 @@ function EmbedDeviceRow({ status, features }: { status: IndexStatus; features: F
         </Select>
         <button
           className="btn-ghost sm"
-          title="Detect GPUs again"
-          aria-label="Detect GPUs again"
+          title={tr("Detect GPUs again")}
+          aria-label={tr("Detect GPUs again")}
           disabled={accelerators === null}
           onClick={() => { setAccelerators(null); vscode.postMessage({ type: "embedAcceleratorsGet", refresh: true }); }}
         >
@@ -520,17 +546,17 @@ function IndexingPanel({
     accel === "gpu" ? "GPU" : accel === "cpu" ? "CPU" : accel === "remote" ? "Remote" : "Loading...";
   return (
     <>
-      <h1 className="page-title">Indexing &amp; Docs</h1>
-      <div className="section-label">Codebase</div>
+      <h1 className="page-title">{tr("Indexing & Docs")}</h1>
+      <div className="section-label">{tr("Codebase")}</div>
       <div className="index-card">
-        <div className="index-card-title">Codebase Indexing</div>
+        <div className="index-card-title">{tr("Codebase Indexing")}</div>
         <p className="row-desc">
           Embed codebase for improved contextual understanding and knowledge. Embeddings and metadata are
           stored locally on your machine - your code never leaves your computer. The index persists across
           restarts; only new or changed files are re-embedded.
         </p>
         <div className="index-divider" />
-        <Row title="Enable Indexing" desc="When off, background embedding stops. Existing index files stay on disk; text search remains available.">
+        <Row title={tr("Enable Indexing")} desc={tr("When off, background embedding stops. Existing index files stay on disk; text search remains available.")}>
           <Toggle
             checked={features.indexingEnabled !== false}
             onChange={(v) => setFeatures({ indexingEnabled: v })}
@@ -560,14 +586,14 @@ function IndexingPanel({
           </div>
           <dl className="index-tech">
             <div>
-              <dt>Model</dt>
+              <dt>{tr("Model")}</dt>
               <dd>
                 <code>{status.model}</code>
               </dd>
             </div>
             {status.modelRepo && (
               <div>
-                <dt>Repo</dt>
+                <dt>{tr("Repo")}</dt>
                 <dd>
                   <code>{status.modelRepo}</code>
                 </dd>
@@ -575,7 +601,7 @@ function IndexingPanel({
             )}
             {status.modelDtype && (
               <div>
-                <dt>Dtype</dt>
+                <dt>{tr("Dtype")}</dt>
                 <dd>
                   <code>{status.modelDtype}</code>
                 </dd>
@@ -583,7 +609,7 @@ function IndexingPanel({
             )}
             {status.modelPooling && (
               <div>
-                <dt>Pooling</dt>
+                <dt>{tr("Pooling")}</dt>
                 <dd>
                   <code>{status.modelPooling}</code>
                 </dd>
@@ -591,7 +617,7 @@ function IndexingPanel({
             )}
             {status.modelDim != null && (
               <div>
-                <dt>Dimensions</dt>
+                <dt>{tr("Dimensions")}</dt>
                 <dd>
                   <code>{status.modelDim}</code>
                 </dd>
@@ -599,34 +625,34 @@ function IndexingPanel({
             )}
             {status.device != null && status.device !== "" && (
               <div>
-                <dt>ONNX EP</dt>
+                <dt>{tr("ONNX EP")}</dt>
                 <dd>
                   <code>{status.device}</code>
                 </dd>
               </div>
             )}
             <div>
-              <dt>Backend</dt>
+              <dt>{tr("Backend")}</dt>
               <dd>
                 <code>{status.backend || "local"}</code>
               </dd>
             </div>
             {status.remoteBaseUrl && (
               <div>
-                <dt>Endpoint</dt>
+                <dt>{tr("Endpoint")}</dt>
                 <dd>
                   <code>{status.remoteBaseUrl}</code>
                 </dd>
               </div>
             )}
             <div>
-              <dt>Runtime</dt>
+              <dt>{tr("Runtime")}</dt>
               <dd>
                 <code>{status.runtime || "—"}</code>
               </dd>
             </div>
             <div>
-              <dt>Platform</dt>
+              <dt>{tr("Platform")}</dt>
               <dd>
                 <code>{status.platform || "—"}</code>
               </dd>
@@ -635,7 +661,7 @@ function IndexingPanel({
         </div>
         <div className="index-divider" />
         <div className="index-model-row">
-          <span className="index-model-label">Embedding model</span>
+          <span className="index-model-label">{tr("Embedding model")}</span>
           <ModelSelect
             models={remoteEmbed}
             value={status.model}
@@ -645,38 +671,110 @@ function IndexingPanel({
           />
           <div className="index-actions" style={{ marginTop: 0, marginLeft: "auto" }}>
             {status.paused ? (
-              <button className="btn-secondary" disabled={features.indexingEnabled === false} onClick={() => vscode.postMessage({ type: "resumeIndex" })} title="Continue indexing; files already embedded are skipped">
-                <Icon name="play" /> Resume
+              <button className="btn-secondary" disabled={features.indexingEnabled === false} onClick={() => vscode.postMessage({ type: "resumeIndex" })} title={tr("Continue indexing; files already embedded are skipped")}>
+                <Icon name="play" /> {tr("Resume")}
               </button>
             ) : status.indexing ? (
-              <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "pauseIndex" })} title="Stop after the current batch and keep progress. Indexing stays enabled.">
-                <Icon name="stop" /> Pause
+              <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "pauseIndex" })} title={tr("Stop after the current batch and keep progress. Indexing stays enabled.")}>
+                <Icon name="stop" /> {tr("Pause")}
               </button>
             ) : (
               <button className="btn-secondary" disabled={features.indexingEnabled === false} onClick={() => vscode.postMessage({ type: "syncIndex" })}>
-                <Icon name="reset" /> Sync
+                <Icon name="reset" /> {tr("Sync")}
               </button>
             )}
             <button className="btn-secondary danger" disabled={status.indexing} onClick={() => vscode.postMessage({ type: "deleteIndex" })}>
-              <Icon name="trash" /> Delete Index
+              <Icon name="trash" /> {tr("Delete Index")}
             </button>
           </div>
         </div>
       </div>
       <div className="index-card rows-card">
         <EmbedDeviceRow status={status} features={features} />
-        <Row title="Index New Folders" desc="Automatically index any new folders added to the workspace">
+        <Row title={tr("Index New Folders")} desc={tr("Automatically index any new folders added to the workspace")}>
           <Toggle checked={features.indexNewFolders !== false} onChange={(v) => setFeatures({ indexNewFolders: v })} disabled={features.indexingEnabled === false} />
         </Row>
-        <Row title="Ignore Files in .cursorignore" desc="Files to exclude from indexing in addition to .gitignore">
-          <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openCursorignore" })}>Edit</button>
+        <Row title={tr("Ignore Files in .cursorignore")} desc={tr("Files to exclude from indexing in addition to .gitignore")}>
+          <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "aiWorkHarnessignore" })}>{tr("Edit")}</button>
         </Row>
-        <Row title="Index Repositories for Instant Grep" desc="Automatically index repositories to speed up Grep searches. All data is stored locally.">
+        <Row title={tr("Index Repositories for Instant Grep")} desc={tr("Automatically index repositories to speed up Grep searches. All data is stored locally.")}>
           <Toggle checked={features.indexForGrep !== false} onChange={(v) => setFeatures({ indexForGrep: v })} disabled={features.indexingEnabled === false} />
         </Row>
       </div>
       <DocsSection docs={docs} status={docsStatus} />
     </>
+  );
+}
+
+function EngineStatusRow({
+  engine,
+  installing,
+  log,
+  result,
+}: {
+  engine: EngineStatusInfo;
+  installing: boolean;
+  log?: string[];
+  result?: EngineInstallResult;
+}) {
+  const [copied, setCopied] = React.useState(false);
+  const copy = async () => {
+    if (!engine.installCommand) return;
+    try {
+      await navigator.clipboard.writeText(engine.installCommand);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* clipboard unavailable — keep the command text selectable */
+    }
+  };
+  return (
+    <div className="row">
+      <div className="row-text">
+        <div className="row-title">
+          {engine.label}{" "}
+          {installing ? (
+            <span className="badge-tag loading"><span className="llama-spinner" /> {tr("Installing…")}</span>
+          ) : engine.available ? (
+            <span className="badge-tag engine-status-badge ok">{tr("Installed")}</span>
+          ) : engine.manual ? (
+            <span className="badge-tag engine-status-badge missing">{tr("Manual install required")}</span>
+          ) : (
+            <span className="badge-tag engine-status-badge missing">{tr("Not installed")}</span>
+          )}
+        </div>
+        {engine.binaryPath && <div className="row-desc engine-status-path" title={engine.binaryPath}>{engine.binaryPath}</div>}
+        {engine.source && (
+          <div className="row-desc engine-status-path">{tr(ENGINE_SOURCE_LABELS[engine.source] || engine.source)}</div>
+        )}
+        {engine.installCommand && (
+          <div className="engine-status-command">
+            <code title={engine.installCommand}>{engine.installCommand}</code>
+            <button className="btn-secondary" onClick={copy} disabled={installing}>{copied ? tr("Copied") : tr("Copy command")}</button>
+          </div>
+        )}
+        {result?.detail && <div className={"row-desc" + (result.ok ? "" : " engine-status-error")}>{tr(result.detail)}</div>}
+        {installing && log && log.length > 0 && (
+          <div className="engine-status-log">
+            <div className="row-desc">{tr("Installation log")}</div>
+            <pre className="llama-log-pre">{log.join("\n")}</pre>
+          </div>
+        )}
+      </div>
+      <div className="row-control">
+        <button className="btn-secondary" disabled={installing} onClick={() => vscode.postMessage({ type: "pickEnginePath", id: engine.id })}>{tr("Select installed path")}</button>
+        {engine.source === "override" && (
+          <button className="btn-secondary" disabled={installing} onClick={() => vscode.postMessage({ type: "clearEnginePath", id: engine.id })}>{tr("Clear path")}</button>
+        )}
+        {installing ? (
+          <button className="btn-secondary" disabled>{tr("Install")}</button>
+        ) : !engine.available && engine.installCommand ? (
+          <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "installEngine", id: engine.id })}>{tr("Install")}</button>
+        ) : !engine.available && engine.manual && engine.docsUrl ? (
+          <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: engine.docsUrl })}>{tr("Open docs")}</button>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -702,6 +800,10 @@ export function App() {
   const [ollamaModels, setOllamaModels] = React.useState<OllamaModel[]>([]);
   const [oauthStatus, setOauthStatus] = React.useState<OAuthStatus>({ accounts: [], errors: {} });
   const [usage, setUsage] = React.useState<Record<string, ModelUsage>>({});
+  const [engineStatus, setEngineStatus] = React.useState<EngineStatusInfo[]>([]);
+  const [engineInstalling, setEngineInstalling] = React.useState<string | null>(null);
+  const [engineLogs, setEngineLogs] = React.useState<Record<string, string[]>>({});
+  const [engineResults, setEngineResults] = React.useState<Record<string, EngineInstallResult>>({});
   const [navQuery, setNavQuery] = React.useState("");
 
   React.useEffect(() => { setMotionPreference(features.motion); }, [features.motion]);
@@ -733,6 +835,7 @@ export function App() {
         setModels(msg.models || []);
         if (msg.modelList) setModelList(msg.modelList);
       } else if (msg.type === "features") {
+        setLocale(msg.language);
         setFeaturesState({ ...EMPTY_FEATURES, ...msg.features });
         setMcpStatus(msg.mcpStatus || []);
         setRules(msg.rules || []);
@@ -759,6 +862,26 @@ export function App() {
         setOauthStatus(msg.status);
       } else if (msg.type === "usageData") {
         setUsage(msg.usage || {});
+      } else if (msg.type === "engineStatus") {
+        setEngineStatus(msg.engines || []);
+      } else if (msg.type === "engineInstallStarted") {
+        setEngineInstalling(msg.id);
+        setEngineLogs((prev) => ({ ...prev, [msg.id]: [] }));
+        setEngineResults((prev) => {
+          const next = { ...prev };
+          delete next[msg.id];
+          return next;
+        });
+      } else if (msg.type === "engineInstallProgress") {
+        setEngineLogs((prev) => ({
+          ...prev,
+          [msg.id]: [...(prev[msg.id] || []), String(msg.line ?? "")].slice(-200),
+        }));
+      } else if (msg.type === "engineInstallDone") {
+        setEngineInstalling(null);
+        setEngineResults((prev) => ({ ...prev, [msg.id]: { ok: !!msg.ok, detail: msg.detail } }));
+      } else if (msg.type === "enginePathPicked") {
+        // A successful pick is followed by a fresh engineStatus; cancels need no UI change.
       }
     };
     window.addEventListener("message", handler);
@@ -775,6 +898,11 @@ export function App() {
     if (section === "usage") vscode.postMessage({ type: "getUsage" });
   }, [section]);
 
+  // Probe external engine installs whenever the Agents page is opened.
+  React.useEffect(() => {
+    if (section === "agents") vscode.postMessage({ type: "getEngineStatus" });
+  }, [section]);
+
   // Fetch models across every enabled provider (grouped). Disabled providers are skipped.
   const fetchModels = () => vscode.postMessage({ type: "fetchAllModels" });
 
@@ -787,7 +915,7 @@ export function App() {
   const navFiltered = navQuery.trim()
     ? NAV.filter((n) => {
         const q = navQuery.trim().toLowerCase();
-        return n.label.toLowerCase().includes(q) || (SECTION_KEYWORDS[n.id] || "").includes(q);
+        return tr(n.label).toLowerCase().includes(q) || n.label.toLowerCase().includes(q) || (SECTION_KEYWORDS[n.id] || "").includes(q);
       })
     : NAV;
 
@@ -797,15 +925,15 @@ export function App() {
         <div className="brand">
           <img className="brand-badge" src={document.getElementById("root")?.dataset.icon} alt="" />
           <span>
-            <span className="brand-name">Settings</span>
-            <span className="brand-sub">OpenCursor</span>
+            <span className="brand-name">{tr("Settings")}</span>
+            <span className="brand-sub">{tr("AiWorkHarness")}</span>
           </span>
         </div>
         <input
           className="nav-search"
           type="search"
-          placeholder="Search settings"
-          aria-label="Search settings"
+          placeholder={tr("Search settings")}
+          aria-label={tr("Search settings")}
           value={navQuery}
           onChange={(e) => setNavQuery(e.target.value)}
         />
@@ -814,12 +942,12 @@ export function App() {
             {n.sep && !navQuery && <div className="nav-sep" />}
             <button className={"nav-item" + (section === n.id ? " active" : "")} aria-current={section === n.id ? "page" : undefined} onClick={() => setSection(n.id)}>
               <Icon name={n.icon} />
-              <span>{n.label}</span>
+              <span>{tr(n.label)}</span>
             </button>
             {n.id === "general" && !navQuery && (
               <button className="nav-item" onClick={() => vscode.postMessage({ type: "openVsCodeSettings" })}>
                 <Icon name="code" />
-                <span>VS Code Settings ↗</span>
+                <span>{tr("VS Code Settings ↗")}</span>
               </button>
             )}
           </React.Fragment>
@@ -831,40 +959,47 @@ export function App() {
         <div className="content-inner" key={section}>
           {section === "general" && (
             <>
-              <h1 className="page-title">General</h1>
+              <h1 className="page-title">{tr("General")}</h1>
 
               <Group>
-                <Row title="Providers & API Keys" desc="Manage the AI providers, API keys and OAuth accounts this extension talks to.">
-                  <button className="btn-secondary" onClick={() => setSection("providers")}>Open</button>
+                <Row title={tr("Providers & API Keys")} desc={tr("Manage the AI providers, API keys and OAuth accounts this extension talks to.")}>
+                  <button className="btn-secondary" onClick={() => setSection("providers")}>{tr("Open")}</button>
                 </Row>
               </Group>
 
-              <div className="section-label">Preferences</div>
+              <div className="section-label">{tr("Preferences")}</div>
               <Group>
-                <Row title="Animations" desc="Enable animated loading indicators and transitions, follow your system preference, or reduce motion.">
-                  <Select aria-label="Animations" value={features.motion} onChange={(event) => setFeatures({ motion: event.target.value as MotionPreference })}>
-                    <option value="full">Enabled</option>
-                    <option value="system">Follow system</option>
-                    <option value="reduced">Reduced motion</option>
+                <Row title={tr("Language")} desc={tr("Choose the language used by the chat and settings interface. Auto follows VS Code's display language.")}>
+                  <Select aria-label={tr("Language")} value={features.language ?? "auto"} onChange={(event) => setFeatures({ language: event.target.value as LanguagePreference })}>
+                    {LANGUAGE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{tr(option.label)}</option>
+                    ))}
                   </Select>
                 </Row>
-                <Row title="Editor Settings" desc="Configure font, formatting, minimap and more.">
-                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openEditorSettings" })}>Open ↗</button>
+                <Row title={tr("Animations")} desc={tr("Enable animated loading indicators and transitions, follow your system preference, or reduce motion.")}>
+                  <Select aria-label={tr("Animations")} value={features.motion} onChange={(event) => setFeatures({ motion: event.target.value as MotionPreference })}>
+                    <option value="full">{tr("Enabled")}</option>
+                    <option value="system">{tr("Follow system")}</option>
+                    <option value="reduced">{tr("Reduced motion")}</option>
+                  </Select>
                 </Row>
-                <Row title="Keyboard Shortcuts" desc="Configure keyboard shortcuts.">
-                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openKeyboardShortcuts" })}>Open ↗</button>
+                <Row title={tr("Editor Settings")} desc={tr("Configure font, formatting, minimap and more.")}>
+                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openEditorSettings" })}>{tr("Open ↗")}</button>
                 </Row>
-                <Row title="VS Code Settings" desc="Open the native VS Code settings UI.">
-                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openVsCodeSettings" })}>Open ↗</button>
+                <Row title={tr("Keyboard Shortcuts")} desc={tr("Configure keyboard shortcuts.")}>
+                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openKeyboardShortcuts" })}>{tr("Open ↗")}</button>
+                </Row>
+                <Row title={tr("VS Code Settings")} desc={tr("Open the native VS Code settings UI.")}>
+                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openVsCodeSettings" })}>{tr("Open ↗")}</button>
                 </Row>
               </Group>
 
-              <div className="section-label">Chat</div>
+              <div className="section-label">{tr("Chat")}</div>
               <Group>
-                <Row title="Auto-Generate Chat Titles" desc="Generate a short AI title for new conversations after the first message.">
+                <Row title={tr("Auto-Generate Chat Titles")} desc={tr("Generate a short AI title for new conversations after the first message.")}>
                   <Toggle checked={features.autoGenerateTitles !== false} onChange={(v) => setFeatures({ autoGenerateTitles: v })} />
                 </Row>
-                <Row title="Per-Tab Composer Drafts" desc="Keep a separate unsent message per chat tab. When off, the composer text follows you between tabs.">
+                <Row title={tr("Per-Tab Composer Drafts")} desc={tr("Keep a separate unsent message per chat tab. When off, the composer text follows you between tabs.")}>
                   <Toggle checked={features.perTabDrafts === true} onChange={(v) => setFeatures({ perTabDrafts: v })} />
                 </Row>
                 {/* Auto model (judge routing) hidden for now — bring back later.
@@ -880,37 +1015,35 @@ export function App() {
                 */}
               </Group>
 
-              <div className="section-label">Notifications</div>
+              <div className="section-label">{tr("Notifications")}</div>
               <Group>
-                <Row title="System Notifications" desc="Show a notification when the agent finishes responding while the window is unfocused.">
+                <Row title={tr("System Notifications")} desc={tr("Show a notification when the agent finishes responding while the window is unfocused.")}>
                   <Toggle checked={features.notifyOnComplete !== false} onChange={(v) => setFeatures({ notifyOnComplete: v })} />
                 </Row>
-                <Row title="Completion Sound" desc="Play a sound when the agent finishes responding.">
+                <Row title={tr("Completion Sound")} desc={tr("Play a sound when the agent finishes responding.")}>
                   <Toggle checked={features.completionSound === true} onChange={(v) => setFeatures({ completionSound: v })} />
                 </Row>
               </Group>
 
-              <div className="section-label">Privacy</div>
+              <div className="section-label">{tr("Privacy")}</div>
               <p className="panel-hint">
-                OpenCursor is fully local and open source. There is no OpenCursor backend - your code,
-                keys and conversations stay on your machine and are only ever sent to the AI providers
-                you configure yourself.
+                {tr("AiWorkHarness is fully local and open source. There is no AiWorkHarness backend - your code, keys and conversations stay on your machine and are only ever sent to the AI providers you configure yourself.")}
               </p>
               <Group>
-                <Row title="Local-First" desc="Conversations, settings and workspace context are stored on this device (VS Code global storage).">
-                  <span className="badge-tag always">Always on</span>
+                <Row title={tr("Local-First")} desc={tr("Conversations, settings and workspace context are stored on this device (VS Code global storage).")}>
+                  <span className="badge-tag always">{tr("Always on")}</span>
                 </Row>
-                <Row title="Secure Key Storage" desc="API keys and OAuth tokens are kept in the OS secret store (VS Code SecretStorage), never in plain-text settings or synced files.">
-                  <span className="badge-tag always">Encrypted</span>
+                <Row title={tr("Secure Key Storage")} desc={tr("API keys and OAuth tokens are kept in the OS secret store (VS Code SecretStorage), never in plain-text settings or synced files.")}>
+                  <span className="badge-tag always">{tr("Encrypted")}</span>
                 </Row>
-                <Row title="No Telemetry" desc="OpenCursor collects no analytics, usage metrics or crash reports. The only outbound requests are the AI calls you trigger to your configured providers.">
-                  <span className="badge-tag always">None</span>
+                <Row title={tr("No Telemetry")} desc={tr("AiWorkHarness collects no analytics, usage metrics or crash reports. The only outbound requests are the AI calls you trigger to your configured providers.")}>
+                  <span className="badge-tag always">{tr("None")}</span>
                 </Row>
-                <Row title="You Choose the Destination" desc="Every request goes to the exact provider you set up — a hosted API, your own OpenAI/Anthropic-compatible endpoint, or a fully offline model via llama.cpp / Ollama.">
-                  <span className="badge-tag">Your providers</span>
+                <Row title={tr("You Choose the Destination")} desc={tr("Every request goes to the exact provider you set up — a hosted API, your own OpenAI/Anthropic-compatible endpoint, or a fully offline model via llama.cpp / Ollama.")}>
+                  <span className="badge-tag">{tr("Your providers")}</span>
                 </Row>
-                <Row title="Open Source" desc="The full source is public and MIT-licensed, so anyone can audit exactly what the extension does with your data.">
-                  <span className="badge-tag glob">MIT</span>
+                <Row title={tr("Open Source")} desc={tr("The full source is public and MIT-licensed, so anyone can audit exactly what the extension does with your data.")}>
+                  <span className="badge-tag glob">{tr("MIT")}</span>
                 </Row>
               </Group>
             </>
@@ -918,40 +1051,103 @@ export function App() {
 
           {section === "agents" && (
             <>
-              <h1 className="page-title">Agents</h1>
+              <h1 className="page-title">{tr("Agents")}</h1>
 
               <Group>
-                <Row title="Text Size" desc="Adjust the conversation text size.">
+                <Row title={tr("Agent engine")} desc={tr("Choose which engine drives agent turns. External engines run their own CLI; AiWorkHarness handles chat, approvals and the UI.")}>
                   <Select
-                    aria-label="Text size"
+                    aria-label={tr("Agent engine")}
+                    value={features.agentEngine ?? "builtin"}
+                    onChange={(e) => setFeatures({ agentEngine: e.target.value as FeatureConfig["agentEngine"] })}
+                  >
+                    <option value="builtin">{tr("Built-in (recommended)")}</option>
+                    <option value="claude-code">Claude Code</option>
+                    <option value="opencode">OpenCode</option>
+                    <option value="dsh">{tr("DeepSeek Harness (experimental)")}</option>
+                    <option value="gemini">Gemini CLI</option>
+                    <option value="qwen">Qwen Code</option>
+                    <option value="kimi">Kimi CLI</option>
+                    <option value="crush">Crush</option>
+                    <option value="zcode">ZCode</option>
+                    <option value="pi">pi</option>
+                    <option value="codex">Codex</option>
+                  </Select>
+                </Row>
+                <Row title={tr("Use AiWorkHarness models for external engines")} desc={tr("Route the engine's model calls through a local bridge. It listens only on 127.0.0.1 with a random port and token, so only this machine can reach it.")}>
+                  <Toggle checked={features.engineBridgeEnabled === true} onChange={(v) => setFeatures({ engineBridgeEnabled: v })} />
+                </Row>
+                {features.engineBridgeEnabled === true && (
+                  <Row title={tr("Bridged model")} desc={tr("Force one AiWorkHarness model; leave empty to honor the model requested by the engine.")}>
+                    <Select
+                      aria-label={tr("Bridged model")}
+                      value={features.engineBridgeModel || ""}
+                      onChange={(e) => setFeatures({ engineBridgeModel: e.target.value })}
+                    >
+                      <option value="">{tr("Engine's requested model")}</option>
+                      {modelList.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name || m.id}</option>
+                      ))}
+                    </Select>
+                  </Row>
+                )}
+                <Row title={tr("Text Size")} desc={tr("Adjust the conversation text size.")}>
+                  <Select
+                    aria-label={tr("Text size")}
                     value={features.chatTextSize || "default"}
                     onChange={(e) => setFeatures({ chatTextSize: e.target.value as FeatureConfig["chatTextSize"] })}
                   >
-                    <option value="compact">Compact</option>
-                    <option value="default">Default</option>
-                    <option value="large">Large</option>
+                    <option value="compact">{tr("Compact")}</option>
+                    <option value="default">{tr("Default")}</option>
+                    <option value="large">{tr("Large")}</option>
                   </Select>
                 </Row>
-                <Row title="Submit with Ctrl + Enter" desc="When enabled, Ctrl + Enter submits chat and Enter inserts a newline.">
+                <Row title={tr("Submit with Ctrl + Enter")} desc={tr("When enabled, Ctrl + Enter submits chat and Enter inserts a newline.")}>
                   <Toggle checked={features.submitWithCtrlEnter === true} onChange={(v) => setFeatures({ submitWithCtrlEnter: v })} />
                 </Row>
-                <Row title="Max Tab Count" desc="Limit how many chat tabs can be open at once (0 = unlimited).">
+                <Row title={tr("Max Tab Count")} desc={tr("Limit how many chat tabs can be open at once (0 = unlimited).")}>
                   <NumInput value={features.maxTabCount || null} step="1" min="0" placeholder="unlimited" onChange={(v) => setFeatures({ maxTabCount: v ?? 0 })} />
                 </Row>
               </Group>
 
-              <div className="section-label">Run Limits</div>
+              <div className="docs-head">
+                <div className="section-label">{tr("Engine status")}</div>
+                <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "getEngineStatus" })}>
+                  <Icon name="reset" /> {tr("Recheck")}
+                </button>
+              </div>
+              {engineStatus.length > 0 && (
+                <>
+                  <p className="panel-hint">
+                    {engineStatus[0]?.installScope === "global"
+                      ? tr("Installs into the global npm environment.")
+                      : tr("Installs into the extension folder — your global npm environment stays untouched.")}
+                  </p>
+                  <Group>
+                    {engineStatus.map((engine) => (
+                      <EngineStatusRow
+                        key={engine.id}
+                        engine={engine}
+                        installing={engineInstalling === engine.id}
+                        log={engineLogs[engine.id]}
+                        result={engineResults[engine.id]}
+                      />
+                    ))}
+                  </Group>
+                </>
+              )}
+
+              <div className="section-label">{tr("Run Limits")}</div>
               <Group>
-                <Row title="Max Agent Steps" desc="Pause the agent after this many steps in a single run (0 = default 50).">
+                <Row title={tr("Max Agent Steps")} desc={tr("Pause the agent after this many steps in a single run (0 = default 50).")}>
                   <NumInput value={features.maxAgentSteps || null} step="1" min="0" placeholder="50" onChange={(v) => setFeatures({ maxAgentSteps: v ?? 0 })} />
                 </Row>
-                <Row title="Auto Continue" desc="Automatically continue when the step limit is reached instead of pausing.">
+                <Row title={tr("Auto Continue")} desc={tr("Automatically continue when the step limit is reached instead of pausing.")}>
                   <Toggle checked={features.autoContinue === true} onChange={(v) => setFeatures({ autoContinue: v })} />
                 </Row>
               </Group>
 
-              <div className="section-label">Tool Timeouts</div>
-              <p className="panel-hint">Hard timeout per tool (seconds). Empty = built-in default. Prevents a hung tool from blocking the agent forever.</p>
+              <div className="section-label">{tr("Tool Timeouts")}</div>
+              <p className="panel-hint">{tr("Hard timeout per tool (seconds). Empty = built-in default. Prevents a hung tool from blocking the agent forever.")}</p>
               <Group>
                 {TOOL_TIMEOUT_DEFAULTS.map(({ name, sec }) => {
                   const overrides = features.toolTimeoutsSec || {};
@@ -975,24 +1171,24 @@ export function App() {
                 })}
               </Group>
 
-              <div className="section-label">Subagents</div>
+              <div className="section-label">{tr("Subagents")}</div>
               <p className="panel-hint">
-                Subagents, teams and the default subagent model live in the <button className="link-btn" onClick={() => setSection("subagents")}>Subagents &amp; Teams</button> tab.
+                {tr("Subagents, teams and the default subagent model live in the")} <button className="link-btn" onClick={() => setSection("subagents")}>{tr("Subagents & Teams")}</button> {tr("tab.")}
               </p>
 
-              <div className="section-label">Context</div>
+              <div className="section-label">{tr("Context")}</div>
               <Group>
-                <Row title="Web Search Tool" desc="Allow the agent to search the web for relevant information.">
+                <Row title={tr("Web Search Tool")} desc={tr("Allow the agent to search the web for relevant information.")}>
                   <Toggle checked={features.webSearchEnabled !== false} onChange={(v) => setFeatures({ webSearchEnabled: v })} />
                 </Row>
-                <Row title="Web Fetch Tool" desc="Allow the agent to fetch content from URLs.">
+                <Row title={tr("Web Fetch Tool")} desc={tr("Allow the agent to fetch content from URLs.")}>
                   <Toggle checked={features.webFetchEnabled !== false} onChange={(v) => setFeatures({ webFetchEnabled: v })} />
                 </Row>
               </Group>
 
-              <div className="section-label">Approvals &amp; Execution</div>
+              <div className="section-label">{tr("Approvals & Execution")}</div>
               <p className="panel-hint">
-                Tool capabilities and approval gates live in the <button className="link-btn" onClick={() => setSection("behavior")}>Behavior</button> tab.
+                {tr("Tool capabilities and approval gates live in the")} <button className="link-btn" onClick={() => setSection("behavior")}>{tr("Behavior")}</button> {tr("tab.")}
               </p>
             </>
           )}
@@ -1040,25 +1236,23 @@ export function App() {
 
           {section === "behavior" && (
             <>
-              <h1 className="page-title">Behavior</h1>
-              <div className="section-label">Capabilities</div>
+              <h1 className="page-title">{tr("Behavior")}</h1>
+              <div className="section-label">{tr("Capabilities")}</div>
               <Group>
-                <Row title="Workspace Context" desc="Include workspace info in the agent's context.">
+                <Row title={tr("Workspace Context")} desc={tr("Include workspace info in the agent's context.")}>
                   <Toggle checked={s.enableWorkspaceContext} onChange={(v) => set("enableWorkspaceContext", v)} />
                 </Row>
-                <Row title="File Reading Tools" desc="Allow reading, searching and listing files.">
+                <Row title={tr("File Reading Tools")} desc={tr("Allow reading, searching and listing files.")}>
                   <Toggle checked={s.enableFileReading} onChange={(v) => set("enableFileReading", v)} />
                 </Row>
-                <Row title="Terminal Tools" desc="Allow running terminal commands.">
+                <Row title={tr("Terminal Tools")} desc={tr("Allow running terminal commands.")}>
                   <Toggle checked={s.enableTerminalSuggestions} onChange={(v) => set("enableTerminalSuggestions", v)} />
                 </Row>
               </Group>
 
-              <div className="section-label">Approvals &amp; Execution</div>
+              <div className="section-label">{tr("Approvals & Execution")}</div>
               <p className="panel-hint">
-                Per-action approval policy. <strong>Allow</strong> runs silently, <strong>Auto Review</strong> only asks
-                for risky-looking actions (destructive commands, secrets, deletes), <strong>Ask</strong> prompts every
-                time, <strong>Deny</strong> always blocks. Allow/deny lists override the mode per command or file pattern.
+                {tr("Per-action approval policy.")} <strong>{tr("Allow")}</strong> {tr("runs silently,")} <strong>{tr("Auto Review")}</strong> {tr("only asks for risky-looking actions (destructive commands, secrets, deletes),")} <strong>{tr("Ask")}</strong> {tr("prompts every time,")} <strong>{tr("Deny")}</strong> {tr("always blocks. Allow/deny lists override the mode per command or file pattern.")}
               </p>
               {APPROVAL_ACTIONS.map((a) => (
                 <ApprovalCard
@@ -1073,7 +1267,7 @@ export function App() {
                   className="btn-ghost sm"
                   onClick={() => setFeatures({ approvalPolicy: DEFAULT_APPROVAL })}
                 >
-                  <Icon name="reset" size={13} /> Reset policy to defaults
+                  <Icon name="reset" size={13} /> {tr("Reset policy to defaults")}
                 </button>
               </div>
             </>
@@ -1085,9 +1279,9 @@ export function App() {
 
           {section === "advanced" && (
             <>
-              <h1 className="page-title">Advanced</h1>
-              <div className="section-label">Custom Instructions</div>
-              <Row title="System Prompt" desc="Prepended to the agent's system prompt for every request." stacked>
+              <h1 className="page-title">{tr("Advanced")}</h1>
+              <div className="section-label">{tr("Custom Instructions")}</div>
+              <Row title={tr("System Prompt")} desc={tr("Prepended to the agent's system prompt for every request.")} stacked>
                 <textarea rows={6} value={s.systemPrompt} onChange={(e) => set("systemPrompt", e.target.value)} />
               </Row>
             </>
@@ -1095,37 +1289,37 @@ export function App() {
 
           {section === "about" && (
             <>
-              <h1 className="page-title">About</h1>
+              <h1 className="page-title">{tr("About")}</h1>
               <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "6px 0 18px" }}>
                 <img src={document.getElementById("root")?.dataset.icon} alt="" style={{ width: 48, height: 48, borderRadius: 10 }} />
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 600 }}>OpenCursor</div>
-                  <div className="row-desc" style={{ margin: 0 }}>AI coding agent chat inside VS Code — local, open source.</div>
+                  <div style={{ fontSize: 16, fontWeight: 600 }}>{tr("AiWorkHarness")}</div>
+                  <div className="row-desc" style={{ margin: 0 }}>{tr("AI coding agent chat inside VS Code — local, open source.")}</div>
                 </div>
               </div>
               <Group>
-                <Row title="Author" desc="Created and maintained by Pawan Osman.">
-                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/PawanOsman" })}>GitHub ↗</button>
+                <Row title={tr("Author")} desc={tr("Created and maintained by Yao.")}>
+                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/westhack" })}>{tr("GitHub ↗")}</button>
                 </Row>
-                <Row title="Repository" desc="Source code, issues and contributions.">
-                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/PawanOsman/OpenCursor" })}>Open ↗</button>
+                <Row title={tr("Repository")} desc={tr("Source code, issues and contributions.")}>
+                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/westhack/ai-work-harness" })}>{tr("Open ↗")}</button>
                 </Row>
-                <Row title="Report an Issue" desc="Found a bug or have a feature request?">
-                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/PawanOsman/OpenCursor/issues" })}>Issues ↗</button>
+                <Row title={tr("Report an Issue")} desc={tr("Found a bug or have a feature request?")}>
+                  <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "openExternal", url: "https://github.com/westhack/ai-work-harness/issues" })}>{tr("Issues ↗")}</button>
                 </Row>
-                <Row title="License" desc="Free and open source under the MIT License.">
-                  <span className="badge-tag glob">MIT</span>
+                <Row title={tr("License")} desc={tr("Free and open source under the MIT License.")}>
+                  <span className="badge-tag glob">{tr("MIT")}</span>
                 </Row>
               </Group>
-              <p className="panel-hint">Copyright © 2026 Pawan Osman. Licensed under the MIT License.</p>
+              <p className="panel-hint">{tr("Copyright © 2026 Yao. Licensed under the MIT License.")}</p>
             </>
           )}
 
         </div>
         </div>
-        <footer className="settings-actions" aria-label="Settings actions">
+        <footer className="settings-actions" aria-label={tr("Settings actions")}>
           <div className="settings-actions-inner">
-            <button className="btn-save" onClick={save}>Save</button>
+            <button className="btn-save" onClick={save}>{tr("Save")}</button>
           </div>
         </footer>
       </main>

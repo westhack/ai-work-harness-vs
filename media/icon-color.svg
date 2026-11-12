@@ -1,0 +1,38 @@
+<!--
+Copyright (c) 2026 Yao
+
+This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+https://github.com/westhack/ai-work-harness
+
+Licensed under the MIT License. See LICENSE file in the project root.
+
+Source artwork for media/icon.png: a bold "A" (AiWorkHarness) held by a cyan
+harness rail — one core, many engines strapped to it.
+-->
+
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tile" x1="16" y1="8" x2="112" y2="122" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3B3FE0"/>
+      <stop offset="0.55" stop-color="#5B4BEA"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(38 22) scale(84)">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="128" height="128" rx="30" fill="url(#tile)"/>
+  <rect width="128" height="128" rx="30" fill="url(#sheen)"/>
+  <rect x="0.9" y="0.9" width="126.2" height="126.2" rx="29.2" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="1.8"/>
+
+  <circle cx="64" cy="64" r="46" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="1.6"/>
+
+  <!-- the A itself -->
+  <path d="M64 30L38.5 98" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round"/>
+  <path d="M64 30L89.5 98" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round"/>
+
+  <!-- harness rail: a strap clamped across the A -->
+  <path d="M36 74H92" stroke="#22D3EE" stroke-width="11" stroke-linecap="round"/>
+</svg>

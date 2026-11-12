@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -15,7 +15,7 @@ import { LocalPluginManager, installedPluginSkills } from "./pluginManager";
 
 let root: string, source: string, manager: LocalPluginManager;
 beforeEach(async () => {
-  root = await fs.mkdtemp(path.join(tmpdir(), "ocursor-plugin-test-"));
+  root = await fs.mkdtemp(path.join(tmpdir(), "aiworkharness-plugin-test-"));
   source = path.join(root, "source");
   await fs.mkdir(path.join(source, ".codex-plugin"), { recursive: true });
   await fs.mkdir(path.join(source, "skills", "review"), { recursive: true });
@@ -25,7 +25,7 @@ beforeEach(async () => {
   manager = new LocalPluginManager(path.join(root, "installed"));
 });
 afterEach(async () => {
-  if (!path.resolve(root).startsWith(path.resolve(tmpdir()) + path.sep) || !path.basename(root).startsWith("ocursor-plugin-test-")) throw new Error("Unexpected test cleanup path");
+  if (!path.resolve(root).startsWith(path.resolve(tmpdir()) + path.sep) || !path.basename(root).startsWith("aiworkharness-plugin-test-")) throw new Error("Unexpected test cleanup path");
   await fs.rm(root, { recursive: true, force: true });
 });
 

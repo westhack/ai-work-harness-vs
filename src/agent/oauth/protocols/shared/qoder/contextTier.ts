@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -14,7 +14,7 @@ import type { ProtocolValue, ProtocolRecord } from "../../wireTypes.js";
  * Each Qoder model_config ships a `context_config` list (e.g. 200K / 400K / 1M for
  * qmodel_38max) while `max_input_tokens` only carries the tier the IDE currently has
  * selected (~180K by default). The Qoder IDE lets the user switch tiers from the model
- * picker; a qodercli-style client (which is what OpenCursor impersonates) has no picker,
+ * picker; a qodercli-style client (which is what AiWorkHarness impersonates) has no picker,
  * so a long Claude-Code / Codex session that grew past the default tier is rejected
  * upstream even though the model itself supports 1M.
  *

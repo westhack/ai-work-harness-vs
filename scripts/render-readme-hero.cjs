@@ -1,21 +1,21 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor, AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness, AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
 // Build the webviews and run preview:ui first. Captures sample data only.
-// OPENCURSOR_PREVIEW_ORIGIN and OPENCURSOR_BROWSER override local defaults.
+// AIWORKHARNESS_PREVIEW_ORIGIN and AIWORKHARNESS_BROWSER override local defaults.
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const sharp = require('sharp');
 const { chromium } = require('playwright-core');
 
 const root = path.resolve(__dirname, '..');
-const origin = process.env.OPENCURSOR_PREVIEW_ORIGIN || 'http://127.0.0.1:4173';
+const origin = process.env.AIWORKHARNESS_PREVIEW_ORIGIN || 'http://127.0.0.1:4173';
 const stamp = 1_750_000_000_000;
 const sample = {
   type: 'initialState', activeId: 'readme-preview', mode: 'agent', selectedModel: 'readme-local',
@@ -33,7 +33,7 @@ const sample = {
 };
 
 async function browserOptions() {
-  if (process.env.OPENCURSOR_BROWSER) return { executablePath: process.env.OPENCURSOR_BROWSER };
+  if (process.env.AIWORKHARNESS_BROWSER) return { executablePath: process.env.AIWORKHARNESS_BROWSER };
   const candidates = process.platform === 'win32' ? [
     'C:/Program Files/Google/Chrome/Application/chrome.exe',
     'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
@@ -43,7 +43,7 @@ async function browserOptions() {
   for (const executablePath of candidates) {
     try { await fs.access(executablePath); return { executablePath }; } catch { /* Try the next installed browser. */ }
   }
-  throw new Error('Set OPENCURSOR_BROWSER to an installed Chrome or Edge executable.');
+  throw new Error('Set AIWORKHARNESS_BROWSER to an installed Chrome or Edge executable.');
 }
 
 async function captureInterface() {
@@ -95,15 +95,15 @@ async function captureInterface() {
 function hero(screenshot) {
   const image = screenshot.toString('base64');
   return `<!--
-Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+Copyright (c) 2026 Yao
 
-This file is part of OpenCursor, AI coding agent chat inside VS Code.
-https://github.com/PawanOsman/OpenCursor
+This file is part of AiWorkHarness, AI coding agent chat inside VS Code.
+https://github.com/westhack/ai-work-harness
 
 Licensed under the MIT License. See LICENSE file in the project root.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1440" height="980" viewBox="0 0 1440 980" role="img" aria-labelledby="title description" font-family="Segoe UI, Inter, Arial, sans-serif">
-  <title id="title">OpenCursor, an AI coding agent for your workspace</title>
+  <title id="title">AiWorkHarness, an AI coding agent for your workspace</title>
   <desc id="description">Build with your models and stay in control. An interface preview shows a sample conversation with highlighted code, a queued follow-up, and file review controls.</desc>
   <defs><clipPath id="preview"><rect x="752" y="154" width="624" height="744" rx="20"/></clipPath></defs>
   <rect x="1" y="1" width="1438" height="978" rx="26" fill="#17181d" stroke="#3b3c47"/>
@@ -112,7 +112,7 @@ Licensed under the MIT License. See LICENSE file in the project root.
     <path d="M18.5 3l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1z"/>
     <circle cx="20.5" cy="11" r="1.1"/><rect x="4" y="19.5" width="5" height="2" rx="1"/>
   </g>
-  <text x="111" y="79" font-size="28" font-weight="650" fill="#f5f5f8">OpenCursor</text>
+  <text x="111" y="79" font-size="28" font-weight="650" fill="#f5f5f8">AiWorkHarness</text>
   <text x="1376" y="76" text-anchor="end" font-size="15" letter-spacing="2" fill="#adaebc">OPEN SOURCE / VS CODE</text>
   <path d="M64 114H1376" stroke="#3b3c47"/>
   <text x="64" y="226" font-size="69" font-weight="650" letter-spacing="-2" fill="#f5f5f8">Build with</text>

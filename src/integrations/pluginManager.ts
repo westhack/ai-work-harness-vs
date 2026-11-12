@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2026 Pawan Osman <https://github.com/PawanOsman>
+ * Copyright (c) 2026 Yao
  *
- * This file is part of OpenCursor — AI coding agent chat inside VS Code.
- * https://github.com/PawanOsman/OpenCursor
+ * This file is part of AiWorkHarness — AI coding agent chat inside VS Code.
+ * https://github.com/westhack/ai-work-harness
  *
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
@@ -33,7 +33,7 @@ export interface InstalledPlugin {
 }
 
 const validId = (id: unknown): id is string => typeof id === "string" && /^[a-z0-9][a-z0-9._-]{0,63}$/.test(id) && id !== "." && id !== "..";
-export const defaultPluginDirectory = () => path.join(homedir(), ".opencursor", "plugins");
+export const defaultPluginDirectory = () => path.join(homedir(), ".aiworkharness", "plugins");
 
 function relativePath(root: string, input: unknown): string {
   if (typeof input !== "string" || !input.trim() || path.isAbsolute(input)) throw new Error("Plugin paths must be relative to the plugin directory.");
@@ -50,11 +50,11 @@ async function smallJson(file: string, maxBytes = 256 * 1024): Promise<any> {
 async function manifestAt(source: string): Promise<LocalPluginManifest> {
   source = await fs.realpath(source);
   let raw: any;
-  for (const relative of [".opencursor-plugin/plugin.json", ".codex-plugin/plugin.json", "plugin.json"]) {
+  for (const relative of [".aiworkharness-plugin/plugin.json", ".codex-plugin/plugin.json", "plugin.json"]) {
     try { raw = await smallJson(path.join(source, relative)); break; }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
   }
-  if (!raw || typeof raw !== "object") throw new Error("No plugin manifest found. Add .opencursor-plugin/plugin.json or .codex-plugin/plugin.json.");
+  if (!raw || typeof raw !== "object") throw new Error("No plugin manifest found. Add .aiworkharness-plugin/plugin.json or .codex-plugin/plugin.json.");
   const id = raw.id ?? raw.name;
   if (!validId(id)) throw new Error("Plugin id/name must contain 1–64 lowercase letters, digits, dots, underscores or hyphens.");
   const suppliedSkills = raw.skills === undefined ? ["skills"] : typeof raw.skills === "string" ? [raw.skills] : raw.skills;
