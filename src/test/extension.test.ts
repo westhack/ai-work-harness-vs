@@ -12,7 +12,7 @@ import * as vscode from "vscode";
 
 suite("Installed extension host integration", () => {
   suiteSetup(async () => {
-    const extension = vscode.extensions.getExtension("westhack.ai-work-harness");
+    const extension = vscode.extensions.getExtension("westhack.ai-work-harness-vs");
     assert.ok(extension, "The extension under test must be installed in the development host");
     await extension.activate();
     assert.strictEqual(extension.isActive, true);

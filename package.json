@@ -1,6 +1,6 @@
 {
-	"name": "ai-work-harness",
-	"displayName": "AiWorkHarness",
+	"name": "ai-work-harness-vs",
+	"displayName": "Ai Work Harness",
 	"description": "%extension.description%",
 	"version": "0.2.1",
 	"publisher": "westhack",

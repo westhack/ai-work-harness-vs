@@ -18,7 +18,7 @@ Licensed under the MIT License. See LICENSE file in the project root.
 </p>
 
 <p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness">Install for VS Code</a> ·
+  <a href="https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness-vs">Install for VS Code</a> ·
   <a href="https://github.com/westhack/ai-work-harness-vs/releases">Releases</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#development">Build from source</a> ·
@@ -29,7 +29,7 @@ AiWorkHarness brings conversation, code exploration, file edits, terminal comman
 
 ## Quick start
 
-1. **Install AiWorkHarness** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness). You can also download a `.vsix` from [Releases](https://github.com/westhack/ai-work-harness-vs/releases) and run **Extensions: Install from VSIX**. Requires VS Code 1.96 or newer.
+1. **Install AiWorkHarness** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness-vs). You can also download a `.vsix` from [Releases](https://github.com/westhack/ai-work-harness-vs/releases) and run **Extensions: Install from VSIX**. Requires VS Code 1.96 or newer.
 2. **Connect a model.** Open the AiWorkHarness sidebar, then Settings. Add an account or API provider under **Providers**, or configure **Ollama** or **llama.cpp** for local inference.
 3. **Choose a model and start a conversation.** Enable the models you want in **Models**, select one in the composer, and describe your task. Use `Ctrl+L` on Windows/Linux or `Cmd+L` on macOS to add an editor selection (or the whole file, when nothing is selected) to chat. This replaces VS Code's default *Expand Line Selection* shortcut while an editor is focused; rebind `aiworkharness.addToChat` in Keyboard Shortcuts if you prefer the original.
 4. **Review the result.** Inspect tool activity and file changes, then keep or undo the edits. Adjust the permission controls to decide which actions need your approval.

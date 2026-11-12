@@ -38,7 +38,7 @@ function entryOf(pkg: any): string {
 /** This extension's own directory (never a parent folder such as ~/). */
 function extensionRoot(): string | undefined {
   try {
-    const fromHost = vscode.extensions?.getExtension?.("westhack.ai-work-harness")?.extensionPath;
+    const fromHost = vscode.extensions?.getExtension?.("westhack.ai-work-harness-vs")?.extensionPath;
     if (fromHost) return fromHost;
   } catch { /* outside the extension host */ }
   // Bundled as dist/extension.js; sources live under src/.
