@@ -10,6 +10,8 @@
 # remain excluded even when their names or directories change.
 **
 !package.json
+!package.nls.json
+!package.nls.zh-cn.json
 !README.md
 !README.zh-CN.md
 !CHANGELOG.md
@@ -26,3 +28,5 @@
 !dist/webview/sidebar.css
 !dist/webview/settings.js
 !dist/webview/settings.css
+!dist/webview/projectDocs.js
+!dist/webview/projectDocs.css

@@ -37,6 +37,37 @@ def({ name: "GetVerificationEvidence", description: "Read checks and their obser
 def({ name: "RunChecks", description: "Run a user-authorized test, build, lint or other verification command and record actual exit-code evidence. Follow no-test instructions. Use AwaitShell if still running.", parameters: { type: "object", properties: { command: { type: "string", minLength: 1 }, working_directory: { type: "string" }, block_until_ms: { type: "number", minimum: 0, maximum: 30000 }, description: { type: "string" } }, required: ["command"] } });
 
 def({
+  name: "CodeGraph",
+  description: "Query the cached code graph built by graphify instead of re-walking the repository. Use overview to see the repository structure, find to locate files, symbols or modules, and neighbors to inspect what a node connects to. Returns a failure note when no graph has been built yet.",
+  parameters: {
+    type: "object",
+    properties: {
+      action: { type: "string", enum: ["overview", "find", "neighbors"], description: "Operation to perform" },
+      query: { type: "string", description: "Node name, file path or keyword for find/neighbors" },
+      limit: { type: "integer", minimum: 1, maximum: 50, description: "Maximum results (default 20)" },
+    },
+    required: ["action"],
+  },
+});
+
+def({
+  name: "Memory",
+  description: "Save durable preferences or facts across sessions, or search, update, list and delete saved memories. Call add only when the user explicitly asks to remember something, or when a stable preference or fact is clearly worth keeping. Never store credentials, tokens, keys, secrets or transient task state. Project memories apply to the current workspace; global memories apply everywhere.",
+  parameters: {
+    type: "object",
+    properties: {
+      action: { type: "string", enum: ["add", "search", "list", "update", "delete"], description: "Operation to perform" },
+      text: { type: "string", maxLength: 2000, description: "Memory text for add/update" },
+      id: { type: "string", description: "Memory id for update/delete" },
+      query: { type: "string", description: "Optional keyword filter for search" },
+      tags: { type: "array", items: { type: "string" }, description: "Optional short tags" },
+      scope: { type: "string", enum: ["project", "global"], description: "Storage scope (default project)" },
+    },
+    required: ["action"],
+  },
+});
+
+def({
   name: "ReadContext",
   description: "Read or search archived context by id, history for the full conversation, capabilities for current availability, tools for optional built-in schemas, mcp for its tool catalog, or a shell_ job id for retained terminal output. Read a catalog entry's schema id to enable it. Returns a bounded excerpt; use next_line/next_column to continue. Load only the details needed for the current task.",
   parameters: {

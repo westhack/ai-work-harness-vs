@@ -139,6 +139,8 @@ export interface ModelDef {
   group?: "default" | "other";
   providerId?: string;
   providerName?: string;
+  /** Custom-model thinking capability: always, never, or user-switchable. */
+  thinkingMode?: "enabled" | "disabled" | "toggle";
 }
 
 export interface LlamacppServerConfig {
@@ -283,6 +285,22 @@ export interface FeatureConfig {
   activeTeamIds: string[];
   subagentModel: string;
   autoJudgeModel: string;
+  /** Documentation catalog planning model ("" = chat model). */
+  docsCatalogModel?: string;
+  /** Documentation page writing model ("" = chat model). */
+  docsContentModel?: string;
+  /** Documentation translation model ("" = content model). */
+  docsTranslationModel?: string;
+  /** Knowledge-graph extraction model passed to graphify ("" = chat model). */
+  docsGraphifyModel?: string;
+  /** Project Docs limits (0 = built-in default). */
+  docsMaxPages?: number;
+  docsMaxCatalogFiles?: number;
+  docsMaxCatalogChars?: number;
+  docsMaxFileKb?: number;
+  docsCatalogSteps?: number;
+  docsMindmapSteps?: number;
+  docsMindmapTokens?: number;
   hooks: HookDef[];
   enabledModels: string[];
   disabledModels: string[];
@@ -314,6 +332,14 @@ export interface FeatureConfig {
   completionSound: boolean;
   webSearchEnabled: boolean;
   webFetchEnabled: boolean;
+  /** Inject saved memories into the agent context. */
+  memoryEnabled?: boolean;
+  /** Max memory entries injected per message (0 = default 12). */
+  memoryInjectLimit?: number;
+  /** Build and refresh the graphify code graph automatically. */
+  codeGraphEnabled?: boolean;
+  /** Inject the code graph and expose the CodeGraph tool to the agent. */
+  codeGraphConsume?: boolean;
   approvalPolicy: ApprovalPolicy;
   indexingEnabled: boolean;
   indexNewFolders: boolean;
@@ -356,6 +382,24 @@ export interface ModelUsage {
   lastUsed: number;
 }
 
+/** Cached code-graph size/freshness plus per-workspace usage counters. */
+export interface CodeGraphStatus {
+  available: boolean;
+  nodes: number;
+  edges: number;
+  generatedAt?: string;
+  commit?: string;
+  toolVersion?: string;
+  stale: boolean;
+  builds: number;
+  buildFailures: number;
+  lastBuildAt?: number;
+  injections: number;
+  injectedChars: number;
+  toolCalls: number;
+  lastUsedAt?: number;
+}
+
 export interface McpStatus {
   name: string;
   connected: boolean;
@@ -391,6 +435,17 @@ export const EMPTY_FEATURES: FeatureConfig = {
   activeTeamIds: [],
   subagentModel: "",
   autoJudgeModel: "",
+  docsCatalogModel: "",
+  docsContentModel: "",
+  docsTranslationModel: "",
+  docsGraphifyModel: "",
+  docsMaxPages: 0,
+  docsMaxCatalogFiles: 0,
+  docsMaxCatalogChars: 0,
+  docsMaxFileKb: 0,
+  docsCatalogSteps: 0,
+  docsMindmapSteps: 0,
+  docsMindmapTokens: 0,
   hooks: [],
   enabledModels: [],
   disabledModels: [],
@@ -418,6 +473,10 @@ export const EMPTY_FEATURES: FeatureConfig = {
   completionSound: false,
   webSearchEnabled: true,
   webFetchEnabled: true,
+  memoryEnabled: true,
+  memoryInjectLimit: 12,
+  codeGraphEnabled: false,
+  codeGraphConsume: true,
   approvalPolicy: DEFAULT_APPROVAL,
   indexingEnabled: true,
   indexNewFolders: true,

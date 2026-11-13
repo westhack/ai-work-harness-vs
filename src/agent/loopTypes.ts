@@ -62,6 +62,12 @@ export interface RunAgentOptions {
 	enableFileReading: boolean;
 	enableTerminalSuggestions: boolean;
 	enableWorkspaceContext?: boolean;
+	/** Inject saved memories into the run context (default true). */
+	memoryEnabled?: boolean;
+	/** Max memory entries injected per message (0/undefined = 12). */
+	memoryInjectLimit?: number;
+	/** Inject the cached code graph and expose the CodeGraph tool (default true). */
+	codeGraphConsume?: boolean;
 	enableWebSearch?: boolean;
 	enableWebFetch?: boolean;
 	approve?: (toolName: string, input: any, callId?: string) => Promise<boolean | { approved: false; blockedSubject: string }>;

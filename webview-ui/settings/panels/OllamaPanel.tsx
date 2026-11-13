@@ -49,7 +49,7 @@ export function OllamaPanel({
         setTags((prev) => ({ ...prev, [m.name]: m.tags || [] }));
         if (m.error) setSearchErr(m.error);
       } else if (m.type === "localModelError") {
-        setOperationError(m.error || "Model operation failed.");
+        setOperationError(m.error || tr("Model operation failed."));
       }
     };
     window.addEventListener("message", handler);
@@ -165,9 +165,9 @@ export function OllamaPanel({
               <div className="row-desc">
                 {[m.parameterSize, m.quantization, m.family, m.sizeBytes ? fmtSize(m.sizeBytes) : ""].filter(Boolean).join(" · ")}
               </div>
-              {status.loaded?.[m.name] && <div className="row-desc">{tr("Daemon reports loaded:")} {fmtSize(status.loaded[m.name].sizeBytes || 0)} · GPU: {fmtSize(status.loaded[m.name].vramBytes || 0)} · context: {status.loaded[m.name].contextLength?.toLocaleString() || "unknown"}</div>}
+              {status.loaded?.[m.name] && <div className="row-desc">{tr("Daemon reports loaded:")} {fmtSize(status.loaded[m.name].sizeBytes || 0)} · GPU: {fmtSize(status.loaded[m.name].vramBytes || 0)} · context: {status.loaded[m.name].contextLength?.toLocaleString() || tr("unknown")}</div>}
               <button className="btn-ghost sm" onClick={() => vscode.postMessage({ type: "ollamaInspect", name: m.name })}>{tr("Check capabilities")}</button>
-              {status.capabilities?.[m.name] && <div className="row-desc">{tr("Capabilities:")} {status.capabilities[m.name].join(", ") || "Not reported by this runtime"}{status.capabilities[m.name].length > 0 && !status.capabilities[m.name].includes("tools") ? ". This model does not report tool calling; use Ask mode or choose a tool-capable model for agent tasks." : ""}</div>}
+              {status.capabilities?.[m.name] && <div className="row-desc">{tr("Capabilities:")} {status.capabilities[m.name].join(", ") || tr("Not reported by this runtime")}{status.capabilities[m.name].length > 0 && !status.capabilities[m.name].includes("tools") ? ". " + tr("This model does not report tool calling; use Ask mode or choose a tool-capable model for agent tasks.") : ""}</div>}
             </div>
           </div>
         ))

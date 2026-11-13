@@ -11,14 +11,14 @@ import * as React from "react";
 import { Select } from "../shared/Select";
 import { Icon, IconName } from "../shared/icons";
 import { vscode } from "../shared/vscode";
-import { ApprovalActionType, ApprovalMode, ApprovalPolicy, DEFAULT_APPROVAL, EMPTY_FEATURES, FeatureConfig, LlamacppStatus, McpStatus, ModelDef, ModelUsage, OAUTH_LABEL, OAuthStatus, OllamaModel, OllamaStatus, Persona, RuleInfo, SkillInfo, uid } from "./features";
-import { HooksPanel, LlamacppPanel, McpPanel, ModelsPanel, OAuthAccountCard, OllamaPanel, PersonasPanel, ProvidersPanel, RulesPanel, SubagentsPanel } from "./FeaturePanels";
+import { ApprovalActionType, ApprovalMode, ApprovalPolicy, DEFAULT_APPROVAL, EMPTY_FEATURES, FeatureConfig, CodeGraphStatus, LlamacppStatus, McpStatus, ModelDef, ModelUsage, OAUTH_LABEL, OAuthStatus, OllamaModel, OllamaStatus, Persona, RuleInfo, SkillInfo, uid } from "./features";
+import { HooksPanel, LlamacppPanel, McpPanel, MemoryPanel, ModelsPanel, OAuthAccountCard, OllamaPanel, PersonasPanel, ProvidersPanel, RulesPanel, SkillMarketPanel, SubagentsPanel } from "./FeaturePanels";
 import { ModelSelect } from "../shared/ModelSelect";
 import { CacheUsage } from "./CacheUsage";
 import { DocsSection, type DocSourceInfo, type DocsStatus } from "./DocsSection";
 import { ControlLabelContext, Toggle } from "./panels/Toggle";
 import { setMotionPreference, type MotionPreference } from "../shared/motionPreference";
-import { t as tr, setLocale } from "../shared/i18n";
+import { t as tr, getLocale, setLocale } from "../shared/i18n";
 import { LANGUAGE_OPTIONS, type LanguagePreference } from "../../src/shared/i18n";
 
 interface Settings {
@@ -39,7 +39,7 @@ const DEFAULTS: Settings = {
   systemPrompt: "",
 };
 
-type Section = "general" | "usage" | "agents" | "providers" | "models" | "llamacpp" | "ollama" | "behavior" | "personas" | "rules" | "subagents" | "mcp" | "hooks" | "indexing" | "advanced" | "about";
+type Section = "general" | "usage" | "agents" | "providers" | "models" | "llamacpp" | "ollama" | "behavior" | "personas" | "memory" | "rules" | "skillMarket" | "subagents" | "mcp" | "hooks" | "knowledge" | "indexing" | "advanced" | "about";
 
 interface IndexStatus {
   indexing: boolean;
@@ -79,6 +79,7 @@ interface EngineStatusInfo {
   installCommand?: string;
   docsUrl?: string;
   manual: boolean;
+  removable?: boolean;
 }
 
 /** Where a resolved engine binary came from, labelled in the engine list. */
@@ -105,10 +106,13 @@ const NAV: { id: Section; label: string; icon: IconName; sep?: boolean }[] = [
   { id: "models", label: "Models", icon: "model" },
   { id: "behavior", label: "Behavior", icon: "tools" },
   { id: "personas", label: "Personas", icon: "bot", sep: true },
+  { id: "memory", label: "Memory", icon: "brain" },
   { id: "rules", label: "Rules & Skills", icon: "ruler" },
+  { id: "skillMarket", label: "Skill Market", icon: "globe" },
   { id: "subagents", label: "Subagents & Teams", icon: "agent" },
   { id: "mcp", label: "Tools & MCPs", icon: "task" },
   { id: "hooks", label: "Hooks", icon: "infinity" },
+  { id: "knowledge", label: "Knowledge Base", icon: "book" },
   { id: "indexing", label: "Indexing & Docs", icon: "database" },
   { id: "advanced", label: "Advanced", icon: "fileCode", sep: true },
   { id: "about", label: "About", icon: "book" },
@@ -150,10 +154,13 @@ const SECTION_KEYWORDS: Partial<Record<Section, string>> = {
   providers: "api key openai anthropic google openrouter oauth custom base url connect",
   behavior: "workspace context file reading terminal tools auto edits approval allow deny ask review policy allowlist denylist commands mcp web",
   personas: "persona system prompt custom",
+  memory: "memory remember saved preferences facts project global inject entries",
   rules: "rules skills agents.md always apply glob",
+  skillMarket: "skills market registry install search skills.sh skillhub",
   subagents: "subagents teams squad project mode delegate task tool members roster subagent model",
   mcp: "mcp tools servers",
   hooks: "hooks events commands",
+  knowledge: "knowledge base project docs mind map graphify task models limits",
   indexing: "codebase index embedding docs semantic sync",
   advanced: "system prompt custom instructions",
   about: "about version license author github repository open source mit Yao",
@@ -356,8 +363,8 @@ function UsagePanel({
       actionRef.current = undefined;
       setPending(undefined);
       setNotice(message.status === "error"
-        ? { text: message.error || "The usage action failed. Try again.", error: true }
-        : { text: message.status === "cancelled" ? "Usage reset cancelled." : active.action === "reset" ? "Recorded usage reset." : "Local usage refreshed. Account quota results are shown below." });
+        ? { text: message.error || tr("The usage action failed. Try again."), error: true }
+        : { text: message.status === "cancelled" ? tr("Usage reset cancelled.") : active.action === "reset" ? tr("Recorded usage reset.") : tr("Local usage refreshed. Account quota results are shown below.") });
     };
     window.addEventListener("message", handler);
     return () => {
@@ -440,7 +447,7 @@ function UsagePanel({
       </Group>
 
       <div className="section-label">{tr("Account Quota")}</div>
-      <p className="panel-hint">{tr("Rate-limit windows for your connected OAuth accounts (")}{oauthStatus.accounts.map((a) => OAUTH_LABEL[a.kind]).join(", ") || "none connected"}).</p>
+      <p className="panel-hint">{tr("Rate-limit windows for your connected OAuth accounts (")}{oauthStatus.accounts.map((a) => OAUTH_LABEL[a.kind]).join(", ") || tr("none connected")}).</p>
       {oauthStatus.accounts.length === 0 ? (
         <div className="empty-card">
           {tr("No OAuth accounts connected. Add one in the")} <strong>{tr("Providers → OAuth Accounts")}</strong> {tr("tab to see its quota here.")}
@@ -551,9 +558,7 @@ function IndexingPanel({
       <div className="index-card">
         <div className="index-card-title">{tr("Codebase Indexing")}</div>
         <p className="row-desc">
-          Embed codebase for improved contextual understanding and knowledge. Embeddings and metadata are
-          stored locally on your machine - your code never leaves your computer. The index persists across
-          restarts; only new or changed files are re-embedded.
+          {tr("Embed codebase for improved contextual understanding and knowledge. Embeddings and metadata are stored locally on your machine - your code never leaves your computer. The index persists across restarts; only new or changed files are re-embedded.")}
         </p>
         <div className="index-divider" />
         <Row title={tr("Enable Indexing")} desc={tr("When off, background embedding stops. Existing index files stay on disk; text search remains available.")}>
@@ -706,14 +711,135 @@ function IndexingPanel({
   );
 }
 
+function KnowledgePanel({
+  features,
+  setFeatures,
+  taskModelChoices,
+  codeGraphStatus,
+}: {
+  features: FeatureConfig;
+  setFeatures: (p: Partial<FeatureConfig>) => void;
+  taskModelChoices: ModelDef[];
+  codeGraphStatus?: CodeGraphStatus;
+}) {
+  const graph = codeGraphStatus;
+  const stamp = (value?: string | number) => (value ? new Date(value).toLocaleString(getLocale()) : "");
+  const built = graph?.available ? stamp(graph.generatedAt) : "";
+  const graphDesc = !graph
+    ? tr("Loading…")
+    : !graph.available
+      ? tr("No graph built yet. Enable Auto-build, or build it from the Project Docs panel.")
+      : `${graph.nodes} ${tr("nodes")} · ${graph.edges} ${tr("edges")}${built ? ` · ${built}` : ""}${graph.stale ? ` · ${tr("stale, HEAD has moved")}` : ""}`;
+  const injectDesc = !graph || !graph.injections
+    ? tr("No agent turn has consumed the graph yet.")
+    : `${graph.injections} ${tr("turns")} · ${Math.round(graph.injectedChars / 1000)}k ${tr("characters injected")}${graph.lastUsedAt ? ` · ${stamp(graph.lastUsedAt)}` : ""}`;
+  return (
+    <>
+      <h1 className="page-title">{tr("Knowledge Base")}</h1>
+      <div className="section-label">{tr("Code Graph")}</div>
+      <Group>
+        <Row title={tr("Auto-build")} desc={tr("Scan the repository with graphify and refresh .docs/graphify-out when the cached graph is missing or out of date. Builds run in the background.")}>
+          <Toggle checked={features.codeGraphEnabled === true} onChange={(v) => setFeatures({ codeGraphEnabled: v })} />
+        </Row>
+        <Row title={tr("Let the agent use it")} desc={tr("Inject the cached graph into the chat context and enable the CodeGraph tool. Turn this off to save context without deleting the graph.")}>
+          <Toggle checked={features.codeGraphConsume !== false} onChange={(v) => setFeatures({ codeGraphConsume: v })} />
+        </Row>
+      </Group>
+      <div className="section-label">{tr("Status")}</div>
+      <Group>
+        <Row title={tr("Cached graph")} desc={graphDesc}>
+          <span className="row-desc">{graph?.available ? tr("ready") : tr("empty")}</span>
+        </Row>
+        <Row title={tr("Builds")} desc={graph
+          ? `${graph.builds} ${tr("succeeded")} · ${graph.buildFailures} ${tr("failed")}${graph.lastBuildAt ? ` · ${stamp(graph.lastBuildAt)}` : ""}`
+          : tr("Loading…")}>
+          <span />
+        </Row>
+        <Row title={tr("Context injections")} desc={injectDesc}>
+          <span />
+        </Row>
+        <Row title={tr("CodeGraph tool calls")} desc={tr("Queries answered from the graph instead of re-reading files.")}>
+          <span className="row-desc">{graph?.toolCalls ?? 0}</span>
+        </Row>
+      </Group>
+      <div className="section-label">{tr("Task Models")}</div>
+      <Group>
+        <Row title={tr("Catalog Generation")} desc={tr("Model used to plan the Project Docs catalog and its page tree. Empty uses the chat model.")}>
+          <ModelSelect
+            models={taskModelChoices}
+            value={features.docsCatalogModel || ""}
+            onChange={(id) => setFeatures({ docsCatalogModel: id })}
+            customItems={[{ value: "", label: tr("Chat model"), desc: tr("use the default chat model") }]}
+            style={{ maxWidth: 240 }}
+          />
+        </Row>
+        <Row title={tr("Content Generation")} desc={tr("Model used to research and write each Project Docs page. Empty uses the chat model.")}>
+          <ModelSelect
+            models={taskModelChoices}
+            value={features.docsContentModel || ""}
+            onChange={(id) => setFeatures({ docsContentModel: id })}
+            customItems={[{ value: "", label: tr("Chat model"), desc: tr("use the default chat model") }]}
+            style={{ maxWidth: 240 }}
+          />
+        </Row>
+        <Row title={tr("Translation")} desc={tr("Model used for translation tasks in generated documentation. Empty follows the content model.")}>
+          <ModelSelect
+            models={taskModelChoices}
+            value={features.docsTranslationModel || ""}
+            onChange={(id) => setFeatures({ docsTranslationModel: id })}
+            customItems={[{ value: "", label: tr("Content model"), desc: tr("follow the content generation model") }]}
+            style={{ maxWidth: 240 }}
+          />
+        </Row>
+        <Row title={tr("Graphify")} desc={tr("Model passed to the external graphify CLI for semantic extraction and community labels. Empty uses the chat model.")}>
+          <ModelSelect
+            models={taskModelChoices}
+            value={features.docsGraphifyModel || ""}
+            onChange={(id) => setFeatures({ docsGraphifyModel: id })}
+            customItems={[{ value: "", label: tr("Chat model"), desc: tr("use the default chat model") }]}
+            style={{ maxWidth: 240 }}
+          />
+        </Row>
+      </Group>
+
+      <div className="section-label">{tr("Project Docs Limits")}</div>
+      <Group>
+        <Row title={tr("Max documentation pages")} desc={tr("Upper bound for generated pages. 0 uses the default (90).")}>
+          <NumInput value={features.docsMaxPages || null} min="0" placeholder="90" onChange={(v) => setFeatures({ docsMaxPages: v ?? 0 })} />
+        </Row>
+        <Row title={tr("Max catalog files")} desc={tr("Files listed to the planner. 0 uses the default (4000).")}>
+          <NumInput value={features.docsMaxCatalogFiles || null} min="0" placeholder="4000" onChange={(v) => setFeatures({ docsMaxCatalogFiles: v ?? 0 })} />
+        </Row>
+        <Row title={tr("Max catalog characters")} desc={tr("Character budget for the repository listing. 0 uses the default (80000).")}>
+          <NumInput value={features.docsMaxCatalogChars || null} min="0" placeholder="80000" onChange={(v) => setFeatures({ docsMaxCatalogChars: v ?? 0 })} />
+        </Row>
+        <Row title={tr("Max source file size (KB)")} desc={tr("Files larger than this are skipped while scanning. 0 uses the default (1024).")}>
+          <NumInput value={features.docsMaxFileKb || null} min="0" placeholder="1024" onChange={(v) => setFeatures({ docsMaxFileKb: v ?? 0 })} />
+        </Row>
+        <Row title={tr("Catalog planning steps")} desc={tr("Tool steps available while planning the catalog. 0 uses the default (50).")}>
+          <NumInput value={features.docsCatalogSteps || null} min="0" placeholder="50" onChange={(v) => setFeatures({ docsCatalogSteps: v ?? 0 })} />
+        </Row>
+        <Row title={tr("Mind map steps")} desc={tr("Tool steps available while building the mind map. 0 uses the default (40).")}>
+          <NumInput value={features.docsMindmapSteps || null} min="0" placeholder="40" onChange={(v) => setFeatures({ docsMindmapSteps: v ?? 0 })} />
+        </Row>
+        <Row title={tr("Mind map output tokens")} desc={tr("Maximum output tokens for the mind map. 0 uses the default (8192).")}>
+          <NumInput value={features.docsMindmapTokens || null} min="0" placeholder="8192" onChange={(v) => setFeatures({ docsMindmapTokens: v ?? 0 })} />
+        </Row>
+      </Group>
+    </>
+  );
+}
+
 function EngineStatusRow({
   engine,
   installing,
+  uninstalling,
   log,
   result,
 }: {
   engine: EngineStatusInfo;
   installing: boolean;
+  uninstalling?: boolean;
   log?: string[];
   result?: EngineInstallResult;
 }) {
@@ -733,7 +859,9 @@ function EngineStatusRow({
       <div className="row-text">
         <div className="row-title">
           {engine.label}{" "}
-          {installing ? (
+          {uninstalling ? (
+            <span className="badge-tag loading"><span className="llama-spinner" /> {tr("Removing…")}</span>
+          ) : installing ? (
             <span className="badge-tag loading"><span className="llama-spinner" /> {tr("Installing…")}</span>
           ) : engine.available ? (
             <span className="badge-tag engine-status-badge ok">{tr("Installed")}</span>
@@ -750,21 +878,24 @@ function EngineStatusRow({
         {engine.installCommand && (
           <div className="engine-status-command">
             <code title={engine.installCommand}>{engine.installCommand}</code>
-            <button className="btn-secondary" onClick={copy} disabled={installing}>{copied ? tr("Copied") : tr("Copy command")}</button>
+            <button className="btn-secondary" onClick={copy} disabled={installing || uninstalling}>{copied ? tr("Copied") : tr("Copy command")}</button>
           </div>
         )}
         {result?.detail && <div className={"row-desc" + (result.ok ? "" : " engine-status-error")}>{tr(result.detail)}</div>}
-        {installing && log && log.length > 0 && (
+        {(installing || uninstalling) && log && log.length > 0 && (
           <div className="engine-status-log">
-            <div className="row-desc">{tr("Installation log")}</div>
+            <div className="row-desc">{uninstalling ? tr("Uninstall log") : tr("Installation log")}</div>
             <pre className="llama-log-pre">{log.join("\n")}</pre>
           </div>
         )}
       </div>
       <div className="row-control">
-        <button className="btn-secondary" disabled={installing} onClick={() => vscode.postMessage({ type: "pickEnginePath", id: engine.id })}>{tr("Select installed path")}</button>
+        <button className="btn-secondary" disabled={installing || uninstalling} onClick={() => vscode.postMessage({ type: "pickEnginePath", id: engine.id })}>{tr("Select installed path")}</button>
         {engine.source === "override" && (
-          <button className="btn-secondary" disabled={installing} onClick={() => vscode.postMessage({ type: "clearEnginePath", id: engine.id })}>{tr("Clear path")}</button>
+          <button className="btn-secondary" disabled={installing || uninstalling} onClick={() => vscode.postMessage({ type: "clearEnginePath", id: engine.id })}>{tr("Clear path")}</button>
+        )}
+        {engine.removable && !installing && !uninstalling && (
+          <button className="btn-secondary" onClick={() => vscode.postMessage({ type: "uninstallEngine", id: engine.id })}>{tr("Uninstall")}</button>
         )}
         {installing ? (
           <button className="btn-secondary" disabled>{tr("Install")}</button>
@@ -800,10 +931,16 @@ export function App() {
   const [ollamaModels, setOllamaModels] = React.useState<OllamaModel[]>([]);
   const [oauthStatus, setOauthStatus] = React.useState<OAuthStatus>({ accounts: [], errors: {} });
   const [usage, setUsage] = React.useState<Record<string, ModelUsage>>({});
+  const [codeGraphStatus, setCodeGraphStatus] = React.useState<CodeGraphStatus | undefined>();
   const [engineStatus, setEngineStatus] = React.useState<EngineStatusInfo[]>([]);
   const [engineInstalling, setEngineInstalling] = React.useState<string | null>(null);
+  const [engineUninstalling, setEngineUninstalling] = React.useState<string | null>(null);
   const [engineLogs, setEngineLogs] = React.useState<Record<string, string[]>>({});
+  const [engineUninstallLogs, setEngineUninstallLogs] = React.useState<Record<string, string[]>>({});
   const [engineResults, setEngineResults] = React.useState<Record<string, EngineInstallResult>>({});
+  const taskModelChoices = modelList.length
+    ? modelList
+    : [...modelCatalog, ...(features.customModels || [])].filter((m) => features.enabledModels.includes(m.id));
   const [navQuery, setNavQuery] = React.useState("");
 
   React.useEffect(() => { setMotionPreference(features.motion); }, [features.motion]);
@@ -862,6 +999,8 @@ export function App() {
         setOauthStatus(msg.status);
       } else if (msg.type === "usageData") {
         setUsage(msg.usage || {});
+      } else if (msg.type === "codeGraphStatus") {
+        setCodeGraphStatus(msg.status || undefined);
       } else if (msg.type === "engineStatus") {
         setEngineStatus(msg.engines || []);
       } else if (msg.type === "engineInstallStarted") {
@@ -880,6 +1019,22 @@ export function App() {
       } else if (msg.type === "engineInstallDone") {
         setEngineInstalling(null);
         setEngineResults((prev) => ({ ...prev, [msg.id]: { ok: !!msg.ok, detail: msg.detail } }));
+      } else if (msg.type === "engineUninstallStarted") {
+        setEngineUninstalling(msg.id);
+        setEngineUninstallLogs((prev) => ({ ...prev, [msg.id]: [] }));
+        setEngineResults((prev) => {
+          const next = { ...prev };
+          delete next[msg.id];
+          return next;
+        });
+      } else if (msg.type === "engineUninstallProgress") {
+        setEngineUninstallLogs((prev) => ({
+          ...prev,
+          [msg.id]: [...(prev[msg.id] || []), String(msg.line ?? "")].slice(-200),
+        }));
+      } else if (msg.type === "engineUninstallDone") {
+        setEngineUninstalling(null);
+        setEngineResults((prev) => ({ ...prev, [msg.id]: { ok: !!msg.ok, detail: msg.detail } }));
       } else if (msg.type === "enginePathPicked") {
         // A successful pick is followed by a fresh engineStatus; cancels need no UI change.
       }
@@ -896,6 +1051,11 @@ export function App() {
   // Refresh usage numbers whenever the Usage & Quota page is opened.
   React.useEffect(() => {
     if (section === "usage") vscode.postMessage({ type: "getUsage" });
+  }, [section]);
+
+  // Refresh the code-graph readout whenever the Knowledge page is opened.
+  React.useEffect(() => {
+    if (section === "knowledge") vscode.postMessage({ type: "getCodeGraphStatus" });
   }, [section]);
 
   // Probe external engine installs whenever the Agents page is opened.
@@ -1061,16 +1221,16 @@ export function App() {
                     onChange={(e) => setFeatures({ agentEngine: e.target.value as FeatureConfig["agentEngine"] })}
                   >
                     <option value="builtin">{tr("Built-in (recommended)")}</option>
-                    <option value="claude-code">Claude Code</option>
-                    <option value="opencode">OpenCode</option>
+                    <option value="claude-code">{tr("Claude Code")}</option>
+                    <option value="opencode">{tr("OpenCode")}</option>
                     <option value="dsh">{tr("DeepSeek Harness (experimental)")}</option>
-                    <option value="gemini">Gemini CLI</option>
-                    <option value="qwen">Qwen Code</option>
-                    <option value="kimi">Kimi CLI</option>
-                    <option value="crush">Crush</option>
-                    <option value="zcode">ZCode</option>
+                    <option value="gemini">{tr("Gemini CLI")}</option>
+                    <option value="qwen">{tr("Qwen Code")}</option>
+                    <option value="kimi">{tr("Kimi CLI")}</option>
+                    <option value="crush">{tr("Crush")}</option>
+                    <option value="zcode">{tr("ZCode")}</option>
                     <option value="pi">pi</option>
-                    <option value="codex">Codex</option>
+                    <option value="codex">{tr("Codex")}</option>
                   </Select>
                 </Row>
                 <Row title={tr("Use AiWorkHarness models for external engines")} desc={tr("Route the engine's model calls through a local bridge. It listens only on 127.0.0.1 with a random port and token, so only this machine can reach it.")}>
@@ -1128,7 +1288,8 @@ export function App() {
                         key={engine.id}
                         engine={engine}
                         installing={engineInstalling === engine.id}
-                        log={engineLogs[engine.id]}
+                        uninstalling={engineUninstalling === engine.id}
+                        log={engineUninstalling === engine.id ? engineUninstallLogs[engine.id] : engineLogs[engine.id]}
                         result={engineResults[engine.id]}
                       />
                     ))}
@@ -1219,7 +1380,11 @@ export function App() {
 
           {section === "personas" && <PersonasPanel features={features} setFeatures={setFeatures} builtinPersonas={builtinPersonas} />}
 
+          {section === "memory" && <MemoryPanel features={features} setFeatures={setFeatures} />}
+
           {section === "rules" && <RulesPanel rules={rules} skills={skills} />}
+
+          {section === "skillMarket" && <SkillMarketPanel />}
 
           {section === "subagents" && <SubagentsPanel features={features} setFeatures={setFeatures} models={models} modelList={modelList} />}
 
@@ -1275,6 +1440,10 @@ export function App() {
 
           {section === "indexing" && (
             <IndexingPanel status={indexStatus} models={embedModels} modelList={modelList} docs={docSources} docsStatus={docsStatus} features={features} setFeatures={setFeatures} />
+          )}
+
+          {section === "knowledge" && (
+            <KnowledgePanel features={features} setFeatures={setFeatures} taskModelChoices={taskModelChoices} codeGraphStatus={codeGraphStatus} />
           )}
 
           {section === "advanced" && (

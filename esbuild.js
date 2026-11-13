@@ -55,6 +55,7 @@ async function main() {
 		entryPoints: {
 			sidebar: 'webview-ui/sidebar/main.tsx',
 			settings: 'webview-ui/settings/main.tsx',
+			projectDocs: 'webview-ui/projectDocs/main.tsx',
 		},
 		bundle: true,
 		format: 'iife',

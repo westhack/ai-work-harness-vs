@@ -16,6 +16,7 @@ import { FeatureStore, MODEL_CATALOG, getProviderApiKeys } from "../stores/featu
 import { ProviderKeyStore, type ProviderKeyAction } from "../stores/providerKeys";
 import { PROVIDER_PRESETS } from "../shared/providerCatalog";
 import { listRules, listSkills } from "../context/workspaceContext";
+import { addMemory, clearMemory, deleteMemory, listAllMemory, memoryFilePath, updateMemory } from "../stores/memoryStore";
 import { mcpManager } from "../integrations/mcpClient";
 import { BUILTIN_PERSONAS } from "../agent/personas";
 import { getStatus, onIndexStatus, buildIndex, deleteIndex, warmIndex, EMBED_MODELS, setEmbedAccelerator, setIndexingPaused } from "../agent/semanticIndex";
@@ -33,10 +34,13 @@ import * as ollama from "../agent/ollama";
 import { readLocalHardware, estimateModelFit } from "../agent/localRuntime";
 import * as oauth from "../agent/oauth";
 import { getUsage, resetUsage, flushUsage, onUsageChanged } from "../stores/usageStore";
+import { getCodeGraphStats, onCodeGraphStatsChanged } from "../stores/codeGraphStats";
+import { codeGraphSummary } from "../agent/codeGraph";
 import { listExternalHooks, saveExternalHook, deleteExternalHook } from "../integrations/externalHooks";
 import { getAllModels, onAllModels, refreshAllModels, applyEmbedModel } from "../stores/modelRegistry";
 import { cachedAvailability, describeEngineBinary, getLocalEnginesRoot, listEngines, setEngineOverrides, type EngineBinarySource } from "../agent/engines/registry";
-import { ENGINE_INSTALL_SPECS, engineInstallCommand, installEngine } from "../agent/engines/install";
+import { ENGINE_INSTALL_SPECS, engineInstallCommand, installEngine, uninstallEngine } from "../agent/engines/install";
+import { installMarketSkill, listMarketSkills, marketSkillDetail, searchMarketSkills, type MarketSkill, type SkillInstallResult } from "../integrations/skillMarket";
 import type { EngineId } from "../agent/engines/types";
 
 /** External links from webviews may only open ordinary web pages. */
@@ -83,7 +87,7 @@ export class SettingsPanel {
     const language = currentLanguage(featureStore.get().language);
 
     if (SettingsPanel.currentPanel) {
-      SettingsPanel.currentPanel._panel.title = hostText("AiWorkHarness Settings", language);
+      SettingsPanel.currentPanel._panel.title = hostText("Ai Work Harness Settings", language);
       SettingsPanel.currentPanel._panel.reveal(column);
       if (section) {
         SettingsPanel.currentPanel._panel.webview.postMessage({ type: "navigate", section });
@@ -93,7 +97,7 @@ export class SettingsPanel {
 
     const panel = vscode.window.createWebviewPanel(
       SettingsPanel.viewType,
-      hostText("AiWorkHarness Settings", language),
+      hostText("Ai Work Harness Settings", language),
       column || vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -162,6 +166,10 @@ export class SettingsPanel {
       dispose: onUsageChanged((usage) => this._panel.webview.postMessage({ type: "usageData", usage })),
     });
 
+    this._disposables.push({
+      dispose: onCodeGraphStatsChanged(() => void this._postCodeGraphStatus()),
+    });
+
     this._panel.webview.onDidReceiveMessage(
       async (message) => {
         switch (message.type) {
@@ -196,7 +204,7 @@ export class SettingsPanel {
                 }
               }
               this.featureStore.notifyChanged();
-              vscode.window.showInformationMessage(hostText("AiWorkHarness: Settings saved successfully.", this._uiLanguage()));
+              vscode.window.showInformationMessage(hostText("Ai Work Harness: Settings saved successfully.", this._uiLanguage()));
               this._panel.webview.postMessage({ type: "saveSuccess" });
             } catch (err: any) {
               vscode.window.showErrorMessage(`AiWorkHarness: Failed to save settings: ${err.message}`);
@@ -314,6 +322,43 @@ export class SettingsPanel {
           case "getFeatures":
             await this._sendFeatures();
             break;
+          case "getMemory":
+            await this._sendMemory();
+            break;
+          case "addMemory":
+          case "updateMemory":
+          case "deleteMemory":
+          case "clearMemory": {
+            try {
+              if (message.type === "addMemory") {
+                await addMemory({
+                  text: String(message.text ?? ""),
+                  tags: Array.isArray(message.tags) ? message.tags.map(String) : undefined,
+                  scope: message.scope === "global" ? "global" : "project",
+                });
+              } else if (message.type === "updateMemory") {
+                if (!message.id) throw new Error("Missing memory id.");
+                await updateMemory(String(message.id), {
+                  text: message.text === undefined ? undefined : String(message.text),
+                  tags: Array.isArray(message.tags) ? message.tags.map(String) : undefined,
+                });
+              } else if (message.type === "deleteMemory") {
+                if (!message.id) throw new Error("Missing memory id.");
+                await deleteMemory(String(message.id));
+              } else {
+                await clearMemory(message.scope === "global" ? "global" : "project");
+              }
+            } catch (error) {
+              this._panel.webview.postMessage({
+                type: "memoryList",
+                entries: await listAllMemory(),
+                error: String((error as Error)?.message || error),
+              });
+              break;
+            }
+            await this._sendMemory();
+            break;
+          }
           case "saveFeatures": {
             const saved = await this._providerKeys.saveFeatures(message.features);
             // A changed engine path must invalidate the binary/availability caches.
@@ -473,6 +518,163 @@ export class SettingsPanel {
               vscode.window.showErrorMessage(`${hostText("Install failed", language)}${firstLine ? `: ${firstLine}` : ""}`);
             }
             await this._sendEngineStatus();
+            break;
+          }
+          case "uninstallEngine": {
+            const id = message.id as EngineId;
+            if (id === "builtin" || !(id in ENGINE_INSTALL_SPECS)) break;
+            const engineId = id as Exclude<EngineId, "builtin">;
+            const label = listEngines().find((engine) => engine.id === id)?.label ?? id;
+            const language = this._uiLanguage();
+            const removeLabel = hostText("Uninstall", language);
+            const prompt = hostText("Remove {name} from the extension folder?", language);
+            const choice = await vscode.window.showWarningMessage(
+              prompt.replace("{name}", label),
+              { modal: true },
+              removeLabel,
+            );
+            if (choice !== removeLabel) break;
+            this._panel.webview.postMessage({ type: "engineUninstallStarted", id });
+            const pending: string[] = [];
+            let flushTimer: NodeJS.Timeout | undefined;
+            const flush = () => {
+              if (flushTimer) { clearTimeout(flushTimer); flushTimer = undefined; }
+              for (const line of pending.splice(0)) {
+                this._panel.webview.postMessage({ type: "engineUninstallProgress", id, line });
+              }
+            };
+            let result: { ok: boolean; detail?: string; freedBytes?: number };
+            try {
+              result = await uninstallEngine(engineId, (line) => {
+                pending.push(line);
+                if (pending.length >= 20) flush();
+                else if (!flushTimer) flushTimer = setTimeout(flush, 150);
+              });
+            } catch (error) {
+              result = { ok: false, detail: String((error as Error)?.message || error) };
+            } finally {
+              flush();
+            }
+            const freed = result.freedBytes ? ` (${(result.freedBytes / (1024 * 1024)).toFixed(1)} MB)` : "";
+            this._panel.webview.postMessage({ type: "engineUninstallDone", id, ok: result.ok, detail: result.detail, freedBytes: result.freedBytes });
+            if (!result.ok) {
+              vscode.window.showErrorMessage(`${hostText("Uninstall failed", language)}: ${result.detail ?? ""}`.trim());
+            } else {
+              vscode.window.showInformationMessage(`${hostText("Uninstalled {name}", language).replace("{name}", label)}${freed}`);
+            }
+            await this._sendEngineStatus();
+            break;
+          }
+          case "listSkillMarket": {
+            const source = message.source === "skillhub.cn" ? "skillhub.cn" : "skills.sh";
+            const sort = message.sort === "trending" ? "trending" : "popular";
+            const requestId = typeof message.requestId === "string" ? message.requestId : "";
+            const page = Math.max(1, Math.floor(Number(message.page) || 1));
+            try {
+              const data = await listMarketSkills(source, page, undefined, sort);
+              this._panel.webview.postMessage({
+                type: "skillMarketResults",
+                requestId,
+                source,
+                page,
+                results: data.results,
+                hasMore: data.hasMore,
+                total: data.total,
+              });
+            } catch (error) {
+              this._panel.webview.postMessage({
+                type: "skillMarketResults",
+                requestId,
+                source,
+                page,
+                results: [],
+                hasMore: false,
+                error: String((error as Error)?.message || error),
+              });
+            }
+            break;
+          }
+          case "searchSkillMarket": {
+            const source = message.source === "skillhub.cn" ? "skillhub.cn" : "skills.sh";
+            const query = typeof message.query === "string" ? message.query : "";
+            const requestId = typeof message.requestId === "string" ? message.requestId : "";
+            const sort = message.sort === "trending" ? "trending" : "popular";
+            const page = Math.max(1, Math.floor(Number(message.page) || 1));
+            try {
+              const data = query.trim()
+                ? await searchMarketSkills(source, query, page, undefined, sort)
+                : { results: [], hasMore: false, total: undefined };
+              this._panel.webview.postMessage({
+                type: "skillMarketResults",
+                requestId,
+                source,
+                page,
+                results: data.results,
+                hasMore: data.hasMore,
+                total: data.total,
+              });
+            } catch (error) {
+              this._panel.webview.postMessage({
+                type: "skillMarketResults",
+                requestId,
+                source,
+                page,
+                results: [],
+                hasMore: false,
+                error: String((error as Error)?.message || error),
+              });
+            }
+            break;
+          }
+          case "getSkillMarketDetail": {
+            const entry = message.entry as MarketSkill | undefined;
+            if (!entry || (entry.source !== "skills.sh" && entry.source !== "skillhub.cn")) break;
+            const id = String(entry.id ?? "");
+            try {
+              this._panel.webview.postMessage({ type: "skillMarketDetail", id, source: entry.source, detail: await marketSkillDetail(entry) });
+            } catch (error) {
+              this._panel.webview.postMessage({
+                type: "skillMarketDetail",
+                id,
+                source: entry.source,
+                error: String((error as Error)?.message || error),
+              });
+            }
+            break;
+          }
+          case "installSkillMarket": {
+            const entry = message.entry as MarketSkill | undefined;
+            if (!entry || (entry.source !== "skills.sh" && entry.source !== "skillhub.cn")) break;
+            const id = String(entry.id ?? "");
+            this._panel.webview.postMessage({ type: "skillMarketInstallStarted", id });
+            const pending: string[] = [];
+            let flushTimer: NodeJS.Timeout | undefined;
+            const flush = () => {
+              if (flushTimer) { clearTimeout(flushTimer); flushTimer = undefined; }
+              for (const line of pending.splice(0)) {
+                this._panel.webview.postMessage({ type: "skillMarketInstallProgress", id, line });
+              }
+            };
+            let result: SkillInstallResult;
+            try {
+              result = await installMarketSkill(entry, (line) => {
+                pending.push(line);
+                if (pending.length >= 20) flush();
+                else if (!flushTimer) flushTimer = setTimeout(flush, 150);
+              });
+            } catch (error) {
+              result = { ok: false, detail: String((error as Error)?.message || error) };
+            } finally {
+              flush();
+            }
+            this._panel.webview.postMessage({
+              type: "skillMarketInstallDone",
+              id,
+              ok: result.ok,
+              detail: result.detail,
+              path: result.path,
+            });
+            if (result.ok) await this._sendFeatures();
             break;
           }
           case "openExternal":
@@ -655,6 +857,9 @@ export class SettingsPanel {
           case "resetUsage":
             await this._resetUsage(message.requestId);
             break;
+          case "getCodeGraphStatus":
+            await this._postCodeGraphStatus();
+            break;
 
           // ---- OAuth accounts (Claude Code / Codex) ----
           case "oauthGet":
@@ -788,6 +993,16 @@ export class SettingsPanel {
     this._panel.webview.postMessage({ type: "usageActionResult", requestId, action, status,
       ...(error ? { error: String((error as Error)?.message || error) } : {}),
     });
+  }
+
+  /** Graph size/freshness plus this workspace's usage counters. */
+  private async _postCodeGraphStatus(): Promise<void> {
+    const workspace = findWorkspaceRoot();
+    const empty = { available: false, nodes: 0, edges: 0, stale: false, builds: 0, buildFailures: 0, injections: 0, injectedChars: 0, toolCalls: 0 };
+    const status = workspace
+      ? { ...(await codeGraphSummary(workspace)), ...getCodeGraphStats(workspace) }
+      : empty;
+    await this._panel.webview.postMessage({ type: "codeGraphStatus", status });
   }
 
   private async _resetUsage(requestId: unknown) {
@@ -977,6 +1192,17 @@ export class SettingsPanel {
     }
   }
 
+  private async _sendMemory() {
+    const root = findWorkspaceRoot();
+    this._panel.webview.postMessage({
+      type: "memoryList",
+      entries: await listAllMemory(root),
+      hasWorkspace: !!root,
+      projectPath: memoryFilePath("project", root),
+      globalPath: memoryFilePath("global", root),
+    });
+  }
+
   private _sendDocs() {
     this._panel.webview.postMessage({
       type: "docSources",
@@ -998,6 +1224,7 @@ export class SettingsPanel {
       installCommand?: string;
       docsUrl?: string;
       manual: boolean;
+      removable: boolean;
     }[] = [];
     for (const engine of listEngines()) {
       if (engine.id === "builtin") continue;
@@ -1011,6 +1238,8 @@ export class SettingsPanel {
         installCommand: engineInstallCommand(id),
         docsUrl: spec.docsUrl,
         manual: !spec.npm,
+        // Only the extension-owned copy can be deleted safely.
+        removable: false,
       };
       try {
         const binary = await describeEngineBinary(id);
@@ -1018,6 +1247,7 @@ export class SettingsPanel {
         engines.push({
           ...status,
           available: availability.ok,
+          removable: binary?.source === "extension",
           ...(binary ? { binaryPath: binary.path, source: binary.source } : {}),
         });
       } catch {
@@ -1088,6 +1318,6 @@ export class SettingsPanel {
 
   private _getHtmlForWebview(webview: vscode.Webview) {
     const language = this._uiLanguage();
-    return renderWebviewHtml(webview, this.context.extensionUri, "settings", hostText("AiWorkHarness Settings", language), language);
+    return renderWebviewHtml(webview, this.context.extensionUri, "settings", hostText("Ai Work Harness Settings", language), language);
   }
 }

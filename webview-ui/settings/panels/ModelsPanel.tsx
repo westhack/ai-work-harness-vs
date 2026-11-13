@@ -25,11 +25,12 @@ import {
   ProviderKind,
 } from "../features";
 import { Toggle } from "./Toggle";
+import { Select } from "../../shared/Select";
 import { t as tr } from "../../shared/i18n";
 
 // Default and custom models render as flat rows with an enable toggle only;
 // their sampling options are configured in the chat model picker.
-function ModelRow({ model, enabled, onToggle, onRemove, badge }: { model: ModelDef; enabled: boolean; onToggle: () => void; onRemove?: () => void; badge?: string }) {
+function ModelRow({ model, enabled, onToggle, onRemove, onThinkingMode, badge }: { model: ModelDef; enabled: boolean; onToggle: () => void; onRemove?: () => void; onThinkingMode?: (mode: string) => void; badge?: string }) {
   return (
     <div className="model-row">
       <div className="model-name">
@@ -38,6 +39,19 @@ function ModelRow({ model, enabled, onToggle, onRemove, badge }: { model: ModelD
         {model.id !== model.name && <span className="row-desc" style={{ marginLeft: 6, opacity: 0.6 }}>{model.id}</span>}
         {badge && <span className="badge-tag" style={{ marginLeft: 8 }}>{badge}</span>}
       </div>
+      {onThinkingMode && (
+        <Select
+          value={model.thinkingMode ?? ""}
+          onChange={(e) => onThinkingMode(e.target.value)}
+          title={tr("Whether this model thinks, never thinks, or lets you switch")}
+          style={{ maxWidth: 180 }}
+        >
+          <option value="">{tr("Thinking: not set")}</option>
+          <option value="enabled">{tr("Always thinking")}</option>
+          <option value="disabled">{tr("Never thinking")}</option>
+          <option value="toggle">{tr("Thinking switchable")}</option>
+        </Select>
+      )}
       {onRemove && (
         <button className="icon-btn" onClick={onRemove} title={tr("Remove model")}><Icon name="trash" size={14} /></button>
       )}
@@ -64,6 +78,8 @@ interface ModelSectionSpec {
   refreshError?: string;
   /** Local (llama.cpp/Ollama) sections toggle via disabledLocalModels. */
   local?: boolean;
+  /** User-added endpoint: every row can declare thinking capability. */
+  thinkingCapable?: boolean;
   /** Extra badge per model id (e.g. "running" for loaded llama.cpp servers). */
   badgeFor?: (id: string) => string | undefined;
 }
@@ -76,6 +92,7 @@ function ModelSection({
   onEnableAll,
   isCustom,
   onRemove,
+  onThinkingMode,
   onAdd,
 }: {
   spec: ModelSectionSpec;
@@ -86,6 +103,7 @@ function ModelSection({
   onEnableAll: (ids: string[], enable: boolean) => void;
   isCustom: (id: string) => boolean;
   onRemove: (id: string) => void;
+  onThinkingMode: (id: string, mode: string, target?: { providerId: string; kind: ModelKind }) => void;
   onAdd?: (id: string) => void;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -133,6 +151,7 @@ function ModelSection({
                     enabled={enabledFor(m.id)}
                     onToggle={() => onToggle(m.id)}
                     onRemove={!spec.local && isCustom(m.id) ? () => onRemove(m.id) : undefined}
+                    onThinkingMode={!spec.local && (spec.thinkingCapable || isCustom(m.id)) ? (mode) => onThinkingMode(m.id, mode, spec.addTarget) : undefined}
                     badge={isCustom(m.id) ? "custom" : spec.badgeFor?.(m.id)}
                   />
                 ))}
@@ -286,6 +305,17 @@ export function ModelsPanel({
   const removeCustomModel = (id: string) => {
     setFeatures({ customModels: (features.customModels || []).filter((m) => m.id !== id) });
   };
+  const setCustomThinkingMode = (id: string, mode: string, target?: { providerId: string; kind: ModelKind }) => {
+    const thinkingMode = mode === "enabled" || mode === "disabled" || mode === "toggle" ? mode : undefined;
+    const list = features.customModels || [];
+    const existing = list.find((m) => m.id === id);
+    if (existing) {
+      setFeatures({ customModels: list.map((m) => m.id === id ? { ...m, thinkingMode } : m) });
+    } else if (thinkingMode && target) {
+      // Fetched model: persist capability metadata without changing enablement.
+      setFeatures({ customModels: [...list, { id, name: id, kind: target.kind, options: [], providerId: target.providerId, thinkingMode }] });
+    }
+  };
   const isCustom = (id: string) => (features.customModels || []).some((m) => m.id === id);
 
   const q = query.trim().toLowerCase();
@@ -304,7 +334,13 @@ export function ModelsPanel({
       for (const m of catalog) if (Array.isArray(m.kind) ? m.kind.includes(kind) : m.kind === kind) push(m);
     }
     for (const m of modelList) if (m.providerId === providerId) push(m);
-    for (const m of customs) if (m.providerId === providerId) push(m);
+    // A custom entry can add capability metadata to a model the endpoint also
+    // advertises, without duplicating the row.
+    for (const m of customs) if (m.providerId === providerId) {
+      const index = list.findIndex((x) => x.id === m.id);
+      if (index >= 0) list[index] = { ...list[index], thinkingMode: m.thinkingMode };
+      else push(m);
+    }
     for (const id of fetchedExtra[providerId] || []) push({ id, name: id, kind });
     return list;
   };
@@ -355,6 +391,7 @@ export function ModelsPanel({
       connected,
       models: modelsFor(p.id, p.kind),
       addTarget: { providerId: p.id, kind: p.kind },
+      thinkingCapable: true,
       onRefresh: () => refreshProvider(p),
       refreshing: refreshing.has(p.id),
       refreshError: refreshErrors[p.id],
@@ -376,7 +413,11 @@ export function ModelsPanel({
     for (const m of catalog) {
       if ((Array.isArray(m.kind) ? m.kind.includes(kind) : m.kind === kind) && (!available || available.has(m.id))) push(m);
     }
-    for (const m of customs) if (m.providerId === id && (!available || available.has(m.id))) push(m);
+    for (const m of customs) if (m.providerId === id && (!available || available.has(m.id))) {
+      const index = list.findIndex((x) => x.id === m.id);
+      if (index >= 0) list[index] = { ...list[index], thinkingMode: m.thinkingMode };
+      else push(m);
+    }
     if (available) for (const modelId of available) push({ id: modelId, name: modelId, kind, providerId: id });
     sections.push({
       key: id,
@@ -446,9 +487,7 @@ export function ModelsPanel({
       </div>
 
       <p className="panel-hint">
-        Only enabled, connected providers are listed below. Expand a provider to enable/disable its models in
-        the chat picker, add custom models by id, or refresh its model list. Configure each model's supported
-        reasoning, thinking and context options using Edit options in the chat model picker.
+        {tr("Only enabled, connected providers are listed below. Expand a provider to enable/disable its models in the chat picker, add custom models by id, or refresh its model list. Configure each model's supported reasoning, thinking and context options using Edit options in the chat model picker.")}
       </p>
 
       {q && visibleSections.length === 0 && <div className="empty-card">{tr("No models match \"")}{query}".</div>}
@@ -464,6 +503,7 @@ export function ModelsPanel({
           onEnableAll={s.local ? localEnableAll : enableAll}
           isCustom={isCustom}
           onRemove={removeCustomModel}
+          onThinkingMode={setCustomThinkingMode}
           onAdd={s.addTarget ? (id) => addCustomModel(id, s.addTarget!.providerId, s.addTarget!.kind) : undefined}
         />
       ))}

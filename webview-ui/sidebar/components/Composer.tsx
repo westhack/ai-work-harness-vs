@@ -758,7 +758,7 @@ function ModelPicker({
 
   const editing = editingId ? list.find((m) => m.id === editingId) || null : null;
   const selectedModel = list.find((m) => m.id === selected);
-  const selLabel = selected === "auto" ? "Auto" : selectedModel?.name || selected || "no model";
+  const selLabel = selected === "auto" ? "Auto" : selectedModel?.name || selected || tr("no model");
   const summary = selectedModel ? optionSummary(selectedModel.options.filter(option => ["reasoning_effort", "effort", "thinking", "speed"].includes(option.key))) : "";
 
   const triggerRef = React.useRef<HTMLSpanElement>(null);
@@ -957,6 +957,9 @@ export function Composer({
   onRunNextQueued?: () => void;
 }) {
   const [attachments, setAttachments] = React.useState<Attachment[]>(initialAttachments ?? []);
+  const [enhancing, setEnhancing] = React.useState(false);
+  const enhanceReqRef = React.useRef<string | null>(null);
+  const enhanceOriginalRef = React.useRef<string | null>(null);
   const [previewImageId, setPreviewImageId] = React.useState<string | null>(null);
   const previewImages = React.useMemo(() => attachments.filter(attachment => attachment.kind === "image"), [attachments]);
   React.useEffect(() => { setPreviewImageId(null); }, [focusKey]);
@@ -1034,6 +1037,39 @@ export function Composer({
   React.useEffect(() => { onTabDraftRef.current = onTabDraft; }, [onTabDraft]);
   const attachmentsRef = React.useRef(attachments);
   React.useEffect(() => { attachmentsRef.current = attachments; }, [attachments]);
+
+  // The host rewrites the draft on request; only the newest request is applied.
+  React.useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data as { type?: string; requestId?: string; text?: string; error?: string } | undefined;
+      if (!data || data.requestId !== enhanceReqRef.current) return;
+      if (data.type === "promptEnhanceDelta" && data.text) {
+        // Show the rewrite while it is generated so the wait feels immediate.
+        richEditor.current?.setText(data.text);
+        refreshEmpty();
+        return;
+      }
+      if (data.type !== "promptEnhanced") return;
+      enhanceReqRef.current = null;
+      setEnhancing(false);
+      if (data.text) {
+        richEditor.current?.setText(data.text);
+        refreshEmpty();
+        edRef.current?.focus();
+        if (!editing) onTabDraftRef.current?.({ text: data.text, attachments: attachmentsRef.current });
+      } else if (data.error) {
+        // Keep the draft the user typed instead of the partial rewrite.
+        if (enhanceOriginalRef.current != null) {
+          richEditor.current?.setText(enhanceOriginalRef.current);
+          refreshEmpty();
+        }
+        console.warn("Prompt enhancement failed:", data.error);
+      }
+      enhanceOriginalRef.current = null;
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [editing, refreshEmpty]);
   const restoredDraftRef = React.useRef<{ focusKey?: string; draft?: ComposerDraft | null } | null>(null);
   // Serialize is defined below; snapshot via ref so tab-switch effect can call it.
   const serializeRef = React.useRef<() => string>(() => "");
@@ -1386,6 +1422,17 @@ export function Composer({
     emitDraft();
   }, [attachments, empty, editing, emitDraft]);
 
+  /** Ask the host model to rewrite the draft into a sharper prompt. */
+  const enhancePrompt = () => {
+    const text = richEditor.current?.getText() ?? "";
+    if (enhancing || !text.trim()) return;
+    const requestId = `enhance-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    enhanceReqRef.current = requestId;
+    enhanceOriginalRef.current = text;
+    setEnhancing(true);
+    vscode.postMessage({ type: "enhancePrompt", requestId, text, model: selectedModel });
+  };
+
   const clear = () => {
     if (edRef.current) {
       richEditor.current?.setText("");
@@ -1721,6 +1768,17 @@ export function Composer({
           {!editing && <ApprovalPicker policy={approvalPolicy} />}
           </div>
           <div className="right">
+            {!editing && (
+              <button
+                className="attach-btn"
+                title={enhancing ? tr("Enhancing…") : tr("Enhance prompt")}
+                aria-label={tr("Enhance prompt")}
+                disabled={enhancing || empty}
+                onClick={enhancePrompt}
+              >
+                <Icon name={enhancing ? "reset" : "brain"} size={16} />
+              </button>
+            )}
             {!editing && (() => {
               const sel = modelList.find((m) => m.id === selectedModel);
               const total = parseContextSize(sel?.options.find((o) => o.key === "max_context")?.value) || 128_000;

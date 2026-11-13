@@ -8,11 +8,24 @@
  */
 
 import type { ChildProcess } from "node:child_process";
-import { mkdir } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { EngineId } from "./types";
-import { clearEngineCaches, getLocalEnginesRoot, killProcessTree, resolveEngineBinary, spawnCommand, whereBinary } from "./registry";
+import { stopDshHosts } from "./dsh";
+import { stopOpenCodeServers } from "./openCode";
+import {
+	clearEngineCaches,
+	describeEngineBinary,
+	engineInstallDirectory,
+	getEngineOverride,
+	getLocalEnginesRoot,
+	killProcessTree,
+	resolveEngineBinary,
+	spawnCommand,
+	whereBinary,
+} from "./registry";
 
 /** How to obtain one external engine. Engines without `npm` need a manual install. */
 export type EngineInstallSpec = {
@@ -43,6 +56,7 @@ const INSTALL_TIMEOUT_MS = 15 * 60 * 1000;
 const DETAIL_LINES = 20;
 
 const installs = new Map<string, Promise<EngineInstallResult>>();
+const uninstalls = new Map<string, Promise<EngineUninstallResult>>();
 
 /** Where npm put the package: the extension folder or the global prefix. */
 export type EngineInstallScope = "extension" | "global";
@@ -189,5 +203,86 @@ export function installEngine(id: EngineId, onLine: (line: string) => void): Pro
 	if (running) return running;
 	const task = runEngineInstall(id, onLine).finally(() => installs.delete(id));
 	installs.set(id, task);
+	return task;
+}
+
+export type EngineUninstallResult = {
+	ok: boolean;
+	detail?: string;
+	/** Bytes reclaimed, when the folder could be measured first. */
+	freedBytes?: number;
+};
+
+/** Long-lived adapters that may still hold files inside the install folder. */
+const ENGINE_STOPPERS: Partial<Record<Exclude<EngineId, "builtin">, () => void>> = {
+	opencode: stopOpenCodeServers,
+	dsh: stopDshHosts,
+};
+
+/** Best-effort recursive size, used only for the "freed N MB" message. */
+async function directorySize(dir: string): Promise<number> {
+	let total = 0;
+	const stack = [dir];
+	while (stack.length > 0) {
+		const current = stack.pop() as string;
+		let entries;
+		try {
+			entries = await readdir(current, { withFileTypes: true });
+		} catch {
+			continue;
+		}
+		for (const entry of entries) {
+			const full = join(current, entry.name);
+			if (entry.isDirectory()) stack.push(full);
+			else if (entry.isFile()) {
+				try { total += (await stat(full)).size; } catch { /* raced with the delete */ }
+			}
+		}
+	}
+	return total;
+}
+
+/**
+ * Remove an engine that was installed into the extension folder. Installs the
+ * user made themselves (picked path or global npm) are never touched.
+ */
+async function runEngineUninstall(
+	id: Exclude<EngineId, "builtin">,
+	onLine: (line: string) => void,
+): Promise<EngineUninstallResult> {
+	if (getEngineOverride(id)) {
+		return { ok: false, detail: "This engine uses a path you selected; remove it outside the extension." };
+	}
+	const dir = engineInstallDirectory(id);
+	if (!dir) {
+		return { ok: false, detail: "Engines are installed globally; uninstall with npm uninstall -g." };
+	}
+	if (!existsSync(dir)) {
+		return { ok: false, detail: "Nothing is installed in the extension folder for this engine." };
+	}
+	const info = await describeEngineBinary(id);
+	if (info && info.source !== "extension") {
+		return { ok: false, detail: "The active binary is not the extension copy; nothing was removed." };
+	}
+
+	ENGINE_STOPPERS[id]?.();
+	onLine(`Removing ${dir}`);
+	const freedBytes = await directorySize(dir);
+	try {
+		await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+	} catch (error) {
+		return { ok: false, detail: String((error as Error)?.message || error) };
+	}
+	clearEngineCaches(id);
+	return { ok: true, freedBytes };
+}
+
+/** Uninstall one engine; repeated calls share a single run. */
+export function uninstallEngine(id: EngineId, onLine: (line: string) => void): Promise<EngineUninstallResult> {
+	if (id === "builtin") return Promise.resolve({ ok: false, detail: "The built-in engine cannot be uninstalled." });
+	const running = uninstalls.get(id);
+	if (running) return running;
+	const task = runEngineUninstall(id, onLine).finally(() => uninstalls.delete(id));
+	uninstalls.set(id, task);
 	return task;
 }

@@ -40,6 +40,9 @@ import { ContextArchive } from "./contextArchive";
 import { DeferredToolSchemas, OPTIONAL_BUILTIN_TOOLS } from "./deferredTools";
 import { restoreContext, saveContext } from "./contextState";
 import { buildUserInfoBlock, buildOpenFilesBlock } from "../context/cursorContext";
+import { renderMemoryBlock } from "../stores/memoryStore";
+import { recordCodeGraphEvent } from "../stores/codeGraphStats";
+import { codeGraphPromptBlock } from "./codeGraph";
 import { mcpManager, formatMcpToolResult } from "../integrations/mcpClient";
 import { firstMcpImage } from "../integrations/mcpContent";
 import type { AgentEvent, Attachment, ChatReasoning, Mode, ResponsesReasoning, Step, ToolCall, ToolSchema } from "./types";
@@ -554,6 +557,7 @@ async function runAgentInWorkspace(opts: RunAgentOptions): Promise<void> {
 				enableWorkspaceContext,
 				enableWebSearch: webSearchEnabled,
 				enableWebFetch: webFetchEnabled,
+				codeGraphConsume: opts.codeGraphConsume,
 				changeOwner,
 				approve,
 				isSubagent: true,
@@ -638,6 +642,20 @@ async function runAgentInWorkspace(opts: RunAgentOptions): Promise<void> {
 			if (opts.mode === "project" && teams?.length && activeTeamIds?.length) {
 				userInfo += buildTeamsBlock(teams, customSubagents ?? [], activeTeamIds);
 			}
+			if (opts.memoryEnabled !== false) {
+				// Memory is ranked against this message, then bounded so it cannot crowd out context.
+				const memory = await renderMemoryBlock({ query: prompt, limit: opts.memoryInjectLimit ?? 12 }).catch(() => "");
+				if (memory) userInfo += `\n\n${memory}`;
+			}
+			if (opts.codeGraphConsume !== false) {
+				// Reuse the cached graphify structure instead of re-walking the tree.
+				const root = getWorkspaceRoot();
+				const graph = await codeGraphPromptBlock(root).catch(() => undefined);
+				if (graph) {
+					userInfo += `\n\n${graph}`;
+					if (root) recordCodeGraphEvent(root, { type: "inject", chars: graph.length });
+				}
+			}
 			const openFiles = enableWorkspaceContext !== false ? await buildOpenFilesBlock() : "";
 			cursorCtx = { userInfo, openFiles };
 		} catch {
@@ -690,6 +708,7 @@ async function runAgentInWorkspace(opts: RunAgentOptions): Promise<void> {
 	}
 	if (opts.enableWebSearch === false) disabledToolNames.add("WebSearch");
 	if (opts.enableWebFetch === false) disabledToolNames.add("WebFetch");
+	if (opts.codeGraphConsume === false) disabledToolNames.add("CodeGraph");
 	if (opts.enableWebFetch === false || (currentExecutionProfile().kind === "container" && !currentExecutionProfile().network)) {
 		for (const name of ["BrowserNavigate", "BrowserInspect", "BrowserScreenshot", "BrowserInteract", "BrowserClose", "WebFetch", "WebSearch"]) disabledToolNames.add(name);
 	}

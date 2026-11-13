@@ -13,6 +13,7 @@ import { SidebarProvider } from './ui/sidebarProvider';
 import { registerInlineReview } from './ui/inlineReview';
 import { registerGitSync } from './integrations/gitSync';
 import { SettingsPanel } from './ui/settingsPanel';
+import { ProjectDocsPanel } from './ui/projectDocsPanel';
 import { FeatureStore } from './stores/featureStore';
 import { setToolTimeoutOverrides } from './agent/tools/shared';
 import { mcpManager } from './integrations/mcpClient';
@@ -20,10 +21,15 @@ import { configureMcpAuthentication } from './integrations/mcpHost';
 import { setIndexStorageDir, setEmbedAccelerator } from './agent/semanticIndex';
 import { listEmbedAccelerators } from './agent/embedAccelerators';
 import { setDocsStorageDir, setDocSourcesProvider } from './agent/docsIndex';
+import { setProjectDocsStorageDir } from './agent/projectDocs/store';
 import { initIndexWatch } from './agent/indexWatch';
 import { initLlamacpp, checkInstalled, loadModel, disposeLlamacpp } from './agent/llamacpp';
 import { initOAuth } from './agent/oauth';
 import { initUsage } from './stores/usageStore';
+import { initCodeGraphStats } from './stores/codeGraphStats';
+import { codeGraphSummary } from './agent/codeGraph';
+import { onGraphifyStatus } from './agent/knowledgeGraph';
+import { findWorkspaceRoot } from './context/workspaceUtils';
 import { initModelRegistry, applyEmbedModel } from './stores/modelRegistry';
 import { initRuntimeDeps } from './runtimeDeps';
 import { initLog, logError } from './logging';
@@ -36,7 +42,7 @@ import * as path from 'node:path';
 import { registerPluginManagement } from './ui/pluginCommands';
 import { registerRemoteJobs } from './ui/remoteCommands';
 import { initHookConsent } from './integrations/hookConsent';
-import { setLocalEnginesRoot, setEngineOverrides } from './agent/engines/registry';
+import { setLocalEnginesRoot, setEngineOverrides, primeShellPath } from './agent/engines/registry';
 import { setBridgeEnvFeatureSource } from './agent/engines/bridgeEnv';
 import { stopBridge } from './agent/bridge';
 
@@ -105,6 +111,8 @@ export async function activate(context: vscode.ExtensionContext) {
   try {
     setLocalEnginesRoot(path.join(context.globalStorageUri.fsPath, 'engines'));
     setEngineOverrides(featureStore.get().enginePaths);
+    // macOS/Linux editors launched from the Dock miss Homebrew/nvm in PATH.
+    void primeShellPath().catch(() => undefined);
   } catch (error) {
     logError('startup.engines', error);
   }
@@ -114,6 +122,7 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(featureStore.onDidChange(syncToolTimeouts));
   initOAuth(context);
   initUsage(context);
+  initCodeGraphStats(context);
   setOllamaHost(context.globalState.get<string>('aiworkharness.ollamaEndpoint', 'http://localhost:11434'));
   // Prefetch the provider-grouped model list so every UI (settings, pickers)
   // renders instantly from the backend cache.
@@ -122,6 +131,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // Local semantic index: vectors in globalStorage; warm disk + incremental sync.
   setIndexStorageDir(context.globalStorageUri.fsPath);
   setDocsStorageDir(context.globalStorageUri.fsPath);
+  setProjectDocsStorageDir(context.globalStorageUri.fsPath);
   setDocSourcesProvider(() => featureStore.get().docSources ?? []);
   // Embedding device: CPU unless the user picked a GPU. GPUs are only probed
   // (a short PowerShell/nvidia-smi call) when one is selected, to label it.
@@ -192,6 +202,48 @@ export async function activate(context: vscode.ExtensionContext) {
     })
   );
 
+  context.subscriptions.push(
+    vscode.commands.registerCommand('aiworkharness.openProjectDocs', () => {
+      ProjectDocsPanel.createOrShow(context, settingsManager, featureStore);
+    })
+  );
+
+  // Status-bar quick switch for code-graph consumption (the graph itself stays cached).
+  const codeGraphItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 90);
+  codeGraphItem.command = 'aiworkharness.toggleCodeGraph';
+  const refreshCodeGraphItem = () => {
+    const on = featureStore.get().codeGraphConsume !== false;
+    codeGraphItem.text = `$(graph) ${hostText('Code Graph', hostLanguage())}: ${on ? hostText('On', hostLanguage()) : hostText('Off', hostLanguage())}`;
+    codeGraphItem.tooltip = hostText('Include the cached graphify code graph in agent context. Click to toggle.', hostLanguage());
+    codeGraphItem.show();
+    // The tooltip doubles as the status readout: freshness and size of the cached graph.
+    const workspace = findWorkspaceRoot();
+    if (workspace) void codeGraphSummary(workspace).then((summary) => {
+      const base = hostText('Include the cached graphify code graph in agent context. Click to toggle.', hostLanguage());
+      if (!summary.available) {
+        codeGraphItem.tooltip = `${base}\n${hostText('No graph built yet.', hostLanguage())}`;
+        return;
+      }
+      const built = summary.generatedAt ? new Date(summary.generatedAt).toLocaleString() : '';
+      const tail = `${summary.nodes} nodes · ${summary.edges} edges${built ? ` · ${built}` : ''}${summary.stale ? ` · ${hostText('stale: HEAD has moved', hostLanguage())}` : ''}`;
+      codeGraphItem.tooltip = `${base}\n${tail}`;
+    }).catch(() => { /* the tooltip is best effort */ });
+  };
+  refreshCodeGraphItem();
+  context.subscriptions.push(
+    codeGraphItem,
+    featureStore.onDidChange(refreshCodeGraphItem),
+    { dispose: onGraphifyStatus((status) => { if (status.phase === 'done' || status.phase === 'error') refreshCodeGraphItem(); }) },
+    vscode.commands.registerCommand('aiworkharness.toggleCodeGraph', async () => {
+      const next = featureStore.get().codeGraphConsume === false;
+      await featureStore.set({ codeGraphConsume: next });
+      void vscode.window.showInformationMessage(hostText(
+        next ? 'The code graph is included in agent context.' : 'The code graph is no longer included in agent context.',
+        hostLanguage(),
+      ));
+    }),
+  );
+
   // Ctrl+L: add the current selection (or file) to chat as a mention.
   const todoLensesChanged = new vscode.EventEmitter<void>();
   // Refresh CodeLens captions when the UI language changes.
@@ -201,6 +253,9 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('aiworkharness.newChat', () => sidebarProvider.newChat()),
     vscode.commands.registerCommand('aiworkharness.reviewChanges', () => sidebarProvider.startReview()),
     vscode.commands.registerCommand('aiworkharness.implementTodo', (uri?: vscode.Uri, line?: number) => sidebarProvider.implementTodo(uri, line)),
+    vscode.commands.registerCommand('aiworkharness.generateCode', () => sidebarProvider.runEditorAction('generate')),
+    vscode.commands.registerCommand('aiworkharness.generateTests', () => sidebarProvider.runEditorAction('tests')),
+    vscode.commands.registerCommand('aiworkharness.outlineFile', () => sidebarProvider.runEditorAction('outline')),
     todoLensesChanged,
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('aiworkharness.todoCodeLensEnabled')) todoLensesChanged.fire();
@@ -210,7 +265,7 @@ export async function activate(context: vscode.ExtensionContext) {
       provideCodeLenses(document, token) {
         if (!vscode.workspace.getConfiguration('aiworkharness').get<boolean>('todoCodeLensEnabled', true)) return [];
         return todoCommentLines(document.getText(), 20_000, () => token.isCancellationRequested).map((line) =>
-          new vscode.CodeLens(new vscode.Range(line, 0, line, 0), { title: hostText('Implement with AiWorkHarness', hostLanguage()), command: 'aiworkharness.implementTodo', arguments: [document.uri, line] }));
+          new vscode.CodeLens(new vscode.Range(line, 0, line, 0), { title: hostText('Implement with Ai Work Harness', hostLanguage()), command: 'aiworkharness.implementTodo', arguments: [document.uri, line] }));
       },
     })
   );

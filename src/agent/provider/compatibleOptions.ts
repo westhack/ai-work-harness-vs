@@ -49,11 +49,19 @@ export function applyCompatibleOptions(
 ): void {
   const provider = compatibleProviderFor(apiBaseUrl, model);
   if (!provider) {
+    const selected = normalized(params?.thinking);
     // Qualified gateway models retain their routing ID and use shared controls.
     const slash = model.indexOf("/");
     if (slash > 0 && Object.hasOwn(MODEL_PROVIDER_ALIASES, model.slice(0, slash))
-      && ["disabled", "enabled", "adaptive"].includes(params?.thinking ?? "")) {
-      body.thinking = { type: params!.thinking };
+      && ["disabled", "enabled", "adaptive"].includes(selected ?? "")) {
+      body.thinking = { type: selected };
+      return;
+    }
+    // Custom endpoints (vLLM/SGLang) expose thinking through the chat template.
+    if (params?.chatTemplateThinking && (selected === "enabled" || selected === "disabled")) {
+      const existing = typeof body.chat_template_kwargs === "object" && body.chat_template_kwargs !== null
+        ? body.chat_template_kwargs as Record<string, unknown> : {};
+      body.chat_template_kwargs = { ...existing, enable_thinking: selected === "enabled" };
     }
     return;
   }

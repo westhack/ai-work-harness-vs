@@ -9,11 +9,24 @@
 
 import * as vscode from "vscode";
 import { randomBytes } from "node:crypto";
+import { statSync } from "node:fs";
 import { htmlLang, type UiLanguage } from "../shared/i18n";
 
 function nonce(): string {
   // CSP nonces must be unpredictable; Math.random is not a CSPRNG.
   return randomBytes(24).toString("base64url");
+}
+
+/**
+ * Webview assets are served under stable URLs, so VS Code caches them across
+ * reloads. Versioning by mtime makes every rebuild fetch the new bundle.
+ */
+function assetVersion(extensionUri: vscode.Uri, name: string): string {
+  try {
+    return `?v=${Math.round(statSync(vscode.Uri.joinPath(extensionUri, "dist", "webview", name).fsPath).mtimeMs)}`;
+  } catch {
+    return "";
+  }
 }
 
 /** The only extension folders a webview may load resources from. */
@@ -25,16 +38,16 @@ export function webviewResourceRoots(extensionUri: vscode.Uri): vscode.Uri[] {
 export function renderWebviewHtml(
   webview: vscode.Webview,
   extensionUri: vscode.Uri,
-  entry: "sidebar" | "settings",
+  entry: "sidebar" | "settings" | "projectDocs",
   title: string,
   language: UiLanguage = "en"
 ): string {
   const scriptUri = webview.asWebviewUri(
     vscode.Uri.joinPath(extensionUri, "dist", "webview", `${entry}.js`)
-  );
+  ) + assetVersion(extensionUri, `${entry}.js`);
   const styleUri = webview.asWebviewUri(
     vscode.Uri.joinPath(extensionUri, "dist", "webview", `${entry}.css`)
-  );
+  ) + assetVersion(extensionUri, `${entry}.css`);
   const iconUri = webview.asWebviewUri(
     vscode.Uri.joinPath(extensionUri, "media", "icon.png")
   );
@@ -46,6 +59,7 @@ export function renderWebviewHtml(
     `style-src ${webview.cspSource} 'unsafe-inline'`,
     `script-src 'nonce-${n}'`,
     `font-src ${webview.cspSource} data:`,
+    `frame-src ${webview.cspSource}`,
   ].join("; ");
 
   return `<!DOCTYPE html>

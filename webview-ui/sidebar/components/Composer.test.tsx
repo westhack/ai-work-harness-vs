@@ -16,6 +16,7 @@ import { Composer, type ComposerDraft } from "./Composer";
 import { setMotionPreference } from "../../shared/motionPreference";
 import type { ModelDef } from "../types";
 import { vscode } from "../../shared/vscode";
+import { setLocale } from "../../shared/i18n";
 
 vi.mock("../../shared/vscode", () => ({ vscode: { postMessage: vi.fn() } }));
 let root: Root, container: HTMLDivElement;
@@ -56,6 +57,57 @@ it("previews attached images without submitting or removing them, and keeps remo
   expect(container.querySelector(".attach-chip")).toBeNull();
   expect(document.querySelector('[role="dialog"][aria-label="Image preview"]')).toBeNull();
   expect(lastDraft().attachments).toEqual([]);
+  expect(submit).not.toHaveBeenCalled();
+});
+
+it("shows the rewrite while it streams", () => {
+  act(() => root.render(<Composer {...props} initialText="fix the bug" />));
+  const button = container.querySelector<HTMLButtonElement>('[aria-label="Enhance prompt"]')!;
+  act(() => button.click());
+  const post = vi.mocked(vscode.postMessage);
+  const message = post.mock.calls[post.mock.calls.length - 1][0] as { requestId: string };
+  act(() => {
+    window.dispatchEvent(new MessageEvent("message", {
+      data: { type: "promptEnhanceDelta", requestId: message.requestId, text: "Fix the bug" },
+    }));
+  });
+  expect(editor().textContent).toBe("Fix the bug");
+  expect(button.disabled).toBe(true);
+  act(() => {
+    window.dispatchEvent(new MessageEvent("message", {
+      data: { type: "promptEnhanced", requestId: message.requestId, text: "Fix the bug in loop.ts." },
+    }));
+  });
+  expect(editor().textContent).toBe("Fix the bug in loop.ts.");
+  expect(button.disabled).toBe(false);
+});
+
+it("localizes the enhance control", () => {
+  act(() => setLocale("zh-CN"));
+  try {
+    act(() => root.render(<Composer {...props} initialText="fix the bug" />));
+    const button = container.querySelector<HTMLButtonElement>('[aria-label="增强提示词"]');
+    expect(button?.title).toBe("增强提示词");
+  } finally {
+    act(() => setLocale("en"));
+  }
+});
+
+it("asks the host to enhance the draft and replaces it with the rewrite", () => {
+  act(() => root.render(<Composer {...props} initialText="fix the bug in loop" />));
+  const button = container.querySelector<HTMLButtonElement>('[aria-label="Enhance prompt"]')!;
+  expect(button.disabled).toBe(false);
+  act(() => button.click());
+  const post = vi.mocked(vscode.postMessage);
+  const message = post.mock.calls[post.mock.calls.length - 1][0] as { type: string; requestId: string; text: string };
+  expect(message.type).toBe("enhancePrompt");
+  expect(message.text).toBe("fix the bug in loop");
+  act(() => {
+    window.dispatchEvent(new MessageEvent("message", {
+      data: { type: "promptEnhanced", requestId: message.requestId, text: "Fix the bug in loop.ts and add a regression test." },
+    }));
+  });
+  expect(editor().textContent).toBe("Fix the bug in loop.ts and add a regression test.");
   expect(submit).not.toHaveBeenCalled();
 });
 

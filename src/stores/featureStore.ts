@@ -86,6 +86,9 @@ export interface ModelOption {
 	value: string;
 }
 
+/** Thinking capability declared by the user for a custom model. */
+export type ModelThinkingMode = "enabled" | "disabled" | "toggle";
+
 /** A curated model with its provider kind and tunable options. */
 export interface ModelDef {
 	/** Picker id. May be a provider-scoped composite ("<providerId>::<modelId>") so the
@@ -107,6 +110,9 @@ export interface ModelDef {
 	providerId?: string;
 	/** Provider display name (for grouping in the picker). */
 	providerName?: string;
+	/** Custom-model capability: "enabled" always thinks, "disabled" never does,
+	 *  "toggle" exposes a Thinking switch. Undefined keeps legacy behavior. */
+	thinkingMode?: ModelThinkingMode;
 }
 
 /** Whether a provider participates in chat (defaults to true). */
@@ -317,6 +323,22 @@ export interface FeatureConfig {
 	subagentModel: string;
 	/** Judge model used by Auto mode to pick a model for each task ("" = first enabled). */
 	autoJudgeModel: string;
+	/** Documentation catalog planning model ("" = chat model). */
+	docsCatalogModel: string;
+	/** Documentation page writing model ("" = chat model). */
+	docsContentModel: string;
+	/** Documentation translation model ("" = content model). */
+	docsTranslationModel: string;
+	/** Knowledge-graph extraction model passed to graphify ("" = chat model). */
+	docsGraphifyModel: string;
+	/** Project Docs limits (0 = built-in default). */
+	docsMaxPages: number;
+	docsMaxCatalogFiles: number;
+	docsMaxCatalogChars: number;
+	docsMaxFileKb: number;
+	docsCatalogSteps: number;
+	docsMindmapSteps: number;
+	docsMindmapTokens: number;
 	/** Local embedding model id for the semantic codebase index. */
 	embedModel: string;
 	/** Device for local embeddings: "cpu" (default), "dml:<adapter>", "cuda:<index>" or "coreml". */
@@ -372,6 +394,14 @@ export interface FeatureConfig {
 	webSearchEnabled: boolean;
 	/** Allow the agent to use the WebFetch tool. */
 	webFetchEnabled: boolean;
+	/** Inject saved memories into the agent context. */
+	memoryEnabled: boolean;
+	/** Max memory entries injected per message (0 = default 12). */
+	memoryInjectLimit: number;
+	/** Build and refresh the graphify code graph automatically. */
+	codeGraphEnabled: boolean;
+	/** Inject the code graph and expose the CodeGraph tool to the agent. */
+	codeGraphConsume: boolean;
 	/** Per-action-type approval policy (shell/edits/delete/mcp/web). */
 	approvalPolicy: ApprovalPolicy;
 	/** External documentation sources indexed for @Docs mentions. */
@@ -399,6 +429,17 @@ const DEFAULTS: FeatureConfig = {
 	activeTeamIds: ["team-full-stack"],
 	subagentModel: "",
 	autoJudgeModel: "",
+	docsCatalogModel: "",
+	docsContentModel: "",
+	docsTranslationModel: "",
+	docsGraphifyModel: "",
+	docsMaxPages: 0,
+	docsMaxCatalogFiles: 0,
+	docsMaxCatalogChars: 0,
+	docsMaxFileKb: 0,
+	docsCatalogSteps: 0,
+	docsMindmapSteps: 0,
+	docsMindmapTokens: 0,
 	embedModel: "minilm",
 	embedAccelerator: "cpu",
 	hooks: [],
@@ -426,6 +467,10 @@ const DEFAULTS: FeatureConfig = {
 	completionSound: false,
 	webSearchEnabled: true,
 	webFetchEnabled: true,
+	memoryEnabled: true,
+	memoryInjectLimit: 12,
+	codeGraphEnabled: false,
+	codeGraphConsume: true,
 	approvalPolicy: DEFAULT_APPROVAL,
 	docSources: [],
 	indexingEnabled: true,
@@ -544,6 +589,16 @@ export class FeatureStore {
 			const speed = saved?.find(option => option.key === "speed")?.value;
 			base.push({ key: "speed", label: "Speed", description: MODEL_SPEED_DESCRIPTION, type: "select", values: ["standard", "fast"], value: speed === "fast" ? "fast" : "standard" });
 		}
+		// Custom models declare their thinking capability in settings. Rebuild the
+		// control from that declaration so stale saved values cannot override it.
+		const custom = cfg.customModels.find((m) => m.id === modelId && (!kind || kindMatches(m.kind, kind)));
+		if (custom) {
+			for (let index = base.length - 1; index >= 0; index--) if (base[index].key === "thinking") base.splice(index, 1);
+			if (custom.thinkingMode === "toggle") {
+				const savedThinking = saved?.find((o) => o.key === "thinking")?.value;
+				base.push(thinking(savedThinking === "disabled" ? "disabled" : "enabled", ["enabled", "disabled"]));
+			}
+		}
 		// Opus 5's and Haiku 5.5's two controls are dependent: higher effort cannot disable thinking.
 		if (/^claude-(?:opus-5|haiku-5)(?:$|-)/.test(modelId.slice(modelId.lastIndexOf("/") + 1)) && base.some((o) => o.key === "thinking" && o.value === "disabled")) {
 			const option = base.find((o) => o.key === "reasoning_effort");
@@ -571,6 +626,11 @@ export class FeatureStore {
 	nameFor(modelId: string, kind?: string): string {
 		return this.defFor(modelId, kind)?.name ?? modelId;
 	}
+
+	/** User-declared thinking capability for a custom model. */
+	thinkingModeFor(modelId: string): ModelThinkingMode | undefined {
+		return this.get().customModels.find((m) => m.id === modelId)?.thinkingMode;
+	}
 }
 
 /** Catalog display name for a model id (provider-agnostic), or undefined. */
@@ -579,8 +639,8 @@ export function catalogName(modelId: string): string | undefined {
 }
 
 /** Translate a model's resolved options into provider request params. */
-export function optionsToParams(options: ModelOption[]): { reasoningEffort?: string; thinking?: string; maxContext?: string; speed?: ModelSpeed } {
-	const out: { reasoningEffort?: string; thinking?: string; maxContext?: string; speed?: ModelSpeed } = {};
+export function optionsToParams(options: ModelOption[]): { reasoningEffort?: string; thinking?: string; maxContext?: string; speed?: ModelSpeed; chatTemplateThinking?: boolean } {
+	const out: { reasoningEffort?: string; thinking?: string; maxContext?: string; speed?: ModelSpeed; chatTemplateThinking?: boolean } = {};
 	for (const o of options) {
 		if (o.key === "reasoning_effort" && o.value) out.reasoningEffort = o.value;
 		// thinking is a mode: "disabled" | "adaptive" | "enabled". Legacy "true"/"false"

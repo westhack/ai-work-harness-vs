@@ -269,7 +269,7 @@ function SubagentCard({ block, onOpen, awaitingApproval }: { block: ToolBlock; o
         {subName ? <span className="sub-chip sub-type" title={`Subagent: ${subName}`}>{subName}</span> : null}
         {model ? <span className="sub-chip sub-model" title={String(i.model)}>{model}</span> : null}
         <span className="sub-chip sub-steps"><TextSwap text={`${steps} ${steps === 1 ? "step" : "steps"}`} /></span>
-        <span className="badge badge-agent">{isReadonlySubagent(i) ? "Explore" : "Agent"}</span>
+        <span className="badge badge-agent">{isReadonlySubagent(i) ? tr("Explore") : tr("Agent")}</span>
         {awaitingApproval ? <span className="badge badge-ask">{tr("Approve")}</span> : null}
       </div>
       {subtitle && !open ? <div className="subagent-card-subtitle">{subtitle}</div> : null}
@@ -763,7 +763,7 @@ function QuestionCard({ block }: { block: ToolBlock }) {
               className="qc-textarea"
               aria-label={q.question}
               aria-required={q.required || undefined}
-              placeholder={q.placeholder || "Type your answer…"}
+              placeholder={q.placeholder || tr("Type your answer…")}
               autoFocus
               value={structuredValue}
               onChange={(e) => setCustom((c) => ({ ...c, [String(step)]: e.target.value }))}
@@ -778,7 +778,7 @@ function QuestionCard({ block }: { block: ToolBlock }) {
               type={q.type === "number" ? "number" : "text"}
               aria-label={q.question}
               aria-required={q.required || undefined}
-              placeholder={q.placeholder || "Type your answer…"}
+              placeholder={q.placeholder || tr("Type your answer…")}
               autoFocus
               value={structuredValue}
               onChange={(e) => setCustom((c) => ({ ...c, [String(step)]: e.target.value }))}

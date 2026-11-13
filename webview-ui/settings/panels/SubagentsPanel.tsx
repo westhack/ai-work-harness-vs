@@ -142,9 +142,9 @@ export function SubagentsPanel({
                 </td>
                 <td className="c-desc" title={sub.description}>{sub.description || "—"}</td>
                 <td className="c-mode">
-                  <span className={"badge-tag " + (sub.readonly ? "glob" : "always")}>{sub.readonly ? "read-only" : "read-write"}</span>
+                  <span className={"badge-tag " + (sub.readonly ? "glob" : "always")}>{sub.readonly ? _tr("read-only") : _tr("read-write")}</span>
                 </td>
-                <td className="c-model" title={sub.model || "Inherits the subagent / chat model"}>{sub.model || "inherit"}</td>
+                <td className="c-model" title={sub.model || _tr("Inherits the subagent / chat model")}>{sub.model || _tr("inherit")}</td>
                 <td className="c-actions">
                   <button className="btn-ghost sm" onClick={() => setSubDraft({ value: sub, isNew: false })} title={_tr("Edit subagent")}>
                     {_tr("Edit")}
@@ -412,7 +412,7 @@ function TeamModal({
                     <span className="mo-text">
                       <span className="mo-name">
                         {sub.name}
-                        {sub.readonly && <span className="badge-tag glob">read-only</span>}
+                        {sub.readonly && <span className="badge-tag glob">{_tr("read-only")}</span>}
                       </span>
                       <span className="mo-desc">{sub.description}</span>
                     </span>

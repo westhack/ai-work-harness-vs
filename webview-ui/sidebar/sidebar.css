@@ -2017,6 +2017,13 @@ button.working-head:focus-visible { outline: 1px solid var(--control-focus-borde
 	background: var(--hover);
 }
 
+.attach-btn:disabled {
+	opacity: 0.4;
+	cursor: default;
+	background: none;
+	color: var(--fg-faint);
+}
+
 /* Inline phase indicator (Searchable shimmering status) */
 .error-boundary {
 	display: flex;

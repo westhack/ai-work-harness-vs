@@ -27,10 +27,10 @@ describe("language resolution", () => {
 		setVscodeLanguage("zh-cn");
 		expect(currentLanguage("auto")).toBe("zh-CN");
 		expect(currentLanguage("en")).toBe("en");
-		expect(hostText("AiWorkHarness Settings", currentLanguage("auto"))).toBe("AiWorkHarness 设置");
+		expect(hostText("Ai Work Harness Settings", currentLanguage("auto"))).toBe("Ai Work Harness 设置");
 		setVscodeLanguage("en");
 		expect(currentLanguage("auto")).toBe("en");
-		expect(hostText("AiWorkHarness Settings", "en")).toBe("AiWorkHarness Settings");
+		expect(hostText("Ai Work Harness Settings", "en")).toBe("Ai Work Harness Settings");
 	});
 
 	it("provides the html lang attribute", () => {

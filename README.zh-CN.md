@@ -7,14 +7,14 @@ https://github.com/westhack/ai-work-harness-vs
 Licensed under the MIT License. See LICENSE file in the project root.
 -->
 
-# AiWorkHarness
+# Ai Work Harness
 
 [English](README.md) · **简体中文**
 
 **面向 VS Code 的开源 AI 编程智能体。带上你自己的模型，在你的工作区里工作，并始终掌控每一项改动。**
 
 <p align="center">
-  <img src="media/readme/hero.png" alt="AiWorkHarness 界面预览：示例编程对话、高亮代码、排队中的跟进消息，以及保留或撤销改动的操作按钮。" width="1440" />
+  <img src="media/readme/hero.png" alt="Ai Work Harness 界面预览：示例编程对话、高亮代码、排队中的跟进消息，以及保留或撤销改动的操作按钮。" width="1440" />
 </p>
 
 <p align="center">
@@ -25,12 +25,12 @@ Licensed under the MIT License. See LICENSE file in the project root.
   <a href="#致谢">致谢</a>
 </p>
 
-AiWorkHarness 把对话、代码探索、文件编辑、终端命令与改动审查都放进编辑器里。你可以连接受支持的账号、使用自己的 API Key，或用 Ollama、llama.cpp 在本地运行模型。选好适合当前任务的模型与权限，然后实时跟进工作过程。
+Ai Work Harness 把对话、代码探索、文件编辑、终端命令与改动审查都放进编辑器里。你可以连接受支持的账号、使用自己的 API Key，或用 Ollama、llama.cpp 在本地运行模型。选好适合当前任务的模型与权限，然后实时跟进工作过程。
 
 ## 快速开始
 
-1. **安装 AiWorkHarness**：从 [VS Code 市场](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness-vs) 安装；也可以在 [版本发布](https://github.com/westhack/ai-work-harness-vs/releases) 下载 `.vsix`，然后执行 **扩展：从 VSIX 安装**。需要 VS Code 1.96 或更高版本。
-2. **接入模型。** 打开 AiWorkHarness 侧边栏，进入设置。在 **Providers（提供商）** 中添加账号或 API 提供商，或配置 **Ollama**、**llama.cpp** 做本地推理。
+1. **安装 Ai Work Harness**：从 [VS Code 市场](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness-vs) 安装；也可以在 [版本发布](https://github.com/westhack/ai-work-harness-vs/releases) 下载 `.vsix`，然后执行 **扩展：从 VSIX 安装**。需要 VS Code 1.96 或更高版本。
+2. **接入模型。** 打开 Ai Work Harness 侧边栏，进入设置。在 **Providers（提供商）** 中添加账号或 API 提供商，或配置 **Ollama**、**llama.cpp** 做本地推理。
 3. **选择模型并开始对话。** 在 **Models（模型）** 中启用需要的模型，在输入框中选择一个，然后描述你的任务。Windows/Linux 按 `Ctrl+L`、macOS 按 `Cmd+L`，可把编辑器中的选区（未选中时为整个文件）加入对话。在编辑器获得焦点时，这会覆盖 VS Code 默认的 *扩展行选择* 快捷键；如果想保留原快捷键，可在键盘快捷方式中重新绑定 `aiworkharness.addToChat`。
 4. **审查结果。** 查看工具活动与文件改动，然后保留或撤销修改。调整权限控制，决定哪些操作需要你的批准。
 
@@ -79,7 +79,7 @@ AiWorkHarness 把对话、代码探索、文件编辑、终端命令与改动审
 
 ### Ollama
 
-连接 Ollama 端点，浏览已安装模型，拉取新模型，并加载或卸载它们。AiWorkHarness 会显示服务健康状态与运行时报告的模型能力。
+连接 Ollama 端点，浏览已安装模型，拉取新模型，并加载或卸载它们。Ai Work Harness 会显示服务健康状态与运行时报告的模型能力。
 
 ### 本地推理与检索
 
@@ -157,14 +157,14 @@ README 用的图片位于 [`media/readme`](media/readme)。SVG 源文件可直�
 
 ## 许可证
 
-AiWorkHarness 基于 [MIT 许可证](LICENSE) 发布。
+Ai Work Harness 基于 [MIT 许可证](LICENSE) 发布。
 
 本项目由 Pawan Osman 的 OpenCursor 演化而来，按 MIT 许可证分发，原始版权声明保留在 [LICENSE](LICENSE) 中。
 
 ## 致谢
 
-- **[OpenCursor](https://github.com/PawanOsman/OpenCursor)**（作者 Pawan Osman）是 AiWorkHarness 的上游项目。
-- **[Codex](https://github.com/openai/codex)**（OpenAI）启发了 AiWorkHarness 的界面设计、样式与交互方式。
-- **[9router](https://github.com/decolua/9router)** 为 AiWorkHarness 中的提供商集成与账号认证支持提供了基础。
+- **[OpenCursor](https://github.com/PawanOsman/OpenCursor)**（作者 Pawan Osman）是 Ai Work Harness 的上游项目。
+- **[Codex](https://github.com/openai/codex)**（OpenAI）启发了 Ai Work Harness 的界面设计、样式与交互方式。
+- **[9router](https://github.com/decolua/9router)** 为 Ai Work Harness 中的提供商集成与账号认证支持提供了基础。
 
 感谢这些项目及其贡献者。

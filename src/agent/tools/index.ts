@@ -19,6 +19,8 @@ import { todoWriteTool, todoReadTool, askQuestionTool, taskTool, waitTool, switc
 import { listAgentsTool, sendAgentMessageTool, followupAgentTool, interruptAgentTool, waitForAgentTool } from "./agent";
 import { callMcpToolTool, fetchMcpResourceTool, listMcpResourcesTool } from "./mcp";
 import { readContextTool } from "./context";
+import { codeGraphTool } from "./codeGraph";
+import { memoryTool } from "./memory";
 import { goToDefinitionTool, findReferencesTool, workspaceSymbolsTool, renamePreviewTool } from "./language";
 import { runChecksTool, verificationTool, getGoalTool, updateGoalTool } from "./workflow";
 
@@ -58,6 +60,8 @@ export const TOOLS: Record<string, Tool> = {
   WorkspaceSymbols: workspaceSymbolsTool,
   RenamePreview: renamePreviewTool,
   ReadContext: readContextTool,
+  CodeGraph: codeGraphTool,
+  Memory: memoryTool,
   Read: readFileTool,
   ListDir: listDirTool,
   Glob: globTool,

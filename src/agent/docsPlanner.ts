@@ -12,6 +12,7 @@ import type { SettingsManager } from "../stores/settingsManager";
 import { type FeatureStore, type ProviderConfig, kindMatches, optionsToParams, providerEnabled } from "../stores/featureStore";
 import { PROVIDER_PRESETS } from "../shared/providerCatalog";
 import { OAUTH_KINDS, isOAuthProviderKind } from "../shared/oauthProviders";
+import { stripReasoning } from "../shared/reasoning";
 import { providerApiKeyPool } from "./provider/apiKeyPool";
 import { streamChat, type StreamChatOpts } from "./provider";
 import { recordUsage } from "../stores/usageStore";
@@ -46,14 +47,14 @@ function providerAvailable(provider: ProviderConfig): boolean {
     && (key.id === provider.id || key.id.startsWith(`${provider.id}:key:`)));
 }
 
-async function resolveRoute(settings: SettingsManager, store: FeatureStore, signal: AbortSignal): Promise<Route> {
+export async function resolveRoute(settings: SettingsManager, store: FeatureStore, signal: AbortSignal, preferredModel?: string): Promise<Route> {
   const config = store.get();
   const providers = config.providers.filter(providerAvailable);
   const models = store.allModels();
   const disabled = new Set(config.disabledModels);
   const enabled = new Set(config.enabledModels);
   const selectable = (id: string) => !disabled.has(id) && (!enabled.size || enabled.has(id) || models.some(model => model.id === id && model.enabled !== false));
-  let selected = settings.getSettings().model;
+  let selected = preferredModel?.trim() || settings.getSettings().model;
 
   if (!selected || selected === "auto") {
     for (const def of models) {
@@ -178,7 +179,7 @@ export function createDocsPageSelector(settings: SettingsManager, store: Feature
         void request.return(undefined).catch(() => {});
       }
       let result: unknown;
-      try { result = JSON.parse(answer.trim()); } catch { throw new Error("AI page selection did not return valid JSON."); }
+      try { result = JSON.parse(stripReasoning(answer).trim()); } catch { throw new Error("AI page selection did not return valid JSON."); }
       if (!result || typeof result !== "object" || Array.isArray(result) || Object.keys(result).length !== 1 || !("selected" in result)
         || !Array.isArray(result.selected) || !result.selected.length || result.selected.length > payload.limit
         || result.selected.some((id: unknown) => !Number.isInteger(id) || (id as number) < 0 || (id as number) >= chosen.length)) {

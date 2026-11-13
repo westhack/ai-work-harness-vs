@@ -8,7 +8,7 @@
  */
 
 import { EventEmitter } from "node:events";
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,13 +18,16 @@ const fixture = vi.hoisted(() => ({
 	killProcessTree: vi.fn(),
 	clearEngineCaches: vi.fn(),
 	resolveEngineBinary: vi.fn(),
+	describeEngineBinary: vi.fn(),
 	whereBinary: vi.fn(),
 	getLocalEnginesRoot: vi.fn(),
+	engineInstallDirectory: vi.fn(),
+	getEngineOverride: vi.fn(),
 }));
 
 vi.mock("./registry", () => fixture);
 
-import { engineInstallCommand, installEngine, runNpmInstall } from "./install";
+import { engineInstallCommand, installEngine, runNpmInstall, uninstallEngine } from "./install";
 
 class FakeChild extends EventEmitter {
 	pid = 4242;
@@ -47,8 +50,14 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	fixture.whereBinary.mockResolvedValue("/usr/local/bin/npm");
 	fixture.resolveEngineBinary.mockResolvedValue("/usr/local/bin/engine");
+	fixture.describeEngineBinary.mockResolvedValue({ path: "/usr/local/bin/engine", source: "path" });
 	fixture.clearEngineCaches.mockReset();
 	fixture.getLocalEnginesRoot.mockReturnValue(undefined);
+	fixture.getEngineOverride.mockReturnValue(undefined);
+	fixture.engineInstallDirectory.mockImplementation((id: string) => {
+		const root = fixture.getLocalEnginesRoot();
+		return root ? join(root, id) : undefined;
+	});
 });
 
 describe("engineInstallCommand", () => {
@@ -160,5 +169,75 @@ describe("installEngine", () => {
 		const [a, b] = await Promise.all([first, second]);
 		expect(a).toEqual(b);
 		expect(a.ok).toBe(true);
+	});
+});
+
+describe("uninstallEngine", () => {
+	it("deletes the extension install folder and clears the caches", async () => {
+		const root = mkdtempSync(join(tmpdir(), "aiworkharness-engines-"));
+		try {
+			fixture.getLocalEnginesRoot.mockReturnValue(root);
+			const dir = join(root, "codex");
+			mkdirSync(join(dir, "node_modules", "pkg"), { recursive: true });
+			writeFileSync(join(dir, "node_modules", "pkg", "index.js"), "x".repeat(1024));
+			fixture.describeEngineBinary.mockResolvedValue({ path: join(dir, "bin", "codex"), source: "extension" });
+			const lines: string[] = [];
+			const result = await uninstallEngine("codex", (line) => lines.push(line));
+			expect(result.ok).toBe(true);
+			expect(result.freedBytes).toBeGreaterThan(0);
+			expect(existsSync(dir)).toBe(false);
+			expect(fixture.clearEngineCaches).toHaveBeenCalledWith("codex");
+			expect(lines.join("\n")).toContain(dir);
+		} finally {
+			rmSync(root, { recursive: true, force: true });
+		}
+	});
+
+	it("refuses when the user picked a custom binary path", async () => {
+		fixture.getEngineOverride.mockReturnValue("C:/tools/codex.exe");
+		const result = await uninstallEngine("codex", () => {});
+		expect(result.ok).toBe(false);
+		expect(result.detail).toMatch(/path you selected/);
+		expect(fixture.clearEngineCaches).not.toHaveBeenCalled();
+	});
+
+	it("refuses global installs", async () => {
+		const result = await uninstallEngine("codex", () => {});
+		expect(result.ok).toBe(false);
+		expect(result.detail).toMatch(/globally/);
+	});
+
+	it("refuses when nothing was installed into the extension folder", async () => {
+		const root = mkdtempSync(join(tmpdir(), "aiworkharness-engines-"));
+		try {
+			fixture.getLocalEnginesRoot.mockReturnValue(root);
+			const result = await uninstallEngine("qwen", () => {});
+			expect(result.ok).toBe(false);
+			expect(result.detail).toMatch(/Nothing is installed/);
+		} finally {
+			rmSync(root, { recursive: true, force: true });
+		}
+	});
+
+	it("keeps the folder when another copy is the active binary", async () => {
+		const root = mkdtempSync(join(tmpdir(), "aiworkharness-engines-"));
+		try {
+			fixture.getLocalEnginesRoot.mockReturnValue(root);
+			const dir = join(root, "gemini");
+			mkdirSync(dir, { recursive: true });
+			fixture.describeEngineBinary.mockResolvedValue({ path: "/usr/local/bin/gemini", source: "path" });
+			const result = await uninstallEngine("gemini", () => {});
+			expect(result.ok).toBe(false);
+			expect(result.detail).toMatch(/not the extension copy/);
+			expect(existsSync(dir)).toBe(true);
+		} finally {
+			rmSync(root, { recursive: true, force: true });
+		}
+	});
+
+	it("never uninstalls the built-in engine", async () => {
+		const result = await uninstallEngine("builtin", () => {});
+		expect(result.ok).toBe(false);
+		expect(result.detail).toMatch(/built-in/);
 	});
 });

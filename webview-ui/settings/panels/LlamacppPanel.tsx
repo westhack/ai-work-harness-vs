@@ -135,7 +135,7 @@ export function LlamacppPanel({
       } else if (m.type === "llamacppDownloadProgress") {
         setDownloading((prev) => ({ ...prev, [m.id]: m.total ? Math.round((m.received / m.total) * 100) : 0 }));
       } else if (m.type === "localModelError") {
-        setOperationError(m.error || "Model operation failed.");
+        setOperationError(m.error || tr("Model operation failed."));
       } else if (m.type === "llamacppDownloadDone") {
         if (m.error) setOperationError(m.error);
         else vscode.postMessage({ type: "localHardwareGet" });

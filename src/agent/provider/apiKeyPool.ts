@@ -76,6 +76,11 @@ export class ApiKeyPool {
     private readonly now: () => number = Date.now,
   ) {}
 
+  /** Read one usable credential for an external process that cannot use the streaming pool. */
+  async firstApiKey(signal: AbortSignal): Promise<string | undefined> {
+    return (await this.select(new Set(), signal))?.apiKey;
+  }
+
   private async select(excluded: Set<string>, signal: AbortSignal): Promise<ApiKeyCredential | undefined> {
     signal.throwIfAborted();
     const snapshot = await untilAborted(this.resolve(), signal);

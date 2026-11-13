@@ -20,7 +20,7 @@ import { MODEL_CATALOG, type ModelDef } from "../stores/featureStore";
 import * as vscode from "vscode";
 import { pendingChanges } from "../stores/pendingChanges";
 
-vi.mock("vscode", () => ({ window: { showWarningMessage: vi.fn(), showErrorMessage: vi.fn(), state: { focused: true } }, commands: { executeCommand: vi.fn() } }));
+vi.mock("vscode", () => ({ window: { showWarningMessage: vi.fn(), showErrorMessage: vi.fn(), showInformationMessage: vi.fn(), state: { focused: true } }, commands: { executeCommand: vi.fn() } }));
 vi.mock("../agent/loop", () => ({ runAgent: vi.fn() }));
 vi.mock("../agent/provider", () => ({ generateTitle: vi.fn(), listModels: vi.fn() }));
 vi.mock("../stores/featureStore", () => ({ MODEL_CATALOG: [], optionsToParams: () => ({}), kindMatches: (a: string, b: string) => a === b, providerEnabled: (p: any) => p.enabled !== false }));
@@ -51,7 +51,7 @@ async function fixture(approvalPolicy: ApprovalPolicy = structuredClone(DEFAULT_
   const store = new ConversationStore(context as any);
   const a = await store.create(), b = await store.create();
   const features = { providers: [{ id: "api", kind: "anthropic", enabled: true, baseUrl: "https://api.example.test" }], llamacppModels: [], autoGenerateTitles: false, hooks: [], subagents: [], approvalPolicy, maxAgentSteps: 10 };
-  const host = new SidebarProvider(context as any, { getSettings: () => ({ model: "api::model", maxResponseLength: 0 }), getProviderKey: async () => "test-key" } as any, { get: () => features, allModels: () => [], optionsFor: () => [] } as any) as any;
+  const host = new SidebarProvider(context as any, { getSettings: () => ({ model: "api::model", maxResponseLength: 0 }), getProviderKey: async () => "test-key" } as any, { get: () => features, allModels: () => [], optionsFor: () => [], thinkingModeFor: () => undefined } as any) as any;
   host._activeId = b.id;
   host._view = { webview: { postMessage: vi.fn() } };
   host._sendConversations = vi.fn();
@@ -899,5 +899,35 @@ describe("host-owned transcripts and model output edits", () => {
     host.addSelectionToChat();
     expect(host._view.webview.postMessage).toHaveBeenCalledWith({ type: "insertMention", mention: { kind: "file", path: "a.ts", name: "a.ts" } });
     delete (vscode as any).window.activeTextEditor; delete (vscode as any).workspace;
+  });
+
+  it("builds editor context-menu prompts from the selection", async () => {
+    const { host } = await fixture();
+    const editor = {
+      document: { uri: { scheme: "file", fsPath: "/workspace/src/a.ts" }, lineAt: () => ({ text: "  // TODO parse the config" }), getText: () => "function add(a, b) { return a + b; }" },
+      selection: { isEmpty: false, start: { line: 1, character: 0 }, end: { line: 3, character: 0 }, active: { line: 1, character: 0 } },
+    };
+    (vscode as any).window.activeTextEditor = editor;
+    (vscode as any).workspace = { asRelativePath: () => "src/a.ts" };
+    host._submitMessage = vi.fn();
+    await host.runEditorAction("outline");
+    expect(host._submitMessage).toHaveBeenCalledWith({ text: expect.stringContaining("Outline src/a.ts:2-4"), mode: "ask" });
+    await host.runEditorAction("tests");
+    expect(vi.mocked(host._submitMessage).mock.calls.at(-1)![0]).toMatchObject({ mode: "agent", text: expect.stringContaining("a + b") });
+    // No selection: generate from the line under the cursor, outline the whole file.
+    editor.selection = { ...editor.selection, isEmpty: true };
+    await host.runEditorAction("generate");
+    expect(vi.mocked(host._submitMessage).mock.calls.at(-1)![0]).toMatchObject({ mode: "agent", text: expect.stringContaining("TODO parse the config") });
+    await host.runEditorAction("outline");
+    expect(vi.mocked(host._submitMessage).mock.calls.at(-1)![0]).toMatchObject({ text: expect.stringContaining("Outline src/a.ts:") });
+    delete (vscode as any).window.activeTextEditor; delete (vscode as any).workspace;
+  });
+
+  it("tells the user when a context-menu action has no file to work with", async () => {
+    const { host } = await fixture();
+    host._submitMessage = vi.fn();
+    await host.runEditorAction("generate");
+    expect(vscode.window.showInformationMessage).toHaveBeenCalled();
+    expect(host._submitMessage).not.toHaveBeenCalled();
   });
 });

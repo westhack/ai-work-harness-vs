@@ -16,7 +16,16 @@ const fixture = vi.hoisted(() => ({ execFile: vi.fn() }));
 
 vi.mock("node:child_process", () => ({ spawn: vi.fn(), execFile: fixture.execFile }));
 
-import { describeEngineBinary, getLocalEnginesRoot, resolveEngineBinary, setEngineOverrides, setLocalEnginesRoot } from "./registry";
+import {
+	claudeBinaryNames,
+	claudeExtensionDirs,
+	commonPosixBinDirs,
+	describeEngineBinary,
+	getLocalEnginesRoot,
+	resolveEngineBinary,
+	setEngineOverrides,
+	setLocalEnginesRoot,
+} from "./registry";
 
 let root: string;
 
@@ -90,5 +99,27 @@ describe("engine binary resolution", () => {
 		await expect(describeEngineBinary("dsh")).resolves.toBeUndefined();
 		await expect(describeEngineBinary("builtin")).resolves.toBeUndefined();
 		expect(getLocalEnginesRoot()).toBeUndefined();
+	});
+});
+
+describe("cross-platform helpers", () => {
+	it("names the Claude native binary per platform", () => {
+		expect(claudeBinaryNames("win32")).toEqual(["claude.exe", "claude.cmd"]);
+		expect(claudeBinaryNames("darwin")).toEqual(["claude"]);
+		expect(claudeBinaryNames("linux")).toEqual(["claude"]);
+	});
+
+	it("looks for Claude Code in editor variants, including remote servers", () => {
+		const dirs = claudeExtensionDirs("/home/me");
+		expect(dirs).toContain(join("/home/me", ".vscode", "extensions"));
+		expect(dirs).toContain(join("/home/me", ".vscode-server", "extensions"));
+		expect(dirs).toContain(join("/home/me", ".cursor", "extensions"));
+	});
+
+	it("adds Homebrew and per-user bin dirs to the POSIX search path", () => {
+		const dirs = commonPosixBinDirs("/home/me");
+		expect(dirs).toContain("/opt/homebrew/bin");
+		expect(dirs).toContain("/usr/local/bin");
+		expect(dirs).toContain(join("/home/me", ".local", "bin"));
 	});
 });

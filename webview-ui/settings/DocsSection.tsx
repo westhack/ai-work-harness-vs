@@ -73,7 +73,7 @@ function DocForm({ source, busy, onClose }: { source?: DocSourceInfo; busy: bool
       request.current = undefined;
       setPending(false);
       if (event.data.ok) onClose();
-      else setError(event.data.error || "Could not save the documentation source.");
+      else setError(event.data.error || tr("Could not save the documentation source."));
     };
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
@@ -177,7 +177,7 @@ export function DocsSection({ docs, status }: { docs: DocSourceInfo[]; status: D
   const [adding, setAdding] = React.useState(false);
   const [error, setError] = React.useState("");
   React.useEffect(() => {
-    const receive = (event: MessageEvent) => { if (event.data?.type === "docActionResult" && !event.data.requestId) setError(event.data.ok ? "" : event.data.error || "Documentation action failed."); };
+    const receive = (event: MessageEvent) => { if (event.data?.type === "docActionResult" && !event.data.requestId) setError(event.data.ok ? "" : event.data.error || tr("Documentation action failed.")); };
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
   }, []);

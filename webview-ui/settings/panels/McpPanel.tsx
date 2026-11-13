@@ -31,7 +31,7 @@ export function McpPanel({
   const [editing, setEditing] = React.useState<{ index: number; draft: McpServerConfig } | null>(null);
   const [authError, setAuthError] = React.useState("");
   React.useEffect(() => {
-    const listener = (event: MessageEvent) => { if (event.data?.type === "mcpAuthError") setAuthError(event.data.error || "Authentication failed."); };
+    const listener = (event: MessageEvent) => { if (event.data?.type === "mcpAuthError") setAuthError(event.data.error || tr("Authentication failed.")); };
     window.addEventListener("message", listener);
     return () => window.removeEventListener("message", listener);
   }, []);

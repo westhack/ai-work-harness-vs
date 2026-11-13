@@ -12,8 +12,10 @@
 export { OAuthAccountCard, ProvidersPanel } from "./panels/ProvidersPanel";
 export { ModelsPanel } from "./panels/ModelsPanel";
 export { PersonasPanel } from "./panels/PersonasPanel";
+export { MemoryPanel } from "./panels/MemoryPanel";
 export { McpPanel } from "./panels/McpPanel";
 export { RulesPanel } from "./panels/RulesPanel";
+export { SkillMarketPanel } from "./panels/SkillMarketPanel";
 export { SubagentsPanel } from "./panels/SubagentsPanel";
 export { HooksPanel } from "./panels/HooksPanel";
 export { LlamacppPanel } from "./panels/LlamacppPanel";

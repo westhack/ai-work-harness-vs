@@ -46,6 +46,21 @@ describe("official compatible-provider option contracts", () => {
     expect(body).toEqual({ reasoning_effort: "none" });
   });
 
+  it("maps declared custom-model thinking onto chat_template_kwargs", () => {
+    const disabledBody: Record<string, unknown> = {};
+    applyCompatibleOptions(disabledBody, "http://192.168.3.7:8000/v1", "deepseek-ai/DeepSeek-V3.1", { thinking: "disabled", chatTemplateThinking: true });
+    expect(disabledBody).toEqual({ chat_template_kwargs: { enable_thinking: false } });
+    const enabledBody: Record<string, unknown> = {};
+    applyCompatibleOptions(enabledBody, "http://192.168.3.7:8000/v1", "Qwen/Qwen3-32B", { thinking: "enabled", chatTemplateThinking: true });
+    expect(enabledBody).toEqual({ chat_template_kwargs: { enable_thinking: true } });
+  });
+
+  it("leaves unknown endpoints untouched without a declared capability", () => {
+    const body: Record<string, unknown> = {};
+    applyCompatibleOptions(body, "http://192.168.3.7:8000/v1", "deepseek-ai/DeepSeek-V3.1", { thinking: "disabled" });
+    expect(body).toEqual({});
+  });
+
   it("maps impossible Grok off mode to low without a thinking field", () => {
     const body = { reasoning_effort: "none", thinking: { type: "disabled" }, top_k: 3, logprobs: true };
     applyCompatibleOptions(body, "https://api.x.ai/v1", "grok-4.7");

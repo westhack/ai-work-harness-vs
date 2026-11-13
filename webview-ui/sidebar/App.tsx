@@ -1899,6 +1899,9 @@ export function App() {
           <button className="hicon" title={tr("Settings")} onClick={() => post({ type: "openSettings" })}>
             <Icon name="settings" size={14} />
           </button>
+          <button className="hicon" title={tr("Project Docs")} onClick={() => post({ type: "openProjectDocs" })}>
+            <Icon name="book" size={14} />
+          </button>
           <div className="more-menu-wrap" ref={moreRef}>
             <button className="hicon" title={tr("More")} onClick={() => setMoreOpen((v) => !v)}>
               <Icon name="more" size={14} />

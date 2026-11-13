@@ -84,7 +84,7 @@ export function ModelSelect({
   const current =
     customItems?.find((c) => c.value === value)?.label ??
     models.find((m) => m.id === value)?.name ??
-    (value || customItems?.[0]?.label || "Select model");
+    (value || customItems?.[0]?.label || tr("Select model"));
 
   const close = () => {
     setOpen(false);

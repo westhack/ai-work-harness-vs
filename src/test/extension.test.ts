@@ -20,7 +20,7 @@ suite("Installed extension host integration", () => {
 
   test("activation registers the real chat/settings/review commands", async () => {
     const commands = new Set(await vscode.commands.getCommands(true));
-    for (const command of ["aiworkharness.addToChat", "aiworkharness.openSettings", "aiworkharness.viewDiff"]) {
+    for (const command of ["aiworkharness.addToChat", "aiworkharness.openSettings", "aiworkharness.viewDiff", "aiworkharness.generateCode", "aiworkharness.generateTests", "aiworkharness.outlineFile"]) {
       assert.ok(commands.has(command), `Missing registered command: ${command}`);
     }
     // Exercise the actual command handler: untracked paths must be a safe no-op.

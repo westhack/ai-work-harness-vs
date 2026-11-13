@@ -22,6 +22,8 @@ export interface ModelParams {
   speed?: "standard" | "fast";
   /** Thinking mode: "disabled" | "adaptive" | "enabled" (Anthropic). */
   thinking?: string;
+  /** Custom models: map `thinking` onto chat_template_kwargs.enable_thinking. */
+  chatTemplateThinking?: boolean;
   /** Local working-context budget (e.g. "200k", "1m"); does not change the model's window. */
   maxContext?: string;
 }
@@ -50,6 +52,8 @@ export interface StreamChatOpts {
   maxTokens?: number;
   sampling?: SamplingParams;
   modelParams?: ModelParams;
+  /** Auxiliary call (titles, rewrites): force the provider's cheapest reasoning mode. */
+  auxiliary?: boolean;
   anthropic?: boolean;
   /** OAuth account provider (Claude Code / Codex) — overrides apiBaseUrl/apiKey. */
   oauthKind?: OAuthKind;

@@ -30,6 +30,7 @@ export const CODE_LANGUAGES: readonly CodeLanguage[] = [
   { id: "lua", label: "Lua" },
   { id: "makefile", label: "Makefile", aliases: ["make"] },
   { id: "markdown", label: "Markdown", aliases: ["md", "mdx"] },
+  { id: "mermaid", label: "Mermaid", aliases: ["mmd"] },
   { id: "perl", label: "Perl", aliases: ["pl"] },
   { id: "php", label: "PHP" },
   { id: "powershell", label: "PowerShell", aliases: ["ps", "ps1", "pwsh"] },
@@ -125,7 +126,7 @@ const hashComments = new Set(["bash", "python", "ruby", "perl", "powershell", "y
 /** Lexical colors, rather than a compiler grammar. Output contains only escaped input and fixed span classes. */
 export function highlightCode(code: string, explicit = "auto"): string {
   const language = getCodeLanguage(code, explicit).id;
-  if (language === "plaintext" || language === "markdown") return escapeCodeHtml(code);
+  if (language === "plaintext" || language === "markdown" || language === "mermaid") return escapeCodeHtml(code);
   const input = code.slice(0, 64_000);
   if (language === "diff") return input.split(/(\n)/).map(line => /^(?:\+[^+]|-[^-]|@@)/.test(line)
     ? `<span class="code-token-${line[0] === "+" ? "inserted" : line[0] === "-" ? "deleted" : "keyword"}">${escapeCodeHtml(line)}</span>` : escapeCodeHtml(line)).join("") + escapeCodeHtml(code.slice(input.length));

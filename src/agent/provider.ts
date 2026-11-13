@@ -656,14 +656,14 @@ async function* streamOpenAI(opts: StreamChatOpts): AsyncGenerator<ProviderEvent
     body.reasoning_effort = opts.modelParams.reasoningEffort;
   }
   applyOpenAISampling(body, opts.sampling);
-  applyOpenAIChatOptions(body, opts.apiBaseUrl, opts.model);
+  applyOpenAIChatOptions(body, opts.apiBaseUrl, opts.model, { auxiliary: opts.auxiliary });
   if (google) applyGoogleOpenAIOptions(body, opts.model, opts.modelParams);
   if (opts.tools?.length) {
     body.tools = opts.tools;
     body.tool_choice = "auto";
   }
 
-  applyCompatibleOptions(body, opts.apiBaseUrl, opts.model, opts.modelParams);
+  applyCompatibleOptions(body, opts.apiBaseUrl, opts.model, opts.modelParams, { auxiliary: opts.auxiliary });
   if (!google) applyChatSpeed(body, opts.model, opts.modelParams?.speed);
   const requireReasoning = compatibleProviderFor(opts.apiBaseUrl, opts.model) === "deepseek"
     && !!opts.tools?.length && (body.thinking as { type?: string } | undefined)?.type === "enabled";

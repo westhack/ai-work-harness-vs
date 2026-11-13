@@ -7,11 +7,11 @@
  * Licensed under the MIT License. See LICENSE file in the project root.
  */
 
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn } from "node:child_process";
 import * as net from "node:net";
 import type { AgentEvent } from "../types";
 import type { AgentEngine, EngineRuntime } from "./types";
-import { cachedAvailability, resolveEngineBinary } from "./registry";
+import { cachedAvailability, killProcessTree, resolveEngineBinary, spawnCommand } from "./registry";
 
 const OPENCODE_DEFAULT_PORT = 4096;
 const HEALTH_TIMEOUT_MS = 1_500;
@@ -19,7 +19,7 @@ const SERVER_START_TIMEOUT_MS = 20_000;
 const SERVER_POLL_INTERVAL_MS = 300;
 
 /** Servers spawned by this adapter, kept warm across turns. */
-const spawnedServers = new Map<number, ChildProcess>();
+const spawnedServers = new Map<number, ReturnType<typeof spawn>>();
 let exitHookRegistered = false;
 
 function registerExitHook(): void {
@@ -30,6 +30,14 @@ function registerExitHook(): void {
 			try { child.kill(); } catch { /* best effort */ }
 		}
 	});
+}
+
+/** Stop every server this adapter spawned; used before uninstalling the CLI. */
+export function stopOpenCodeServers(): void {
+	for (const [port, child] of spawnedServers) {
+		killProcessTree(child.pid);
+		spawnedServers.delete(port);
+	}
 }
 
 function findFreePort(): Promise<number> {
@@ -59,13 +67,27 @@ async function isHealthy(base: string): Promise<boolean> {
  * spawn `opencode serve` on a free port and wait for it. Spawned servers are
  * kept warm for later turns and killed when the extension host exits.
  */
-async function ensureServer(binary: string): Promise<string> {
+async function ensureServer(binary: string, directory: string): Promise<string> {
 	const defaultBase = `http://127.0.0.1:${OPENCODE_DEFAULT_PORT}`;
 	if (await isHealthy(defaultBase)) return defaultBase;
 
 	const port = await findFreePort();
 	const base = `http://127.0.0.1:${port}`;
-	const child = spawn(binary, ["serve", "--hostname", "127.0.0.1", "--port", String(port)], { windowsHide: true });
+	// Windows shims are .cmd files: they can only be launched through cmd.exe,
+	// which spawnCommand handles. A raw spawn fails with EINVAL in the
+	// extension host even though the same command works in a terminal.
+	let child: ReturnType<typeof spawn>;
+	try {
+		child = spawnCommand(binary, ["serve", "--hostname", "127.0.0.1", "--port", String(port)], { cwd: directory });
+	} catch (error) {
+		throw new Error(`OpenCode engine: could not start opencode serve (${(error as Error).message})`);
+	}
+	let stderr = "";
+	child.stderr?.on("data", (chunk) => {
+		stderr = (stderr + String(chunk)).slice(-2_000);
+	});
+	// Drain stdout so a chatty server never blocks on a full pipe.
+	child.stdout?.resume();
 	spawnedServers.set(port, child);
 	registerExitHook();
 
@@ -73,14 +95,22 @@ async function ensureServer(binary: string): Promise<string> {
 	while (Date.now() < deadline) {
 		if (child.exitCode != null || child.signalCode != null) {
 			spawnedServers.delete(port);
-			throw new Error(`OpenCode engine: opencode serve exited early (code ${child.exitCode ?? child.signalCode})`);
+			const detail = stderr.trim().split(/\r?\n/).slice(-3).join(" | ");
+			throw new Error(
+				`OpenCode engine: opencode serve exited early (code ${child.exitCode ?? child.signalCode})` +
+				(detail ? `: ${detail}` : ""),
+			);
 		}
 		if (await isHealthy(base)) return base;
 		await new Promise((resolveDelay) => setTimeout(resolveDelay, SERVER_POLL_INTERVAL_MS));
 	}
 	spawnedServers.delete(port);
 	try { child.kill(); } catch { /* best effort */ }
-	throw new Error(`OpenCode engine: opencode serve did not become healthy within ${SERVER_START_TIMEOUT_MS / 1000}s`);
+	const detail = stderr.trim().split(/\r?\n/).slice(-3).join(" | ");
+	throw new Error(
+		`OpenCode engine: opencode serve did not become healthy within ${SERVER_START_TIMEOUT_MS / 1000}s` +
+		(detail ? `: ${detail}` : ""),
+	);
 }
 
 async function createSession(base: string, directory: string): Promise<string> {
@@ -202,7 +232,7 @@ export async function runOpenCode(rt: EngineRuntime): Promise<{ text: string; se
 	const binary = await resolveEngineBinary("opencode");
 	if (!binary) throw new Error("OpenCode engine: the opencode CLI was not found on PATH");
 
-	const base = await ensureServer(binary);
+	const base = await ensureServer(binary, rt.workspaceRoot);
 	const controller = new AbortController();
 	const sessionIdRef: { id: string } = { id: "" };
 	const onAbort = () => {

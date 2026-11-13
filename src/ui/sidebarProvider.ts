@@ -30,11 +30,15 @@ import { effectiveContextLength, ensureLoaded, isRunning, serverUrlFor } from ".
 import * as ollama from "../agent/ollama";
 import * as oauth from "../agent/oauth";
 import { recordUsage } from "../stores/usageStore";
+import { stripReasoning } from "../shared/reasoning";
 import { DEFAULT_APPROVAL, evaluateApproval, deniedSubject, actionTypeForCall, actionTypesForCall, subjectFor, type ApprovalActionType, type ApprovalMode, type ApprovalPolicy } from "../agent/approvalPolicy";
 import { stripModelScope, suggestPattern } from "./sidebar/approvalSuggest";
 import type { PendingApproval, RunSession } from "./sidebar/session";
 import { runHooks, runBlockingHooks } from "../integrations/hooksRunner";
 import { findWorkspaceRoot, getWorkspaceRoot, safePath, withWorkspaceRoot } from "../context/workspaceUtils";
+import { generateKnowledgeGraph } from "../agent/knowledgeGraph";
+import { resolveRoute } from "../agent/docsPlanner";
+import { codeGraphNeedsRefresh, invalidateCodeGraph } from "../agent/codeGraph";
 import { allPersonas, getPersona } from "../agent/personas";
 import { pendingChanges, computeHunks } from "../stores/pendingChanges";
 import { applyEvent, closeTrailingThinking, forceSettleOpenWork, parseMentionTokens, renderMentionTokens, setQuestionAnswers, turnsToTranscript, type AgentEvent as SharedAgentEvent, type Turn } from "../shared/turns";
@@ -76,6 +80,20 @@ function bridgeProviderError(error: unknown): Error {
   return new Error(`No provider is configured for the selected model${reason ? `: ${reason}` : ""}`);
 }
 
+/** Editor context-menu actions handled by `SidebarProvider.runEditorAction`. */
+export type EditorAiAction = "generate" | "outline" | "tests";
+
+/** Rewrites a rough draft into a clear, well-scoped request for a coding model. */
+const ENHANCE_PROMPT_SYSTEM = `You rewrite a developer's rough draft into a prompt for an AI coding agent.
+
+Rules:
+- Preserve the user's intent, constraints, file names, identifiers, error text and code. Never invent requirements or answers.
+- Make the goal explicit, split unrelated asks into short ordered steps, and state the expected outcome (e.g. edit, explain, review, test).
+- Keep it concise: plain text, no preamble, no "Here is", no markdown headings, no code fences around the whole answer.
+- Write in the same language as the draft.
+- If the draft is already clear, tighten wording instead of padding it.
+Return only the rewritten prompt.`;
+
 export class SidebarProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "aiworkharness.chatView";
   private _view?: vscode.WebviewView;
@@ -91,6 +109,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private _pendingNewConversation?: Promise<string>;
   private _workflowReady: Promise<void>;
   private _journals = new Map<string, RunJournal>();
+  /** Shared background graphify build so concurrent runs start only one. */
+  private _codeGraphBuild?: Promise<void>;
+  /** In-flight prompt enhancements, keyed by request id. */
+  private _enhanceAborts = new Map<string, AbortController>();
   private _disposed = false;
   /** Mentions requested before the webview reported `ready` (e.g. the first Ctrl+L). */
   private _pendingMentions: HostMentionItem[] = [];
@@ -455,7 +477,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     if (!uri || typeof line !== "number") {
       const editor = vscode.window.activeTextEditor;
       if (!editor || editor.document.uri.scheme !== "file") {
-        void vscode.window.showInformationMessage("AiWorkHarness: place the cursor on a TODO comment, or use the \"Implement with AiWorkHarness\" CodeLens.");
+        void vscode.window.showInformationMessage("Ai Work Harness: place the cursor on a TODO comment, or use the \"Implement with Ai Work Harness\" CodeLens.");
         return;
       }
       uri = editor.document.uri;
@@ -466,6 +488,48 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const text = document.lineAt(line).text.trim();
     await this.newChat();
     await this._submitMessage({ text: `Implement the TODO at ${vscode.workspace.asRelativePath(uri, false)}:${line + 1}:\n${text}\n\nInspect the surrounding code and relevant tests before editing, and verify the change.`, mode: "agent" });
+  }
+
+  /**
+   * Editor context-menu actions built from the active file and selection:
+   * generate code, outline the file, or generate unit tests.
+   */
+  public async runEditorAction(action: EditorAiAction): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.uri.scheme !== "file") {
+      void vscode.window.showInformationMessage(hostText("Ai Work Harness: open a file and select the code you want to work with.", this._uiLanguage()));
+      return;
+    }
+    const document = editor.document;
+    const rel = vscode.workspace.asRelativePath(document.uri, false);
+    const sel = editor.selection;
+    // With no selection, generate from the line under the cursor (a comment or TODO).
+    const quoted = (sel.isEmpty ? document.lineAt(sel.active.line).text : document.getText(sel)).trim();
+    const range = `${rel}:${sel.start.line + 1}-${sel.end.line + 1}`;
+    const where = sel.isEmpty ? `${rel}:${sel.active.line + 1}` : range;
+    // Outline and tests cover the whole file when nothing is selected.
+    const target = sel.isEmpty ? rel : range;
+    // Keep the prompt small; the agent can read the file for the rest.
+    const code = quoted.length > 4000 ? `${quoted.slice(0, 4000)}\n… truncated, read the file for the remainder` : quoted;
+    const block = code ? `\n\`\`\`\n${code}\n\`\`\`` : "";
+    let text: string;
+    let mode: Mode;
+    if (action === "generate") {
+      if (!code) {
+        void vscode.window.showInformationMessage(hostText("Ai Work Harness: select the code, or put the cursor on the comment describing what to generate.", this._uiLanguage()));
+        return;
+      }
+      mode = "agent";
+      text = `Generate the code for this requirement in ${where}:\n\`\`\`\n${code}\n\`\`\`\nInspect the surrounding code first, follow its conventions, edit the file in place, and run the checks that cover the change.`;
+    } else if (action === "tests") {
+      mode = "agent";
+      text = `Generate unit tests for ${target}:${block}\nFind the project's existing test framework and layout, add the tests there, and run them against the current implementation.`;
+    } else {
+      mode = "ask";
+      text = `Outline ${target}: list the main sections and symbols with their line numbers, one line each on what they do, and how they relate. Do not modify any file.`;
+    }
+    await vscode.commands.executeCommand("aiworkharness.chatView.focus");
+    await this._submitMessage({ text, mode });
   }
 
   /**
@@ -583,6 +647,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             revertFiles: data.revertFiles,
           });
           break;
+        case "enhancePrompt":
+          await this._enhancePrompt(data.requestId, String(data.text ?? ""), data.model);
+          break;
         case "updateChatWorkspace":
           await this._store.setWorkspaceState(data.state as Partial<ChatWorkspaceState>);
           break;
@@ -648,6 +715,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           break;
         case "openSettings":
           vscode.commands.executeCommand("aiworkharness.openSettings", data.section);
+          break;
+        case "openProjectDocs":
+          vscode.commands.executeCommand("aiworkharness.openProjectDocs");
           break;
         case "setApprovalPreset":
           await this._setApprovalPreset(data.preset);
@@ -1335,6 +1405,114 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     return getPersona(personas, personaId).prompt;
   }
 
+  /**
+   * Rewrite the composer draft into a clearer prompt for the coding model.
+   * Runs outside the conversation, so it never touches turns or the journal.
+   */
+  private async _enhancePrompt(requestId: unknown, text: string, model?: string): Promise<void> {
+    const id = String(requestId ?? "");
+    const source = text.trim();
+    if (!id || !source) return;
+    for (const previous of this._enhanceAborts.values()) previous.abort(new Error("superseded"));
+    this._enhanceAborts.clear();
+    const controller = new AbortController();
+    this._enhanceAborts.set(id, controller);
+    const timeout = setTimeout(() => controller.abort(new Error("Prompt enhancement timed out.")), 45_000);
+    try {
+      const route = await resolveRoute(this.settingsManager, this.featureStore, controller.signal, model);
+      controller.signal.throwIfAborted();
+      const { kind, optionModel, ...connection } = route;
+      // Rewriting needs no reasoning: disable thinking and stay on the fast path.
+      const options = this.featureStore.optionsFor(optionModel, kind);
+      const modelParams = optionsToParams(options);
+      modelParams.thinking = "disabled";
+      if (!modelParams.reasoningEffort) modelParams.reasoningEffort = "low";
+      modelParams.speed = "fast";
+      const request = streamChat({
+        ...connection,
+        messages: [
+          { role: "system", content: ENHANCE_PROMPT_SYSTEM },
+          { role: "user", content: source.slice(0, 12_000) },
+        ],
+        modelParams,
+        auxiliary: true,
+        maxTokens: 1500,
+        maxRetries: 1,
+        connectionTimeoutMs: 30_000,
+        idleTimeoutMs: 20_000,
+        signal: controller.signal,
+      });
+      let answer = "";
+      let lastSentAt = 0;
+      try {
+        while (true) {
+          const next = await request.next();
+          if (next.done) break;
+          const event = next.value;
+          if (event.type === "text-delta") {
+            answer += event.text;
+            // Stream the draft as it is written: the user sees progress instead of a spinner.
+            const now = Date.now();
+            if (answer.trim() && now - lastSentAt >= 60) {
+              lastSentAt = now;
+              this._view?.webview.postMessage({ type: "promptEnhanceDelta", requestId: id, text: answer });
+            }
+          }
+          if (event.type === "tool-call" || event.type === "tool-call-start") throw new Error("The model tried to call a tool instead of rewriting the prompt.");
+          if (event.type === "usage" && this.featureStore.get().trackUsage) void recordUsage(event.model ?? route.model, event.promptTokens, event.completionTokens, event).catch(() => {});
+        }
+      } finally {
+        void request.return(undefined).catch(() => {});
+      }
+      const enhanced = stripReasoning(answer).trim().replace(/^```[^\n]*\n?/, "").replace(/\n?```$/, "").trim();
+      if (!enhanced) throw new Error("The model returned an empty rewrite.");
+      this._view?.webview.postMessage({ type: "promptEnhanced", requestId: id, text: enhanced });
+    } catch (error) {
+      this._view?.webview.postMessage({ type: "promptEnhanced", requestId: id, error: error instanceof Error ? error.message : String(error) });
+    } finally {
+      clearTimeout(timeout);
+      this._enhanceAborts.delete(id);
+    }
+  }
+
+  /**
+   * Refresh the graphify code graph in the background when auto-build is on.
+   * The current turn never waits: it consumes whatever graph is already cached.
+   */
+  private _ensureCodeGraph(): void {
+    if (this._codeGraphBuild) return;
+    const workspace = findWorkspaceRoot();
+    if (!workspace) return;
+    this._codeGraphBuild = (async () => {
+      try {
+        if (!(await codeGraphNeedsRefresh(workspace))) return;
+        invalidateCodeGraph(workspace);
+        const binary = vscode.workspace.getConfiguration("aiworkharness").get<string>("graphifyPath", "").trim() || undefined;
+        const result = await generateKnowledgeGraph({
+          workspaceRoot: workspace,
+          binary,
+          resolveModel: async (signal) => {
+            const bound = this.featureStore.get().docsGraphifyModel?.trim();
+            const route = await resolveRoute(this.settingsManager, this.featureStore, signal, bound || undefined);
+            return {
+              kind: route.kind,
+              model: route.model,
+              apiBaseUrl: route.apiBaseUrl,
+              apiKey: route.apiKey,
+              oauthKind: route.oauthKind,
+              apiKeyPool: route.apiKeyPool,
+            };
+          },
+        });
+        if (!result.ok && !result.cancelled) logError("codeGraph.build", new Error(result.error ?? "build failed"), { workspace });
+      } catch (error) {
+        logError("codeGraph.build", error, { workspace });
+      } finally {
+        this._codeGraphBuild = undefined;
+      }
+    })();
+  }
+
   private _answerQuestion(callId: string, answers: Record<string, string[]>) {
     for (const [convId, session] of this._sessions) {
       const resolve = session.pendingQuestions.get(callId);
@@ -1668,6 +1846,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     if (m) return effectiveContextLength(m, f.llamacppContextLength);
     const opt = this.featureStore.optionsFor(bare, oauthKind).find((o) => o.key === "max_context")?.value;
     return parseContextLabel(opt) || 128_000;
+  }
+
+  /** Request params for a model, including a custom model's declared thinking capability. */
+  private _modelParamsFor(model: string, kind?: string): ReturnType<typeof optionsToParams> {
+    const params = optionsToParams(this.featureStore.optionsFor(model, kind));
+    const thinkingMode = this.featureStore.thinkingModeFor(model);
+    if (thinkingMode) {
+      params.chatTemplateThinking = true;
+      if (thinkingMode !== "toggle") params.thinking = thinkingMode;
+    }
+    return params;
   }
 
   /** Build the picker model list from ALL enabled providers. */
@@ -2301,6 +2490,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       // External engine adapters drive the whole turn; AiWorkHarness stays the
       // chat/approval UI. Failures surface through the shared catch below.
       const engineId = (features.agentEngine ?? "builtin") as EngineId;
+      // Background refresh only for the built-in loop, which is the only consumer.
+      if (engineId === "builtin" && features.codeGraphEnabled === true) this._ensureCodeGraph();
       if (engineId !== "builtin") {
         // Bridged engines call AiWorkHarness's configured providers through the
         // local loopback server; start it only inside a workspace.
@@ -2394,7 +2585,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         autoContinue: features.autoContinue === true,
         // Note: modelId (not prov.model — that's the gguf basename for llama.cpp).
         contextTokens: this._contextTokensFor(modelId, modelKind),
-        modelParams: optionsToParams(this.featureStore.optionsFor(prov.model, modelKind)),
+        modelParams: this._modelParamsFor(prov.model, modelKind),
         systemPromptOverride: this._personaPromptFor(convId, features),
         extraInstructions: settings.systemPrompt,
         enableFileReading: settings.enableFileReading,
@@ -2402,6 +2593,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         enableWorkspaceContext: settings.enableWorkspaceContext,
         enableWebSearch: features.webSearchEnabled !== false,
         enableWebFetch: features.webFetchEnabled !== false,
+        memoryEnabled: features.memoryEnabled !== false,
+        memoryInjectLimit: features.memoryInjectLimit > 0 ? features.memoryInjectLimit : 12,
+        codeGraphConsume: features.codeGraphConsume !== false,
         approve: (toolName, input, callId) => this._approveTool(convId, session, toolName, input, callId),
         customSubagents: features.subagents,
         teams: features.teams,
@@ -2411,7 +2605,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         resolveModelOptions: (childModel) => {
           return {
             contextTokens: this._contextTokensFor(childModel, modelKind),
-            modelParams: optionsToParams(this.featureStore.optionsFor(childModel, modelKind)),
+            modelParams: this._modelParamsFor(childModel, modelKind),
             maxTokens: settings.maxResponseLength > 0 ? settings.maxResponseLength : undefined,
           };
         },
@@ -2527,6 +2721,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   private _getHtmlForWebview(webview: vscode.Webview) {
     const language = this._uiLanguage();
-    return renderWebviewHtml(webview, this.context.extensionUri, "sidebar", hostText("AiWorkHarness Chat", language), language);
+    return renderWebviewHtml(webview, this.context.extensionUri, "sidebar", hostText("Ai Work Harness Chat", language), language);
   }
 }

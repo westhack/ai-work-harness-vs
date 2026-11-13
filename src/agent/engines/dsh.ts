@@ -447,6 +447,16 @@ function registerExitHook(): void {
 	});
 }
 
+/** Stop every host this adapter spawned; used before uninstalling the CLI. */
+export function stopDshHosts(): void {
+	for (const [port, child] of spawnedHosts) {
+		killProcessTree(child.pid);
+		spawnedHosts.delete(port);
+	}
+	hostCookies.clear();
+	ownedHost = undefined;
+}
+
 type ProbeOutcome = { kind: "live" } | { kind: "unauthorized" } | { kind: "down" };
 
 /** One `settings/describe` round-trip; 401 means alive but credential-locked. */

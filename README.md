@@ -7,14 +7,14 @@ https://github.com/westhack/ai-work-harness-vs
 Licensed under the MIT License. See LICENSE file in the project root.
 -->
 
-# AiWorkHarness
+# Ai Work Harness
 
 **An open-source AI coding agent for VS Code. Bring your models, work in your workspace, and stay in control of the changes.**
 
 [English](README.md) · [简体中文](README.zh-CN.md)
 
 <p align="center">
-  <img src="media/readme/hero.png" alt="AiWorkHarness interface preview with a sample coding conversation, highlighted code, a queued follow-up, and controls to keep or undo changes." width="1440" />
+  <img src="media/readme/hero.png" alt="Ai Work Harness interface preview with a sample coding conversation, highlighted code, a queued follow-up, and controls to keep or undo changes." width="1440" />
 </p>
 
 <p align="center">
@@ -25,12 +25,12 @@ Licensed under the MIT License. See LICENSE file in the project root.
   <a href="#credits">Credits</a>
 </p>
 
-AiWorkHarness brings conversation, code exploration, file edits, terminal commands, and change review into your editor. Connect a supported account, use your own API keys, or run a local model with Ollama or llama.cpp. Choose the model and permissions that fit the task, then follow the work as it happens.
+Ai Work Harness brings conversation, code exploration, file edits, terminal commands, and change review into your editor. Connect a supported account, use your own API keys, or run a local model with Ollama or llama.cpp. Choose the model and permissions that fit the task, then follow the work as it happens.
 
 ## Quick start
 
-1. **Install AiWorkHarness** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness-vs). You can also download a `.vsix` from [Releases](https://github.com/westhack/ai-work-harness-vs/releases) and run **Extensions: Install from VSIX**. Requires VS Code 1.96 or newer.
-2. **Connect a model.** Open the AiWorkHarness sidebar, then Settings. Add an account or API provider under **Providers**, or configure **Ollama** or **llama.cpp** for local inference.
+1. **Install Ai Work Harness** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=westhack.ai-work-harness-vs). You can also download a `.vsix` from [Releases](https://github.com/westhack/ai-work-harness-vs/releases) and run **Extensions: Install from VSIX**. Requires VS Code 1.96 or newer.
+2. **Connect a model.** Open the Ai Work Harness sidebar, then Settings. Add an account or API provider under **Providers**, or configure **Ollama** or **llama.cpp** for local inference.
 3. **Choose a model and start a conversation.** Enable the models you want in **Models**, select one in the composer, and describe your task. Use `Ctrl+L` on Windows/Linux or `Cmd+L` on macOS to add an editor selection (or the whole file, when nothing is selected) to chat. This replaces VS Code's default *Expand Line Selection* shortcut while an editor is focused; rebind `aiworkharness.addToChat` in Keyboard Shortcuts if you prefer the original.
 4. **Review the result.** Inspect tool activity and file changes, then keep or undo the edits. Adjust the permission controls to decide which actions need your approval.
 
@@ -79,7 +79,7 @@ Search for GGUF models, choose a quantization, download the files, and manage th
 
 ### Ollama
 
-Connect to an Ollama endpoint, browse installed models, pull new ones, and load or unload them. AiWorkHarness shows server health and the model capabilities reported by the runtime.
+Connect to an Ollama endpoint, browse installed models, pull new ones, and load or unload them. Ai Work Harness shows server health and the model capabilities reported by the runtime.
 
 ### Local inference and retrieval
 
@@ -157,14 +157,14 @@ For code changes, include focused verification and screenshots when the interfac
 
 ## License
 
-AiWorkHarness is available under the [MIT License](LICENSE).
+Ai Work Harness is available under the [MIT License](LICENSE).
 
 This project is derived from OpenCursor by Pawan Osman and is distributed under the MIT License. The original copyright notice is retained in [LICENSE](LICENSE).
 
 ## Credits
 
-- **[OpenCursor](https://github.com/PawanOsman/OpenCursor)** by Pawan Osman is the upstream project AiWorkHarness is derived from.
-- **[Codex](https://github.com/openai/codex)** by OpenAI inspired AiWorkHarness's interface design, styling, and interaction patterns.
-- **[9router](https://github.com/decolua/9router)** provided the foundation for the provider integrations and account authentication support adapted into AiWorkHarness.
+- **[OpenCursor](https://github.com/PawanOsman/OpenCursor)** by Pawan Osman is the upstream project Ai Work Harness is derived from.
+- **[Codex](https://github.com/openai/codex)** by OpenAI inspired Ai Work Harness's interface design, styling, and interaction patterns.
+- **[9router](https://github.com/decolua/9router)** provided the foundation for the provider integrations and account authentication support adapted into Ai Work Harness.
 
 Thank you to these projects and their contributors.

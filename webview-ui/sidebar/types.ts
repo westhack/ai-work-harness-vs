@@ -110,6 +110,8 @@ export type InMessage =
   | { type: "workflowState"; queues: Record<string, QueuedMessage[]>; steeringQueues?: Record<string, QueuedMessage[]>; goals: Record<string, ConversationGoal> }
   | { type: "queueSteeringResult"; convId: string; requestId: string; accepted: boolean }
   | { type: "requestAccepted"; requestId: string; convId: string; created: boolean }
+  | { type: "promptEnhanced"; requestId: string; text?: string; error?: string }
+  | { type: "promptEnhanceDelta"; requestId: string; text: string }
   | { type: "steeringAccepted"; convId: string }
   | { type: "queueDraft"; convId: string; draft: { text: string; attachments: Attachment[] } }
   | { type: "conversationSearchResults"; requestId: number; list: ConversationSummary[] }
@@ -171,6 +173,7 @@ export type OutMessage =
   | { type: "revertToMessage"; index: number; revertFiles?: boolean }
   | { type: "browseAttachments" }
   | { type: "openSettings"; section?: string }
+  | { type: "openProjectDocs" }
   | { type: "setApprovalPreset"; preset: "ask" | "review" | "allow" }
   | { type: "openBrowserTab"; url?: string }
   | { type: "exportConversation"; convId?: string }
@@ -202,5 +205,6 @@ export type OutMessage =
   | { type: "logError"; message: string; info?: string }
   | { type: "openLog" }
   | { type: "getFileIcon"; filename: string }
-  | { type: "resolvePastedCode"; text: string; requestId: number };
+  | { type: "resolvePastedCode"; text: string; requestId: number }
+  | { type: "enhancePrompt"; requestId: string; text: string; model?: string };
 

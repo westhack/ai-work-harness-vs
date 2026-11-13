@@ -54,6 +54,14 @@
 				"title": "%command.openSettings%"
 			},
 			{
+				"command": "aiworkharness.openProjectDocs",
+				"title": "%command.openProjectDocs%"
+			},
+			{
+				"command": "aiworkharness.toggleCodeGraph",
+				"title": "%command.toggleCodeGraph%"
+			},
+			{
 				"command": "aiworkharness.addToChat",
 				"title": "%command.addToChat%"
 			},
@@ -68,6 +76,18 @@
 			{
 				"command": "aiworkharness.implementTodo",
 				"title": "%command.implementTodo%"
+			},
+			{
+				"command": "aiworkharness.generateCode",
+				"title": "%command.generateCode%"
+			},
+			{
+				"command": "aiworkharness.generateTests",
+				"title": "%command.generateTests%"
+			},
+			{
+				"command": "aiworkharness.outlineFile",
+				"title": "%command.outlineFile%"
 			}
 		],
 		"keybindings": [
@@ -76,6 +96,18 @@
 				"key": "ctrl+l",
 				"mac": "cmd+l",
 				"when": "editorTextFocus"
+			},
+			{
+				"command": "aiworkharness.generateCode",
+				"key": "ctrl+enter",
+				"mac": "cmd+enter",
+				"when": "editorTextFocus && !editorReadonly && !notebookEditorFocused && !inDebugRepl"
+			}
+		],
+		"submenus": [
+			{
+				"id": "aiworkharness.editorContext",
+				"label": "%submenu.aiworkharness%"
 			}
 		],
 		"menus": {
@@ -84,13 +116,39 @@
 					"command": "aiworkharness.implementTodo",
 					"when": "false"
 				}
+			],
+			"editor/context": [
+				{
+					"submenu": "aiworkharness.editorContext",
+					"group": "1_aiworkharness"
+				}
+			],
+			"aiworkharness.editorContext": [
+				{
+					"command": "aiworkharness.addToChat",
+					"group": "1_context@1"
+				},
+				{
+					"command": "aiworkharness.generateCode",
+					"when": "!editorReadonly",
+					"group": "2_generate@1"
+				},
+				{
+					"command": "aiworkharness.generateTests",
+					"when": "!editorReadonly",
+					"group": "2_generate@2"
+				},
+				{
+					"command": "aiworkharness.outlineFile",
+					"group": "3_read@1"
+				}
 			]
 		},
 		"viewsContainers": {
 			"activitybar": [
 				{
 					"id": "aiworkharness-sidebar",
-					"title": "AiWorkHarness",
+					"title": "Ai Work Harness",
 					"icon": "media/icon.svg"
 				}
 			]
@@ -100,7 +158,7 @@
 				{
 					"type": "webview",
 					"id": "aiworkharness.chatView",
-					"name": "AiWorkHarness"
+					"name": "Ai Work Harness"
 				}
 			]
 		},
@@ -156,6 +214,11 @@
 						"type": "string",
 						"default": "",
 						"description": "%config.browserExecutablePath.description%"
+					},
+					"aiworkharness.graphifyPath": {
+						"type": "string",
+						"default": "",
+						"description": "%config.graphifyPath.description%"
 					},
 					"aiworkharness.containerImage": {
 						"type": "string",
@@ -255,6 +318,7 @@
 		"react": "^19.2.7",
 		"react-dom": "^19.2.7",
 		"sharp": "^0.35.2",
+		"vis-network": "^10.1.5",
 		"ws": "^8.22.2"
 	}
 }

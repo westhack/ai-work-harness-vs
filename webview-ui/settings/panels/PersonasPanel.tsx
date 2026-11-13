@@ -55,8 +55,8 @@ export function PersonasPanel({
         </div>
         <Select aria-label={tr("Active persona")} value={features.activePersonaId} onChange={(e) => setFeatures({ activePersonaId: e.target.value })}>
           {all.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
+            <option key={p.id} value={p.id} title={tr(p.description)}>
+              {tr(p.name)}
             </option>
           ))}
         </Select>
@@ -66,10 +66,10 @@ export function PersonasPanel({
         <div className="list-row" key={p.id}>
           <Icon name="agent" />
           <div className="lr-text">
-            <div className="lr-title">{p.name}</div>
-            <div className="lr-desc">{p.description}</div>
+            <div className="lr-title">{tr(p.name)}</div>
+            <div className="lr-desc">{tr(p.description)}</div>
           </div>
-          {features.activePersonaId === p.id && <span className="badge-default">default</span>}
+          {features.activePersonaId === p.id && <span className="badge-default">{tr("default")}</span>}
         </div>
       ))}
 

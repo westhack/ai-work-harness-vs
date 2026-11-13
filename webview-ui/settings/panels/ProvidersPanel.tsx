@@ -136,9 +136,9 @@ function ProviderModal({ provider, method, isNew, onClose, onBack, onSave }: {
         {error && <div className="fc-error" role="alert">{error}</div>}
         <div className="test-row">
           <button type="button" className="btn-ghost" onClick={runTest} disabled={test.status === "testing" || (requiresKey && !keyDraft.trim())}>
-            {test.status === "testing" ? "Testing…" : "Test connection"}</button>
+            {test.status === "testing" ? tr("Testing…") : tr("Test connection")}</button>
           {test.status === "ok" && <span className="test-result ok" role="status"><Icon name="check" size={13} /> {test.message}</span>}
-          {test.status === "error" && <span className="test-result err" role="alert">{test.message || "Connection failed"}</span>}
+          {test.status === "error" && <span className="test-result err" role="alert">{test.message || tr("Connection failed")}</span>}
         </div>
       </div>
       <div className="modal-foot provider-connection-actions">
@@ -203,7 +203,7 @@ export function OAuthAccountCard({ account, defaultOpen, refreshToken = 0, group
         window.clearTimeout(active.timer);
         resetRequest.current = undefined;
         setResetting(false);
-        setResetMsg(m.ok ? "Windows reset." : (m.message || "Reset failed."));
+        setResetMsg(m.ok ? tr("Windows reset.") : (m.message || tr("Reset failed.")));
         // A reset can consume a credit; cached pre-reset credits must not
         // enable another operation if the follow-up quota refresh fails.
         setResetNeedsRefresh(true);

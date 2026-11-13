@@ -50,6 +50,25 @@ describe("model speed preferences", () => {
   });
 });
 
+describe("custom model thinking capability", () => {
+  const custom = (thinkingMode: "enabled" | "disabled" | "toggle") => ({ id: "local-qwen", name: "local-qwen", kind: "openai" as const, options: [], thinkingMode });
+  it("exposes a switch only when the model can toggle thinking", async () => {
+    const store = storeWith();
+    await store.set({ customModels: [custom("toggle")] });
+    expect(selected(store, "local-qwen", "thinking", "openai")).toMatchObject({ values: ["enabled", "disabled"], value: "enabled" });
+    await store.set({ customModels: [custom("disabled")] });
+    expect(store.optionsFor("local-qwen", "openai").some((option) => option.key === "thinking")).toBe(false);
+    expect(store.thinkingModeFor("local-qwen")).toBe("disabled");
+  });
+  it("ignores stale saved thinking when the declared capability changes", async () => {
+    const store = storeWith({ "openai:local-qwen": [oldOption("thinking", "disabled")] });
+    await store.set({ customModels: [custom("enabled")] });
+    expect(store.optionsFor("local-qwen", "openai").some((option) => option.key === "thinking")).toBe(false);
+    expect(optionsToParams(store.optionsFor("local-qwen", "openai")).thinking).toBeUndefined();
+    expect(store.thinkingModeFor("local-qwen")).toBe("enabled");
+  });
+});
+
 describe("provider-qualified model options", () => {
   it.each([["cc", "claude-code", "claude-opus-5-5"], ["cx", "codex", "gpt-6-astra"], ["gemini", "google", "gemini-3.8-flash"], ["ag", "antigravity", "gemini-3.8-flash-low"]])("resolves %s metadata without changing the request ID", (prefix, source, id) => {
     const store = storeWith();
