@@ -119,6 +119,28 @@ describe("current catalog in the actual Models panel", () => {
     expect(cardFor("DeepSeek").textContent).toContain("connected");
   });
 
+  it("lists a keyless custom endpoint once it advertises models", () => {
+    const provider: ProviderConfig = {
+      id: "prov_lan", name: "LAN vLLM", kind: "openai", baseUrl: "http://localhost:8000/v1",
+      enabled: true, hasKey: false, apiKeys: [],
+    };
+    const modelList: ModelDef[] = [{
+      id: "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B", name: "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+      kind: "openai", providerId: "prov_lan",
+    }];
+    act(() => root.render(<Harness key="keyless" providers={[provider]} oauthStatus={{ accounts: [], errors: {} }} />));
+    expect(cards()).toHaveLength(0);
+    act(() => root.render(<Harness key="keyless" providers={[provider]} oauthStatus={{ accounts: [], errors: {} }} modelList={modelList} />));
+    expect(cards().map(title)).toEqual(["LAN vLLM"]);
+    search("deepseek");
+    expect(rowFor("LAN vLLM", "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B")).toBeTruthy();
+    act(() => toggle("LAN vLLM", "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B").click());
+    expect(saved).toHaveBeenLastCalledWith({
+      enabledModels: ["gpt-5.4", "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"],
+      disabledModels: ["gpt-6-luna", "claude-opus-5-5"],
+    });
+  });
+
   it.each([
     ["GPT-6 Sol", "gpt-6-sol", "GPT-6 Sol", ["OpenAI", "OpenAI Codex"]],
     ["gpt-6-luna", "gpt-6-luna", "GPT-6 Luna", ["OpenAI", "OpenAI Codex"]],

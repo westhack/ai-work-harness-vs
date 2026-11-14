@@ -355,7 +355,8 @@ export function ModelsPanel({
   const connectedProvider = (provider: ProviderConfig): boolean => {
     if (provider.enabled === false) return false;
     if (!PROVIDER_PRESETS[provider.kind].needsKey) return true;
-    if (provider.apiKeys) return provider.apiKeys.some(key => key.enabled !== false && key.hasKey !== false);
+    if (provider.apiKeys?.length) return provider.apiKeys.some(key => key.enabled !== false && key.hasKey !== false);
+    // Keyless endpoints (custom gateways, local servers) are connected once they advertise models.
     return !!provider.hasKey || (!provider.id.startsWith("popular:") && modelList.some(model => model.providerId === provider.id));
   };
 
