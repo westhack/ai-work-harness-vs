@@ -1969,7 +1969,7 @@ export function App() {
           <div className="setup-screen">
             <img className="app-logo" src={document.getElementById("root")?.dataset.icon} alt={tr("AiWorkHarness")} />
             <StaggerReveal>
-              <h1 className="setup-title t-stagger-line">{tr("Build with AiWorkHarness")}</h1>
+              <h1 className="setup-title t-stagger-line">{tr("Build with Ai Work Harness")}</h1>
               <div className="setup-desc t-stagger-line t-stagger-line--2">{tr("Connect your account, add an API key, or run a local model to start building.")}</div>
             </StaggerReveal>
             <button className="setup-btn" onClick={() => post({ type: "openSettings", section: "providers" })}>

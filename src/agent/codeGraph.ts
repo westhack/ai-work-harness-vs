@@ -310,7 +310,7 @@ export async function queryCodeGraph(
 ): Promise<string> {
 	const graph = await readCodeGraph(workspaceRoot);
 	if (!graph) {
-		return "No code graph is available yet. Ask the user to build it from Settings > Knowledge base, or run the graphify build command.";
+		return "No code graph is available yet. Ask the user to build it from Settings > Repo Wiki, or run the graphify build command.";
 	}
 	if (action === "overview") return renderCodeGraphContext(graph, 8000);
 	const query = (value ?? "").trim();

@@ -112,7 +112,7 @@ const NAV: { id: Section; label: string; icon: IconName; sep?: boolean }[] = [
   { id: "subagents", label: "Subagents & Teams", icon: "agent" },
   { id: "mcp", label: "Tools & MCPs", icon: "task" },
   { id: "hooks", label: "Hooks", icon: "infinity" },
-  { id: "knowledge", label: "Knowledge Base", icon: "book" },
+  { id: "knowledge", label: "Repo Wiki", icon: "book" },
   { id: "indexing", label: "Indexing & Docs", icon: "database" },
   { id: "advanced", label: "Advanced", icon: "fileCode", sep: true },
   { id: "about", label: "About", icon: "book" },
@@ -160,7 +160,7 @@ const SECTION_KEYWORDS: Partial<Record<Section, string>> = {
   subagents: "subagents teams squad project mode delegate task tool members roster subagent model",
   mcp: "mcp tools servers",
   hooks: "hooks events commands",
-  knowledge: "knowledge base project docs mind map graphify task models limits",
+  knowledge: "repo wiki knowledge base project docs mind map graphify task models limits",
   indexing: "codebase index embedding docs semantic sync",
   advanced: "system prompt custom instructions",
   about: "about version license author github repository open source mit Yao",
@@ -735,7 +735,7 @@ function KnowledgePanel({
     : `${graph.injections} ${tr("turns")} · ${Math.round(graph.injectedChars / 1000)}k ${tr("characters injected")}${graph.lastUsedAt ? ` · ${stamp(graph.lastUsedAt)}` : ""}`;
   return (
     <>
-      <h1 className="page-title">{tr("Knowledge Base")}</h1>
+      <h1 className="page-title">{tr("Repo Wiki")}</h1>
       <div className="section-label">{tr("Code Graph")}</div>
       <Group>
         <Row title={tr("Auto-build")} desc={tr("Scan the repository with graphify and refresh .docs/graphify-out when the cached graph is missing or out of date. Builds run in the background.")}>
@@ -1086,7 +1086,7 @@ export function App() {
           <img className="brand-badge" src={document.getElementById("root")?.dataset.icon} alt="" />
           <span>
             <span className="brand-name">{tr("Settings")}</span>
-            <span className="brand-sub">{tr("AiWorkHarness")}</span>
+            <span className="brand-sub">{tr("Ai Work Harness")}</span>
           </span>
         </div>
         <input
@@ -1462,7 +1462,7 @@ export function App() {
               <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "6px 0 18px" }}>
                 <img src={document.getElementById("root")?.dataset.icon} alt="" style={{ width: 48, height: 48, borderRadius: 10 }} />
                 <div>
-                  <div style={{ fontSize: 16, fontWeight: 600 }}>{tr("AiWorkHarness")}</div>
+                  <div style={{ fontSize: 16, fontWeight: 600 }}>{tr("Ai Work Harness")}</div>
                   <div className="row-desc" style={{ margin: 0 }}>{tr("AI coding agent chat inside VS Code — local, open source.")}</div>
                 </div>
               </div>
