@@ -218,6 +218,22 @@ it("does not reopen portal menus or swallow model-search Space and child actions
   expect(document.activeElement).toBe(trigger);
 });
 
+it("withholds fetched ids from the picker once the host reports an empty enabled list", () => {
+  const id = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B";
+  act(() => root.render(<Composer {...props} models={[id]} modelListReady />));
+  key(container.querySelector('[aria-label="Choose model"]') as HTMLElement, "Enter");
+  expect(document.querySelector('.model-picker')).not.toBeNull();
+  expect(document.querySelector(`[aria-label="Select ${id}"]`)).toBeNull();
+  expect(document.body.textContent).not.toContain(id);
+});
+
+it("falls back to fetched ids only before the host's first model list arrives", () => {
+  const id = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B";
+  act(() => root.render(<Composer {...props} models={[id]} />));
+  key(container.querySelector('[aria-label="Choose model"]') as HTMLElement, "Enter");
+  expect(document.querySelector(`[aria-label="Select ${id}"]`)).not.toBeNull();
+});
+
 it("focuses model search and restores its trigger without scrolling on first open, reopen and options return", () => {
   const model: ModelDef = { id: "example", name: "Example model", kind: "openai", options: [{ key: "effort", label: "Effort", type: "select", value: "low", values: ["low", "high"] }] };
   act(() => root.render(<Composer {...props} modelList={[model]} />));

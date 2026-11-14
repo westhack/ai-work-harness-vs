@@ -927,6 +927,10 @@ export function App() {
   const [mode, setMode] = React.useState<Mode>("agent");
   const [models, setModels] = React.useState<string[]>([]);
   const [modelList, setModelList] = React.useState<ModelDef[]>([]);
+  // An intentionally empty list (nothing enabled) must not be confused with
+  // "the host hasn't answered yet" — the picker falls back to raw ids only
+  // before the first modelsFetched.
+  const [modelListReady, setModelListReady] = React.useState(false);
   const [selectedModel, setSelectedModel] = React.useState("");
   const [conversations, setConversations] = React.useState<ConversationSummary[]>([]);
   const [activeId, setActiveId] = React.useState<string | undefined>(undefined);
@@ -1437,7 +1441,7 @@ export function App() {
           break;
         case "modelsFetched":
           setModels(msg.models || []);
-          if (msg.modelList) setModelList(msg.modelList);
+          if (Array.isArray(msg.modelList)) { setModelList(msg.modelList); setModelListReady(true); }
           break;
         case "pendingChanges":
           setPendingChanges(msg.changes || []);
@@ -2030,6 +2034,7 @@ export function App() {
                         }}
                         models={models}
                         modelList={modelList}
+                        modelListReady={modelListReady}
                         selectedModel={selectedModel}
                         onSelectModel={(m) => {
                           setSelectedModel(m);
@@ -2158,6 +2163,7 @@ export function App() {
           onTeams={composerOnTeams}
           models={models}
           modelList={modelList}
+          modelListReady={modelListReady}
           selectedModel={selectedModel}
           onSelectModel={composerOnSelectModel}
           onSaveModelOptions={composerOnSaveModelOptions}

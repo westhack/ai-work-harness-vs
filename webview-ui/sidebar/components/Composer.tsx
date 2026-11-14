@@ -705,6 +705,7 @@ function HeadReset({ onReset }: { onReset: () => void }) {
 function ModelPicker({
   models,
   modelList,
+  modelListReady,
   selected,
   onSelect,
   onSaveOptions,
@@ -712,6 +713,7 @@ function ModelPicker({
 }: {
   models: string[];
   modelList: ModelDef[];
+  modelListReady?: boolean;
   selected: string;
   onSelect: (m: string) => void;
   onSaveOptions: (modelId: string, options: ModelOption[]) => void;
@@ -731,11 +733,12 @@ function ModelPicker({
   }, [present]);
 
   // modelList is already the server-filtered set (enabled + default). Fall back to
-  // raw ids only if the extension hasn't sent a modelList yet.
+  // raw ids only if the extension hasn't sent a modelList yet — an empty list is
+  // authoritative once received (nothing is enabled).
   const list: ModelDef[] = React.useMemo(() => {
-    if (modelList.length) return modelList;
+    if (modelList.length || modelListReady) return modelList;
     return models.map((id) => ({ id, name: id, kind: "openai" as const, options: [] }));
-  }, [modelList, models]);
+  }, [modelList, modelListReady, models]);
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -891,6 +894,7 @@ export function Composer({
   onMode,
   models,
   modelList,
+  modelListReady,
   selectedModel,
   onSelectModel,
   onSaveModelOptions,
@@ -927,6 +931,8 @@ export function Composer({
   persona?: PersonaInfo;
   models: string[];
   modelList: ModelDef[];
+  /** True once the host has answered with a model list, even an empty one. */
+  modelListReady?: boolean;
   selectedModel: string;
   onSelectModel: (m: string) => void;
   onSaveModelOptions: (modelId: string, options: ModelOption[]) => void;
@@ -1784,7 +1790,7 @@ export function Composer({
               const total = parseContextSize(sel?.options.find((o) => o.key === "max_context")?.value) || 128_000;
               return <ContextRing used={usedTokens ?? 0} total={total} />;
             })()}
-            <ModelPicker models={models} modelList={modelList} selected={selectedModel} onSelect={onSelectModel} onSaveOptions={onSaveModelOptions} onResetOptions={onResetModelOptions} />
+            <ModelPicker models={models} modelList={modelList} modelListReady={modelListReady} selected={selectedModel} onSelect={onSelectModel} onSaveOptions={onSaveModelOptions} onResetOptions={onResetModelOptions} />
             {editing && (
               <button className="attach-btn" title={tr("Cancel edit (Esc)")} onClick={() => onCancelEdit?.()}>
                 <Icon name="close" size={15} />
