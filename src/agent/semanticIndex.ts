@@ -249,9 +249,17 @@ export function cpuThreadBudget(cores = os.cpus()?.length || 1): number {
   return Math.max(1, Math.min(4, Math.floor(Math.max(1, cores) / 4)));
 }
 
-/** Session options for every EP: GPU sessions still run fallback kernels on CPU threads. */
+/**
+ * Session options for every EP: GPU sessions still run fallback kernels on CPU threads.
+ *
+ * The CPU arena is off: with thousands of variable-length embedding inputs its
+ * size-class pools fragment and grow to ~1.5 GB on a mid-size repo, where
+ * Electron's allocator aborts the whole extension host (SIGTRAP from the
+ * embedder worker; plain Node survives the same workload). Per-batch tensors
+ * are freed to the system allocator instead — peak RSS drops to ~0.6 GB.
+ */
 function embedSessionOptions(): Record<string, unknown> {
-  return { intraOpNumThreads: cpuThreadBudget(), interOpNumThreads: 1, executionMode: "sequential" };
+  return { intraOpNumThreads: cpuThreadBudget(), interOpNumThreads: 1, executionMode: "sequential", enableCpuMemArena: false };
 }
 
 /** A loaded embedding session, in a worker thread or (fallback) in-process. */
